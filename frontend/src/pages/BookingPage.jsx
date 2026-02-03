@@ -701,7 +701,7 @@ const BookingPage = () => {
 
                 {/* Info note */}
                 <p className="text-xs text-gray-500 text-center">
-                  ℹ️ Neděle jsou zavřené. Přesný čas domluvíme telefonicky.
+                  ℹ️ Pracujeme 7 dní v týdnu. Přesný čas domluvíme telefonicky.
                 </p>
               </div>
             </div>
