@@ -866,22 +866,31 @@ const BookingPage = () => {
                     <span className="font-medium">{getServiceName(formData.service)}</span>
                   </div>
                   <div className="flex justify-between py-1.5 border-b border-gray-200">
-                    <span className="text-gray-500">Plocha:</span>
-                    <span className="font-medium">{formData.property_size} m²</span>
+                    <span className="text-gray-500">{isHourlyService(formData.service) ? 'Hodin:' : 'Plocha:'}</span>
+                    <span className="font-medium">
+                      {isHourlyService(formData.service) 
+                        ? `${formData.property_size} hod`
+                        : `${formData.property_size} m²`
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between py-1.5 border-b border-gray-200">
                     <span className="text-gray-500">Termín:</span>
                     <span className="font-medium">{formData.preferred_date?.toLocaleDateString('cs-CZ')}</span>
                   </div>
+                  <div className="flex justify-between py-1.5 border-b border-gray-200">
+                    <span className="text-gray-500">Čas:</span>
+                    <span className="font-medium">{getTimeName(formData.preferred_time)}</span>
+                  </div>
                   <div className="flex justify-between py-2 bg-[#F0FDF4] -mx-2 px-2 rounded">
                     <span className="font-medium">Cena:</span>
-                    <span className="font-bold text-[#3FA34D]">{getFinalPrice().toLocaleString('cs-CZ')} Kč</span>
+                    <span className="font-bold text-[#3FA34D]">~{getFinalPrice().toLocaleString('cs-CZ')} Kč</span>
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-gray-500 mb-4">
-                📞 Brzy vás budeme kontaktovat.
+                📞 Brzy vás budeme kontaktovat pro potvrzení.
               </p>
 
               <div className="flex gap-3">
