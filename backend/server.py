@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,7 +10,8 @@ from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import requests
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -30,7 +32,24 @@ except ImportError:
 
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', '')
-RESEND_AUDIENCE_ID = os.environ.get('RESEND_AUDIENCE_ID', '')  # Pro newsletter kontakty
+RESEND_AUDIENCE_ID = os.environ.get('RESEND_AUDIENCE_ID', '')
+
+# Google Calendar setup
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', '')
+
+# Google Calendar service
+google_calendar_service = None
+try:
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import build
+    from google.auth.transport.requests import Request as GoogleRequest
+    GOOGLE_CALENDAR_AVAILABLE = True
+except ImportError:
+    GOOGLE_CALENDAR_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("Google Calendar libraries not available")
 
 # Create the main app
 app = FastAPI()
