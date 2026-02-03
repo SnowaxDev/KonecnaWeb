@@ -64,6 +64,125 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ============== GOOGLE CALENDAR HELPERS ==============
+
+SERVICE_NAMES = {
+    'lawn_mowing': 'Sekání trávy',
+    'lawn_with_fertilizer': 'Sekání + hnojení',
+    'overgrown': 'Hrubé sekání',
+    'spring_package': 'Jarní balíček',
+    'summer_package': 'Letní balíček',
+    'autumn_package': 'Podzimní balíček',
+    'winter_snow': 'Zimní balíček',
+    'vip_annual': 'VIP Celoroční',
+    'garden_work': 'Zahradnické práce',
+    'debris_removal': 'Odvoz odpadu',
+    'debris_hourly': 'Odvoz odpadu',
+    'other': 'Jiná služba',
+}
+
+async def get_google_credentials():
+    """Get Google credentials from database, refresh if needed"""
+    if not GOOGLE_CALENDAR_AVAILABLE:
+        return None
+    
+    tokens = await db.google_tokens.find_one({"type": "owner"})
+    if not tokens:
+        logger.warning("No Google Calendar tokens found. Owner needs to authenticate.")
+        return None
+    
+    try:
+        creds = Credentials(
+            token=tokens.get('access_token'),
+            refresh_token=tokens.get('refresh_token'),
+            token_uri='https://oauth2.googleapis.com/token',
+            client_id=GOOGLE_CLIENT_ID,
+            client_secret=GOOGLE_CLIENT_SECRET
+        )
+        
+        # Refresh if expired
+        if creds.expired and creds.refresh_token:
+            creds.refresh(GoogleRequest())
+            await db.google_tokens.update_one(
+                {"type": "owner"},
+                {"$set": {"access_token": creds.token}}
+            )
+            logger.info("Google Calendar tokens refreshed")
+        
+        return creds
+    except Exception as e:
+        logger.error(f"Failed to get Google credentials: {str(e)}")
+        return None
+
+async def add_booking_to_google_calendar(booking):
+    """Add a booking event to owner's Google Calendar"""
+    if not GOOGLE_CALENDAR_AVAILABLE or not GOOGLE_CLIENT_ID:
+        logger.info("Google Calendar not configured, skipping event creation")
+        return None
+    
+    try:
+        creds = await get_google_credentials()
+        if not creds:
+            logger.warning("No Google Calendar credentials available")
+            return None
+        
+        service = build('calendar', 'v3', credentials=creds)
+        
+        # Parse preferred time
+        time_map = {
+            'morning': ('08:00', '12:00'),
+            'afternoon': ('12:00', '17:00'),
+            'anytime': ('09:00', '17:00'),
+        }
+        start_time, end_time = time_map.get(booking.preferred_time, ('09:00', '17:00'))
+        
+        # Create event
+        service_name = SERVICE_NAMES.get(booking.service, booking.service)
+        event = {
+            'summary': f'🌿 {service_name} - {booking.customer_name}',
+            'description': f"""📍 Adresa: {booking.property_address}
+📏 Plocha: {booking.property_size} m²
+💰 Cena: ~{booking.estimated_price} Kč
+📞 Telefon: {booking.customer_phone}
+📧 Email: {booking.customer_email}
+📝 Poznámka: {booking.notes or 'Žádná'}
+
+Služba: {service_name}
+Stav: {booking.condition}
+ID rezervace: {booking.id}""",
+            'location': booking.property_address,
+            'start': {
+                'dateTime': f'{booking.preferred_date}T{start_time}:00',
+                'timeZone': 'Europe/Prague',
+            },
+            'end': {
+                'dateTime': f'{booking.preferred_date}T{end_time}:00',
+                'timeZone': 'Europe/Prague',
+            },
+            'colorId': '10',  # Green color
+            'reminders': {
+                'useDefault': False,
+                'overrides': [
+                    {'method': 'popup', 'minutes': 60},
+                    {'method': 'email', 'minutes': 1440},  # 24 hours before
+                ],
+            },
+        }
+        
+        result = service.events().insert(calendarId='primary', body=event).execute()
+        logger.info(f"Google Calendar event created: {result.get('id')}")
+        
+        # Save event ID to booking
+        await db.bookings.update_one(
+            {"id": booking.id},
+            {"$set": {"google_event_id": result.get('id')}}
+        )
+        
+        return result.get('id')
+    except Exception as e:
+        logger.error(f"Failed to add event to Google Calendar: {str(e)}")
+        return None
+
 # ============== MODELS ==============
 
 class BookingCreate(BaseModel):
