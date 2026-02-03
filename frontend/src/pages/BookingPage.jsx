@@ -74,12 +74,11 @@ const BookingPage = () => {
   useEffect(() => {
     if (formData.service) {
       const isHourly = ['garden_work', 'debris_hourly'].includes(formData.service);
-      // If switching to hourly service and size is large (>10), set to 2 hours
-      if (isHourly && formData.property_size > 10) {
+      if (isHourly) {
+        // For hourly services, default to 2 hours
         setFormData(prev => ({ ...prev, property_size: 2 }));
-      }
-      // If switching from hourly to m2 and size is small (<10), set to 100m2
-      if (!isHourly && formData.property_size < 10) {
+      } else if (formData.property_size < 50) {
+        // For m2 services, default to 100m2 if size is too small
         setFormData(prev => ({ ...prev, property_size: 100 }));
       }
     }
