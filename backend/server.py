@@ -588,6 +588,14 @@ async def create_booking(booking_data: BookingCreate):
             except Exception as e:
                 logger.error(f"Failed to send admin email: {str(e)}")
     
+    # Add to Google Calendar (async, don't block response)
+    try:
+        event_id = await add_booking_to_google_calendar(booking)
+        if event_id:
+            logger.info(f"Booking added to Google Calendar: {event_id}")
+    except Exception as e:
+        logger.error(f"Failed to add to Google Calendar: {str(e)}")
+    
     return booking
 
 @api_router.get("/bookings/{booking_id}", response_model=Booking)
