@@ -448,6 +448,97 @@ def get_admin_email_html(booking: Booking) -> str:
 async def root():
     return {"message": "SeknuTo.cz API", "status": "running"}
 
+# ============== GOOGLE CALENDAR AUTH ENDPOINTS ==============
+
+@api_router.get("/auth/google/status")
+async def google_auth_status():
+    """Check if Google Calendar is connected"""
+    tokens = await db.google_tokens.find_one({"type": "owner"})
+    is_connected = tokens is not None and tokens.get('access_token') is not None
+    return {
+        "connected": is_connected,
+        "configured": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET),
+        "email": tokens.get('email') if tokens else None
+    }
+
+@api_router.get("/auth/google/login")
+async def google_auth_login():
+    """Start Google OAuth flow for calendar access"""
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=400, detail="Google Calendar not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env")
+    
+    # Build authorization URL
+    scopes = [
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/userinfo.email'
+    ]
+    
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/auth?"
+        f"client_id={GOOGLE_CLIENT_ID}&"
+        f"redirect_uri={GOOGLE_REDIRECT_URI}&"
+        f"response_type=code&"
+        f"scope={'+'.join(scopes)}&"
+        f"access_type=offline&"
+        f"prompt=consent"
+    )
+    
+    return {"authorization_url": auth_url}
+
+@api_router.get("/auth/google/callback")
+async def google_auth_callback(code: str):
+    """Handle Google OAuth callback"""
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code provided")
+    
+    try:
+        # Exchange code for tokens
+        token_response = requests.post('https://oauth2.googleapis.com/token', data={
+            'code': code,
+            'client_id': GOOGLE_CLIENT_ID,
+            'client_secret': GOOGLE_CLIENT_SECRET,
+            'redirect_uri': GOOGLE_REDIRECT_URI,
+            'grant_type': 'authorization_code'
+        }).json()
+        
+        if 'error' in token_response:
+            raise HTTPException(status_code=400, detail=f"Token exchange failed: {token_response.get('error_description', token_response.get('error'))}")
+        
+        # Get user email
+        user_info = requests.get(
+            'https://www.googleapis.com/oauth2/v2/userinfo',
+            headers={'Authorization': f'Bearer {token_response["access_token"]}'}
+        ).json()
+        
+        # Save tokens to database
+        await db.google_tokens.update_one(
+            {"type": "owner"},
+            {"$set": {
+                "access_token": token_response.get('access_token'),
+                "refresh_token": token_response.get('refresh_token'),
+                "email": user_info.get('email'),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        logger.info(f"Google Calendar connected for: {user_info.get('email')}")
+        
+        # Redirect to frontend with success message
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+        return RedirectResponse(f"{frontend_url}?google_connected=true")
+        
+    except Exception as e:
+        logger.error(f"Google OAuth callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/auth/google/disconnect")
+async def google_auth_disconnect():
+    """Disconnect Google Calendar"""
+    await db.google_tokens.delete_one({"type": "owner"})
+    logger.info("Google Calendar disconnected")
+    return {"message": "Google Calendar disconnected"}
+
 @api_router.post("/bookings", response_model=Booking)
 async def create_booking(booking_data: BookingCreate):
     booking = Booking(**booking_data.model_dump())
