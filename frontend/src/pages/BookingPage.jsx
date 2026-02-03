@@ -117,22 +117,22 @@ const BookingPage = () => {
     return formData.estimated_price;
   };
 
-  // Basic services
+  // Basic services - with unit type
   const basicServices = [
-    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2 Kč/m²' },
-    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²' },
-    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²' },
-    { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: '300-450 Kč/hod' },
-    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: '400 Kč/hod' },
+    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2 Kč/m²', unit: 'm2' },
+    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²', unit: 'm2' },
+    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²', unit: 'm2' },
+    { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: '300-450 Kč/hod', unit: 'hours' },
+    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: '400 Kč/hod', unit: 'hours' },
   ];
 
-  // Packages
+  // Packages - all per m2
   const packages = [
-    { id: 'spring_package', icon: Flower2, title: '🌸 Jarní balíček', price: '8,5-12 Kč/m²', color: 'border-pink-300 bg-pink-50' },
-    { id: 'summer_package', icon: Sun, title: '☀️ Letní balíček', price: '3-4 Kč/m²/měsíc', color: 'border-yellow-300 bg-yellow-50' },
-    { id: 'autumn_package', icon: Leaf, title: '🍂 Podzimní balíček', price: '10-14 Kč/m²', color: 'border-orange-300 bg-orange-50' },
-    { id: 'winter_snow', icon: Snowflake, title: '❄️ Zimní balíček', price: '8-10 Kč/m²', color: 'border-blue-300 bg-blue-50' },
-    { id: 'vip_annual', icon: Package, title: '🌀 VIP Celoroční', price: '18-22 Kč/m²/rok', color: 'border-green-400 bg-green-50', popular: true },
+    { id: 'spring_package', icon: Flower2, title: '🌸 Jarní balíček', price: '8,5-12 Kč/m²', color: 'border-pink-300 bg-pink-50', unit: 'm2' },
+    { id: 'summer_package', icon: Sun, title: '☀️ Letní balíček', price: '3-4 Kč/m²/měsíc', color: 'border-yellow-300 bg-yellow-50', unit: 'm2' },
+    { id: 'autumn_package', icon: Leaf, title: '🍂 Podzimní balíček', price: '10-14 Kč/m²', color: 'border-orange-300 bg-orange-50', unit: 'm2' },
+    { id: 'winter_snow', icon: Snowflake, title: '❄️ Zimní balíček', price: '8-10 Kč/m²', color: 'border-blue-300 bg-blue-50', unit: 'm2' },
+    { id: 'vip_annual', icon: Package, title: '🌀 VIP Celoroční', price: '18-22 Kč/m²/rok', color: 'border-green-400 bg-green-50', popular: true, unit: 'm2' },
   ];
 
   const additionalServices = [
@@ -141,10 +141,21 @@ const BookingPage = () => {
   ];
 
   const timeOptions = [
-    { id: 'morning', label: 'Dopoledne' },
-    { id: 'afternoon', label: 'Odpoledne' },
-    { id: 'anytime', label: 'Kdykoliv' },
+    { id: 'morning', label: 'Dopoledne', time: '8:00 - 12:00' },
+    { id: 'afternoon', label: 'Odpoledne', time: '12:00 - 17:00' },
+    { id: 'anytime', label: 'Kdykoliv', time: 'Flexibilní' },
   ];
+
+  // Helper to check if service is hourly
+  const isHourlyService = (serviceId) => {
+    return ['garden_work', 'debris_hourly'].includes(serviceId);
+  };
+
+  // Get current service unit
+  const getServiceUnit = () => {
+    const service = [...basicServices, ...packages].find(s => s.id === formData.service);
+    return service?.unit || 'm2';
+  };
 
   const steps = [
     { num: 1, title: 'Služba' },
