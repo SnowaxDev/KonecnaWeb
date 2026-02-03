@@ -491,7 +491,7 @@ const BookingPage = () => {
             <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#3FA34D]" />
-                Informace o ploše
+                {isHourlyService(formData.service) ? 'Informace o práci' : 'Informace o ploše'}
               </h2>
               
               <div className="space-y-5">
@@ -501,9 +501,11 @@ const BookingPage = () => {
                   <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
                 </div>
                 
-                {/* Property Size */}
+                {/* Property Size OR Hours */}
                 <div>
-                  <Label htmlFor="property_size" className="text-sm font-semibold">Velikost plochy (m²) *</Label>
+                  <Label htmlFor="property_size" className="text-sm font-semibold">
+                    {isHourlyService(formData.service) ? 'Odhadovaný počet hodin *' : 'Velikost plochy (m²) *'}
+                  </Label>
                   <Input
                     id="property_size"
                     type="number"
@@ -511,11 +513,18 @@ const BookingPage = () => {
                     onChange={(e) => updateFormData('property_size', parseInt(e.target.value) || 0)}
                     className="mt-2 h-12 text-lg border-2 focus:border-[#3FA34D]"
                     min="1"
+                    placeholder={isHourlyService(formData.service) ? 'např. 2' : 'např. 150'}
                     data-testid="input-property-size"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {isHourlyService(formData.service) 
+                      ? 'Zadejte odhadovaný počet hodin práce (min. 1 hodina)'
+                      : 'Zadejte přibližnou velikost trávníku nebo zahrady v m²'
+                    }
+                  </p>
                 </div>
 
-                {/* Condition - only for basic services */}
+                {/* Condition - only for lawn services (not hourly, not packages) */}
                 {['lawn_mowing', 'lawn_with_fertilizer', 'overgrown'].includes(formData.service) && (
                   <div>
                     <Label className="text-sm font-semibold">Stav trávy</Label>
@@ -532,35 +541,43 @@ const BookingPage = () => {
                   </div>
                 )}
 
-                {/* Additional Services */}
-                <div>
-                  <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
-                  <div className="space-y-2">
-                    {additionalServices.map((service) => (
-                      <label
-                        key={service.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                          formData.additional_services.includes(service.id)
-                            ? 'border-[#3FA34D] bg-[#F0FDF4]'
-                            : 'border-gray-100 hover:border-gray-200'
-                        }`}
-                        data-testid={`additional-${service.id}`}
-                      >
-                        <Checkbox
-                          checked={formData.additional_services.includes(service.id)}
-                          onCheckedChange={() => toggleAdditionalService(service.id)}
-                        />
-                        <span className="text-sm font-medium">{service.label}</span>
-                      </label>
-                    ))}
+                {/* Additional Services - only for non-hourly services */}
+                {!isHourlyService(formData.service) && (
+                  <div>
+                    <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
+                    <div className="space-y-2">
+                      {additionalServices.map((service) => (
+                        <label
+                          key={service.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            formData.additional_services.includes(service.id)
+                              ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                              : 'border-gray-100 hover:border-gray-200'
+                          }`}
+                          data-testid={`additional-${service.id}`}
+                        >
+                          <Checkbox
+                            checked={formData.additional_services.includes(service.id)}
+                            onCheckedChange={() => toggleAdditionalService(service.id)}
+                          />
+                          <span className="text-sm font-medium">{service.label}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Price Preview */}
                 {formData.estimated_price > 0 && (
                   <div className="p-5 bg-gradient-to-r from-[#3FA34D] to-[#2d7a38] rounded-2xl text-white" data-testid="price-preview">
                     <p className="text-sm text-white/80">Odhadovaná cena:</p>
                     <p className="text-3xl font-bold">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+                    <p className="text-xs text-white/60 mt-1">
+                      {isHourlyService(formData.service) 
+                        ? `${formData.property_size} hod × sazba`
+                        : `${formData.property_size} m² × sazba`
+                      }
+                    </p>
                   </div>
                 )}
               </div>
