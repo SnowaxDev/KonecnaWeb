@@ -641,7 +641,7 @@ const BookingPage = () => {
                       disabled={(date) => {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
-                        return date < today || date.getDay() === 0;
+                        return date < today;
                       }}
                       locale={cs}
                       className="rounded-xl border border-gray-200 bg-white shadow-sm"
@@ -650,14 +650,15 @@ const BookingPage = () => {
                   </div>
                 </div>
                 
-                {/* Selected Date - More prominent */}
+                {/* Selected Date - More prominent - ABOVE time slots */}
                 {formData.preferred_date && (
-                  <div className="p-4 bg-[#3FA34D] rounded-xl text-white">
+                  <div className="p-4 bg-[#3FA34D] rounded-xl text-white shadow-lg">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                        <CalendarIcon className="w-6 h-6 text-white" />
+                      <div className="w-14 h-14 bg-white/20 rounded-xl flex flex-col items-center justify-center">
+                        <span className="text-2xl font-bold">{formData.preferred_date.getDate()}</span>
+                        <span className="text-[10px] uppercase">{formData.preferred_date.toLocaleDateString('cs-CZ', { month: 'short' })}</span>
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs text-white/70">Vybraný termín:</p>
                         <p className="text-lg font-bold">
                           {formData.preferred_date.toLocaleDateString('cs-CZ', { 
@@ -668,7 +669,7 @@ const BookingPage = () => {
                           })}
                         </p>
                       </div>
-                      <CheckCircle className="w-6 h-6 text-white ml-auto" />
+                      <CheckCircle className="w-8 h-8 text-white" />
                     </div>
                   </div>
                 )}
