@@ -660,15 +660,14 @@ async def calculate_price(data: PriceCalculation):
 
 @api_router.get("/availability")
 async def get_availability():
-    # Return available dates (next 30 days, excluding Sundays)
+    # Return available dates (next 30 days, including weekends)
     from datetime import timedelta
     today = datetime.now(timezone.utc).date()
     available_dates = []
     
     for i in range(1, 31):
         date = today + timedelta(days=i)
-        if date.weekday() != 6:  # Exclude Sundays
-            available_dates.append(date.isoformat())
+        available_dates.append(date.isoformat())
     
     return {"available_dates": available_dates}
 
