@@ -70,6 +70,21 @@ const BookingPage = () => {
     calculatePrice();
   }, [formData.service, formData.property_size, formData.condition, formData.additional_services]);
 
+  // Auto-adjust property_size default based on service type
+  useEffect(() => {
+    if (formData.service) {
+      const isHourly = ['garden_work', 'debris_hourly'].includes(formData.service);
+      // If switching to hourly service and size is large (>10), set to 2 hours
+      if (isHourly && formData.property_size > 10) {
+        setFormData(prev => ({ ...prev, property_size: 2 }));
+      }
+      // If switching from hourly to m2 and size is small (<10), set to 100m2
+      if (!isHourly && formData.property_size < 10) {
+        setFormData(prev => ({ ...prev, property_size: 100 }));
+      }
+    }
+  }, [formData.service]);
+
   const calculatePrice = async () => {
     if (!formData.service || formData.property_size <= 0) return;
     
