@@ -1,275 +1,516 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Scissors, TreeDeciduous, Sprout, Package, Leaf, Sparkles,
-  CheckCircle, ArrowRight, Truck, Sun, Snowflake, Flower2
+  Scissors, TreeDeciduous, Sprout, Package, Leaf,
+  CheckCircle, ArrowRight, Truck, Sun, Snowflake, Flower2,
+  Star, Shield, Clock, Phone, Zap, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
 
 const ServicesPage = () => {
-  const services = [
+  const [expandedService, setExpandedService] = useState(null);
+
+  const basicServices = [
     {
       id: 'lawn_mowing',
       icon: Scissors,
-      title: '✂️ Sekání trávy',
-      description: 'Profesionální sekání trávníků všech velikostí. Nabízíme sekání bez hnojení i s hnojením, včetně možnosti mulčování.',
-      price: 'od 2 Kč/m²',
+      title: 'Sekání trávy',
+      subtitle: 'Základní služba',
+      price: '2',
+      unit: 'Kč/m²',
+      description: 'Profesionální sekání trávníků všech velikostí s možností hnojení a mulčování.',
       features: [
-        'Sekání bez hnojení: 2 Kč/m²',
-        'Sekání s hnojením: 3,33 Kč/m²',
-        'Hrubé sekání (přerostlá): 3-4 Kč/m²',
-        'Mulčování: +0,5 Kč/m²',
+        { label: 'Bez hnojení', price: '2 Kč/m²' },
+        { label: 'S hnojením', price: '3,33 Kč/m²' },
+        { label: 'Přerostlá tráva', price: '3-4 Kč/m²' },
+        { label: 'Mulčování', price: '+0,5 Kč/m²' },
       ],
-      duration: '1-3 hodiny (dle velikosti)',
-      bestFor: 'Rodinné domy, zahrady, parky',
+      time: '1-3 hod',
+      color: 'bg-emerald-50 border-emerald-200',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
     },
     {
       id: 'debris_removal',
       icon: Truck,
-      title: '🚛 Odvoz odpadu',
-      description: 'Odvezeme veškerý zahradní odpad. Nabízíme flexibilní účtování podle váhy nebo času.',
-      price: 'od 5 Kč/kg',
+      title: 'Odvoz odpadu',
+      subtitle: 'Likvidace & úklid',
+      price: '400',
+      unit: 'Kč/hod',
+      description: 'Odvoz veškerého zahradního odpadu - listí, větve, tráva, zemina.',
       features: [
-        'Odvoz dle váhy: od 5 Kč/kg',
-        'Odvoz dle času: 400 Kč/hod',
-        'Likvidace zahradního odpadu',
-        'Odvoz listí, větví, trávy',
+        { label: 'Hodinová sazba', price: '400 Kč/hod' },
+        { label: 'Dle váhy', price: 'od 5 Kč/kg' },
+        { label: 'Včetně nakládky', price: '✓' },
+        { label: 'Ekologická likvidace', price: '✓' },
       ],
-      duration: 'Dle množství odpadu',
-      bestFor: 'Po velkém úklidu, sezónní práce',
+      time: 'Dle množství',
+      color: 'bg-slate-50 border-slate-200',
+      iconBg: 'bg-slate-100',
+      iconColor: 'text-slate-600',
     },
     {
       id: 'garden_work',
       icon: TreeDeciduous,
-      title: '🛠️ Zahradnické práce',
-      description: 'Ruční zahradní práce včetně pletí, výsadby a údržby záhonů. Odstranění překážek a úprava terénu.',
-      price: '300-450 Kč/hod',
+      title: 'Zahradnické práce',
+      subtitle: 'Ruční práce',
+      price: '300-450',
+      unit: 'Kč/hod',
+      description: 'Pletí, výsadba, údržba záhonů, odstranění kořenů a úprava terénu.',
       features: [
-        'Pletí a údržba záhonů',
-        'Výsadba rostlin',
-        'Odstranění kořenů, obrub',
-        'Úprava starých záhonů',
+        { label: 'Pletí záhonů', price: '300 Kč/hod' },
+        { label: 'Výsadba rostlin', price: '350 Kč/hod' },
+        { label: 'Úprava terénu', price: '400 Kč/hod' },
+        { label: 'Speciální práce', price: '450 Kč/hod' },
       ],
-      duration: 'Dle rozsahu práce',
-      bestFor: 'Údržba záhonů, renovace zahrad',
+      time: 'Dle rozsahu',
+      color: 'bg-amber-50 border-amber-200',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
     },
+  ];
+
+  const seasonalPackages = [
     {
       id: 'spring_package',
       icon: Flower2,
-      title: '🌸 Jarní balíček',
-      description: 'Restart trávníku po zimě. Obsahuje vertikutaci, první hnojení s dusíkem, první sekání a ošetření proti mechu.',
-      price: 'od 12 Kč/m²',
+      emoji: '🌸',
+      title: 'Jarní balíček',
+      subtitle: 'Restart po zimě',
+      price: '8-12',
+      unit: 'Kč/m²',
       popular: true,
+      description: 'Kompletní jarní obnova trávníku po zimě.',
       features: [
         'Vertikutace (provzdušnění)',
         'První hnojení s dusíkem',
         'První sekání + vyhrabání',
-        'Ošetření proti mechu a plevelům',
+        'Ošetření proti mechu',
       ],
-      duration: '3-5 hodin (dle velikosti)',
-      bestFor: 'Všechny zahrady na jaře',
+      savings: '-20%',
+      time: '3-5 hod',
+      season: 'Březen - Květen',
+      color: 'from-pink-50 to-rose-50',
+      borderColor: 'border-pink-200',
     },
     {
       id: 'summer_package',
       icon: Sun,
-      title: '☀️ Letní balíček',
-      description: 'Pravidelná letní údržba pro hustý a zdravý trávník. Obsahuje sekání 2× měsíčně, hnojení NPK a mulčování.',
-      price: 'od 3 Kč/m²',
+      emoji: '☀️',
+      title: 'Letní balíček',
+      subtitle: 'Pravidelná údržba',
+      price: '3-4',
+      unit: 'Kč/m²/měs',
+      description: 'Pravidelné sekání 2× měsíčně s hnojením NPK.',
       features: [
-        'Pravidelné sekání (2× měsíčně)',
+        'Sekání 2× měsíčně',
         'Hnojení NPK',
         'Mulčování na přání',
-        'Kontrola stavu trávníku',
+        'Kontrola zdraví trávníku',
       ],
-      duration: 'Pravidelné návštěvy',
-      bestFor: 'Letní období (červen-srpen)',
+      savings: '-15%',
+      time: 'Pravidelně',
+      season: 'Červen - Srpen',
+      color: 'from-yellow-50 to-amber-50',
+      borderColor: 'border-yellow-200',
     },
     {
       id: 'autumn_package',
       icon: Leaf,
-      title: '🍂 Podzimní balíček',
-      description: 'Připravte trávník na zimu. Vertikutace, podzimní hnojení a kompletní shrabání a odvoz listí.',
-      price: 'od 14 Kč/m²',
+      emoji: '🍂',
+      title: 'Podzimní balíček',
+      subtitle: 'Příprava na zimu',
+      price: '10-14',
+      unit: 'Kč/m²',
+      description: 'Vertikutace, podzimní hnojení a kompletní úklid listí.',
       features: [
-        'Vertikutace + podzimní hnojení',
-        'Shrabání listí',
+        'Vertikutace + hnojení',
+        'Shrabání veškerého listí',
         'Odvoz odpadu',
         'Příprava na zimu',
       ],
-      duration: '3-5 hodin (dle velikosti)',
-      bestFor: 'Všechny zahrady na podzim',
+      savings: '-20%',
+      time: '3-5 hod',
+      season: 'Září - Listopad',
+      color: 'from-orange-50 to-amber-50',
+      borderColor: 'border-orange-200',
     },
     {
       id: 'winter_snow',
       icon: Snowflake,
-      title: '❄️ Zimní balíček',
-      description: 'Úklid sněhu z chodníků, příjezdových cest a ploch. Ruční i plošné odklízení včetně solení.',
-      price: 'od 8 Kč/m²',
+      emoji: '❄️',
+      title: 'Zimní balíček',
+      subtitle: 'Úklid sněhu',
+      price: '8-10',
+      unit: 'Kč/m²',
+      description: 'Odklízení sněhu z chodníků, cest a ploch včetně solení.',
       features: [
-        'Ruční odklízení: od 25 Kč/bm',
-        'Plošné odklízení: od 8 Kč/m²',
-        'Dočištění sněhu: 2 Kč/m²',
+        'Ruční odklízení: 25 Kč/bm',
+        'Plošné odklízení: 8 Kč/m²',
         'Solení/posyp: +0,5 Kč/m²',
-        'Paušál: od 1 500 Kč/měsíc',
+        'Paušál od 1 500 Kč/měs',
       ],
-      duration: 'Dle potřeby',
-      bestFor: 'Zimní období, firmy, domácnosti',
-    },
-    {
-      id: 'vip_annual',
-      icon: Package,
-      title: '🌀 Celoroční VIP servis',
-      description: 'Komplexní roční péče o vaši zahradu. Všechny sezónní služby v jednom balíčku - žádné starosti po celý rok.',
-      price: 'od 6 900 Kč/rok',
-      features: [
-        '2× vertikutace',
-        '4× sezónní hnojení',
-        '10× sekání + mulčování',
-        'Jarní a podzimní balíček',
-        '2× odvoz odpadu',
-        'Zimní úklid sněhu',
-      ],
-      duration: 'Celoroční péče',
-      bestFor: 'Zákazníci bez starostí (do 100 m²)',
+      savings: '',
+      time: 'Dle potřeby',
+      season: 'Prosinec - Únor',
+      color: 'from-sky-50 to-blue-50',
+      borderColor: 'border-sky-200',
     },
   ];
 
-  const additionalServices = [
-    { name: 'Mulčování', price: '+0,5 Kč/m²', icon: Leaf },
-    { name: 'Solení/posyp', price: '+0,5 Kč/m²', icon: Snowflake },
-    { name: 'Odvoz odpadu', price: '400 Kč/hod', icon: Truck },
-  ];
+  const vipPackage = {
+    id: 'vip_annual',
+    icon: Package,
+    title: 'VIP Celoroční servis',
+    subtitle: 'Kompletní péče bez starostí',
+    price: '18-22',
+    unit: 'Kč/m²/rok',
+    description: 'Všechny sezónní služby v jednom balíčku. Žádné starosti po celý rok.',
+    features: [
+      '2× vertikutace (jaro + podzim)',
+      '4× sezónní hnojení',
+      '10× sekání + mulčování',
+      'Jarní a podzimní balíček',
+      '2× odvoz odpadu',
+      'Zimní úklid sněhu ZDARMA',
+    ],
+    savings: 'Úspora až 35%',
+    minSize: 'do 100 m²',
+  };
 
   return (
-    <div className="min-h-screen pt-20" data-testid="services-page">
+    <div className="min-h-screen pt-16" data-testid="services-page">
       {/* Hero */}
-      <section className="py-12 md:py-20 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F9FAFB]">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+      <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
+            <Sprout className="w-4 h-4 text-[#3FA34D]" />
+            <span className="text-sm font-medium text-[#3FA34D]">Profesionální zahradnické služby</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Naše služby
           </h1>
-          <p className="text-lg text-[#4B5563] max-w-2xl mx-auto">
-            Kompletní nabídka zahradnických služeb od sekání trávy po celoroční péči. 
-            Vyberte si, co potřebujete, nebo nám napište pro individuální nabídku.
+          <p className="text-gray-600 max-w-xl mx-auto mb-6">
+            Od jednorázového sekání po celoroční péči. Vyberte si službu nebo balíček a ušetřete.
           </p>
-        </div>
-      </section>
-
-      {/* Services Grid */}
-      <section className="py-12 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service) => (
-              <Card 
-                key={service.id}
-                className={`relative card-hover rounded-2xl border ${
-                  service.popular ? 'border-[#3FA34D] shadow-lg' : 'border-gray-100'
-                }`}
-                data-testid={`service-${service.id}`}
-              >
-                {service.popular && (
-                  <div className="badge-popular">Nejoblíbenější</div>
-                )}
-                <CardContent className="p-6 md:p-8 pt-8">
-                  <div className="w-14 h-14 bg-[#F0FDF4] rounded-xl flex items-center justify-center mb-6">
-                    <service.icon className="w-7 h-7 text-[#3FA34D]" />
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-[#222222] mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    {service.title}
-                  </h3>
-                  
-                  <p className="text-[#4B5563] text-sm mb-4 leading-relaxed">
-                    {service.description}
-                  </p>
-
-                  <div className="mb-4">
-                    <span className="text-2xl font-bold text-[#3FA34D]">{service.price}</span>
-                  </div>
-
-                  <ul className="space-y-2 mb-6">
-                    {service.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-[#4B5563]">
-                        <CheckCircle className="w-4 h-4 text-[#3FA34D] flex-shrink-0 mt-0.5" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="pt-4 border-t border-gray-100 space-y-2 text-sm text-[#4B5563] mb-6">
-                    <p><strong>Doba trvání:</strong> {service.duration}</p>
-                    <p><strong>Vhodné pro:</strong> {service.bestFor}</p>
-                  </div>
-
-                  <Link to="/rezervace">
-                    <Button 
-                      className={`w-full rounded-lg ${
-                        service.popular 
-                          ? 'bg-[#3FA34D] hover:bg-[#2d7a38] text-white' 
-                          : 'bg-white border-2 border-[#3FA34D] text-[#3FA34D] hover:bg-[#F0FDF4]'
-                      }`}
-                    >
-                      Objednat službu
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+          
+          {/* Trust badges */}
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              <span>4.9/5 hodnocení</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#3FA34D]" />
+              <span>Garance kvality</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#3FA34D]" />
+              <span>Termín do 48h</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Additional Services */}
-      <section className="py-12 md:py-20 bg-[#F9FAFB]">
-        <div className="max-w-4xl mx-auto px-4 md:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#222222] text-center mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Doplňkové služby
-          </h2>
-          
-          <div className="grid sm:grid-cols-3 gap-4">
-            {additionalServices.map((service, idx) => (
+      {/* Basic Services */}
+      <section className="py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
+              <Scissors className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                Základní služby
+              </h2>
+              <p className="text-sm text-gray-500">Jednorázové služby dle potřeby</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {basicServices.map((service) => (
               <div 
-                key={idx}
-                className="bg-white rounded-xl p-6 text-center border border-gray-100 shadow-sm"
-                data-testid={`additional-service-${idx}`}
+                key={service.id}
+                className={`rounded-2xl border-2 ${service.color} p-5 hover:shadow-lg transition-all cursor-pointer`}
+                onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
+                data-testid={`service-${service.id}`}
               >
-                <service.icon className="w-8 h-8 text-[#3FA34D] mx-auto mb-3" />
-                <h4 className="font-semibold text-[#222222] mb-1">{service.name}</h4>
-                <p className="text-[#3FA34D] font-bold">{service.price}</p>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-11 h-11 ${service.iconBg} rounded-xl flex items-center justify-center`}>
+                      <service.icon className={`w-5 h-5 ${service.iconColor}`} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">{service.title}</h3>
+                      <p className="text-xs text-gray-500">{service.subtitle}</p>
+                    </div>
+                  </div>
+                  {expandedService === service.id ? (
+                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-2xl font-bold text-gray-900">{service.price}</span>
+                  <span className="text-gray-500 ml-1 text-sm">{service.unit}</span>
+                </div>
+
+                <p className="text-sm text-gray-600 mb-4">{service.description}</p>
+
+                {expandedService === service.id && (
+                  <div className="border-t border-gray-200 pt-4 mt-4 space-y-2 animate-fade-in">
+                    {service.features.map((feature, idx) => (
+                      <div key={idx} className="flex justify-between text-sm">
+                        <span className="text-gray-600">{feature.label}</span>
+                        <span className="font-semibold text-gray-900">{feature.price}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-200 mt-3">
+                      <span className="text-xs text-gray-500">⏱️ {service.time}</span>
+                      <Link to="/rezervace">
+                        <Button size="sm" className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-4 h-8 text-xs">
+                          Objednat
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {expandedService !== service.id && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">⏱️ {service.time}</span>
+                    <span className="text-xs text-[#3FA34D] font-medium">Klikněte pro detail →</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-12 md:py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Nevíte, jakou službu vybrat?
+      {/* Seasonal Packages */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#3FA34D] rounded-xl flex items-center justify-center">
+                <Sprout className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  Sezónní balíčky
+                </h2>
+                <p className="text-sm text-gray-500">Výhodné kombinace služeb se slevou</p>
+              </div>
+            </div>
+            <span className="hidden sm:inline-flex items-center gap-1 bg-[#3FA34D] text-white text-xs font-bold px-3 py-1.5 rounded-full">
+              <Zap className="w-3 h-3" />
+              ÚSPORA 15-20%
+            </span>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {seasonalPackages.map((pkg) => (
+              <div 
+                key={pkg.id}
+                className={`relative bg-gradient-to-br ${pkg.color} rounded-2xl border-2 ${pkg.borderColor} p-5 hover:shadow-lg transition-all`}
+                data-testid={`package-${pkg.id}`}
+              >
+                {pkg.popular && (
+                  <div className="absolute -top-2.5 left-4 bg-[#3FA34D] text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                    NEJOBLÍBENĚJŠÍ
+                  </div>
+                )}
+                
+                <div className="text-3xl mb-3">{pkg.emoji}</div>
+                
+                <h3 className="font-bold text-gray-900 mb-1">{pkg.title}</h3>
+                <p className="text-xs text-gray-500 mb-3">{pkg.subtitle}</p>
+                
+                <div className="mb-3">
+                  <span className="text-xl font-bold text-gray-900">{pkg.price}</span>
+                  <span className="text-gray-500 ml-1 text-xs">{pkg.unit}</span>
+                  {pkg.savings && (
+                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                      {pkg.savings}
+                    </span>
+                  )}
+                </div>
+
+                <ul className="space-y-1.5 mb-4">
+                  {pkg.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-gray-600">
+                      <CheckCircle className="w-3.5 h-3.5 text-[#3FA34D] flex-shrink-0 mt-0.5" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200/50">
+                  <span className="text-[10px] text-gray-500">📅 {pkg.season}</span>
+                  <Link to="/rezervace">
+                    <Button size="sm" className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-full px-3 h-7 text-xs shadow-sm">
+                      Vybrat
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* VIP Package */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 rounded-3xl border-2 border-amber-200 p-6 md:p-8 relative overflow-hidden">
+            {/* Decorative */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/30 rounded-full translate-y-1/2 -translate-x-1/2" />
+            
+            <div className="relative">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-14 h-14 bg-amber-400 rounded-2xl flex items-center justify-center shadow-lg">
+                      <Package className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                          🌀 {vipPackage.title}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-500">{vipPackage.subtitle}</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-600 mb-4">{vipPackage.description}</p>
+
+                  <div className="grid sm:grid-cols-2 gap-2 mb-4">
+                    {vipPackage.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                        <CheckCircle className="w-4 h-4 text-amber-500" />
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xs text-gray-500">* Vhodné pro zahrady {vipPackage.minSize}</p>
+                </div>
+
+                <div className="md:text-right md:min-w-[180px]">
+                  <div className="inline-block bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full mb-3">
+                    {vipPackage.savings}
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold text-gray-900">{vipPackage.price}</span>
+                    <span className="text-gray-500 ml-1">{vipPackage.unit}</span>
+                  </div>
+                  <Link to="/rezervace">
+                    <Button className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-6 h-11 font-semibold shadow-lg">
+                      Mám zájem
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Compare Table */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-xl font-bold text-center text-gray-900 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Rychlé srovnání
           </h2>
-          <p className="text-[#4B5563] mb-8">
-            Napište nám nebo zavolejte. Rádi vám poradíme a připravíme nabídku na míru.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/rezervace">
-              <Button 
-                className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-8"
-                data-testid="services-cta-rezervace"
-              >
-                Nezávazná poptávka
-              </Button>
-            </Link>
-            <Link to="/kontakt">
-              <Button 
-                variant="outline"
-                className="border-2 border-[#2d7a38] text-[#2d7a38] hover:bg-[#F0FDF4] rounded-full px-8"
-                data-testid="services-cta-kontakt"
-              >
-                Kontaktovat nás
-              </Button>
-            </Link>
+          
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Služba</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Cena</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700 hidden sm:table-cell">Čas</th>
+                  <th className="text-right py-3 px-4"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-t border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium">✂️ Sekání trávy</td>
+                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">od 2 Kč/m²</td>
+                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">1-3 hod</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Objednat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium">🚛 Odvoz odpadu</td>
+                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">400 Kč/hod</td>
+                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">Dle množství</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Objednat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-pink-50/50">
+                  <td className="py-3 px-4 font-medium">
+                    🌸 Jarní balíček
+                    <span className="ml-2 text-[10px] bg-[#3FA34D] text-white px-1.5 py-0.5 rounded">-20%</span>
+                  </td>
+                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">8-12 Kč/m²</td>
+                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">3-5 hod</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Objednat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-amber-50/50">
+                  <td className="py-3 px-4 font-medium">
+                    🌀 VIP Celoroční
+                    <span className="ml-2 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded">-35%</span>
+                  </td>
+                  <td className="py-3 px-4 text-center text-amber-600 font-bold">18-22 Kč/m²/rok</td>
+                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">Celoročně</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-amber-600 font-medium hover:underline">Objednat →</Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-12 bg-[#222]">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                Nevíte, co vybrat?
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Zavolejte nám nebo napište. Poradíme a připravíme nabídku na míru.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/rezervace">
+                <Button className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-8 h-12 font-semibold">
+                  Nezávazná poptávka
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <a href="tel:+420730588372">
+                <Button variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 rounded-full px-6 h-12">
+                  <Phone className="w-4 h-4 mr-2" />
+                  730 588 372
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </section>
