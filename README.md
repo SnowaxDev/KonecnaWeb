@@ -133,6 +133,52 @@ REACT_APP_GA_ID=G-XXXXXXXXXX
 
 ---
 
+## 📅 Google Calendar Integrace
+
+Nové rezervace se automaticky přidávají do vašeho Google Kalendáře.
+
+### Nastavení:
+
+1. **Vytvořte projekt v Google Cloud Console:**
+   - Jděte na https://console.cloud.google.com/
+   - Vytvořte nový projekt
+   - Povolte "Google Calendar API"
+
+2. **Vytvořte OAuth 2.0 credentials:**
+   - APIs & Services → Credentials → Create Credentials → OAuth client ID
+   - Application type: Web application
+   - Přidejte Authorized redirect URI: `https://vase-domena.com/api/auth/google/callback`
+
+3. **Nastavte proměnné v backend/.env:**
+   ```env
+   GOOGLE_CLIENT_ID=váš-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=váš-client-secret
+   GOOGLE_REDIRECT_URI=https://vase-domena.com/api/auth/google/callback
+   ```
+
+4. **Připojte svůj Google účet:**
+   - Navštivte: `https://vase-domena.com/api/auth/google/login`
+   - Přihlaste se svým Google účtem
+   - Povolte přístup ke kalendáři
+
+### API Endpointy:
+| Endpoint | Popis |
+|----------|-------|
+| `GET /api/auth/google/status` | Stav připojení kalendáře |
+| `GET /api/auth/google/login` | Začít OAuth flow |
+| `GET /api/auth/google/callback` | OAuth callback |
+| `DELETE /api/auth/google/disconnect` | Odpojit kalendář |
+
+### Co se přidá do kalendáře:
+- 🌿 Název služby + jméno zákazníka
+- 📍 Adresa
+- 📏 Velikost plochy
+- 💰 Odhadovaná cena
+- 📞 Kontaktní údaje
+- ⏰ Upomínka 24h a 1h před
+
+---
+
 ## 🚀 Spuštění lokálně
 
 ### Backend
