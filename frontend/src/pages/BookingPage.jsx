@@ -825,7 +825,12 @@ const BookingPage = () => {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-xs text-gray-400">{getServiceName(formData.service)}</p>
-                        <p className="text-xs text-gray-400">{formData.property_size} m² • {formData.preferred_date?.toLocaleDateString('cs-CZ')}</p>
+                        <p className="text-xs text-gray-400">
+                          {isHourlyService(formData.service) 
+                            ? `${formData.property_size} hod` 
+                            : `${formData.property_size} m²`
+                          } • {formData.preferred_date?.toLocaleDateString('cs-CZ')}
+                        </p>
                       </div>
                       <div className="text-right">
                         {couponDiscount > 0 ? (
