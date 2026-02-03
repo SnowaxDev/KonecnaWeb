@@ -593,32 +593,69 @@ const BookingPage = () => {
               </h2>
               
               <div className="space-y-5">
+                {/* Order Summary Card */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-xs text-gray-500 mb-2">Vaše objednávka:</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
+                      <p className="text-sm text-gray-500">
+                        {isHourlyService(formData.service) 
+                          ? `${formData.property_size} hodin` 
+                          : `${formData.property_size} m²`
+                        }
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-[#3FA34D]">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Calendar */}
-                <div className="flex justify-center">
-                  <Calendar
-                    mode="single"
-                    selected={formData.preferred_date}
-                    onSelect={(date) => {
-                      if (date) {
-                        setFormData(prev => ({ ...prev, preferred_date: date }));
-                      }
-                    }}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date < today || date.getDay() === 0;
-                    }}
-                    locale={cs}
-                    className="rounded-xl border border-gray-200 bg-white shadow-sm"
-                    data-testid="calendar-preferred"
-                  />
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Vyberte datum *</Label>
+                  <div className="flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={formData.preferred_date}
+                      onSelect={(date) => {
+                        if (date) {
+                          setFormData(prev => ({ ...prev, preferred_date: date }));
+                        }
+                      }}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today || date.getDay() === 0;
+                      }}
+                      locale={cs}
+                      className="rounded-xl border border-gray-200 bg-white shadow-sm"
+                      data-testid="calendar-preferred"
+                    />
+                  </div>
                 </div>
                 
+                {/* Selected Date - More prominent */}
                 {formData.preferred_date && (
-                  <div className="text-center p-3 bg-[#F0FDF4] rounded-xl">
-                    <p className="text-sm font-medium text-[#3FA34D]">
-                      ✓ Vybráno: {formData.preferred_date.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </p>
+                  <div className="p-4 bg-[#3FA34D] rounded-xl text-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <CalendarIcon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/70">Vybraný termín:</p>
+                        <p className="text-lg font-bold">
+                          {formData.preferred_date.toLocaleDateString('cs-CZ', { 
+                            weekday: 'long', 
+                            day: 'numeric', 
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <CheckCircle className="w-6 h-6 text-white ml-auto" />
+                    </div>
                   </div>
                 )}
 
@@ -631,18 +668,26 @@ const BookingPage = () => {
                         key={option.id}
                         type="button"
                         onClick={() => updateFormData('preferred_time', option.id)}
-                        className={`p-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                        className={`p-3 rounded-xl border-2 text-center transition-all ${
                           formData.preferred_time === option.id 
                             ? 'border-[#3FA34D] bg-[#3FA34D] text-white' 
-                            : 'border-gray-200 hover:border-[#3FA34D]/50'
+                            : 'border-gray-200 hover:border-[#3FA34D]/50 bg-white'
                         }`}
                         data-testid={`time-option-${option.id}`}
                       >
-                        {option.label}
+                        <p className="font-semibold text-sm">{option.label}</p>
+                        <p className={`text-xs mt-0.5 ${
+                          formData.preferred_time === option.id ? 'text-white/70' : 'text-gray-500'
+                        }`}>{option.time}</p>
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Info note */}
+                <p className="text-xs text-gray-500 text-center">
+                  ℹ️ Neděle jsou zavřené. Přesný čas domluvíme telefonicky.
+                </p>
               </div>
             </div>
           )}
