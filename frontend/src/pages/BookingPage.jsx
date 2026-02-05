@@ -392,6 +392,9 @@ const BookingPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 text-sm">{service.title}</p>
+                          {service.info && (
+                            <p className="text-xs text-green-600">{service.info}</p>
+                          )}
                         </div>
                         <span className="text-sm font-bold text-[#3FA34D] whitespace-nowrap">{service.price}</span>
                       </label>
