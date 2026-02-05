@@ -133,9 +133,9 @@ const BookingPage = () => {
 
   // Basic services - with unit type
   const basicServices = [
-    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2 Kč/m²', unit: 'm2' },
-    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²', unit: 'm2' },
-    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²', unit: 'm2' },
+    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2 Kč/m²', unit: 'm2', info: '✓ Úklid trávy v ceně' },
+    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²', unit: 'm2', info: '✓ Úklid trávy v ceně' },
+    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²', unit: 'm2', info: '✓ Úklid trávy v ceně' },
     { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: '300-450 Kč/hod', unit: 'hours' },
     { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: '400 Kč/hod', unit: 'hours' },
   ];
