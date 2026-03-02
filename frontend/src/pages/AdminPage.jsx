@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Ticket, Tag, ClipboardList, LogOut,
   Plus, Trash2, Check, X, RefreshCw, Eye, EyeOff, Copy,
   TrendingUp, Users, Leaf, CreditCard, ChevronDown, ChevronUp,
-  Calendar, Phone, Mail, MapPin, Edit3, FileText, Bold, Italic
+  Calendar, Phone, Mail, MapPin, Edit3, FileText, Bold, Italic, Image
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -652,6 +652,251 @@ const BookingsTab = ({ token }) => {
   );
 };
 
+// ─── GALLERY TAB ──────────────────────────────────────────────────────────────
+const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
+
+const GalleryTab = ({ token }) => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [editProject, setEditProject] = useState(null);
+  const [previewBefore, setPreviewBefore] = useState(false);
+  const [previewAfter, setPreviewAfter] = useState(false);
+  const [form, setForm] = useState({
+    title: '', category: 'Sekání', location: '', date: '',
+    description: '', before_image: '', after_image: '', published: true,
+  });
+  const headers = { 'X-Admin-Token': token };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/gallery/projects`, { headers });
+      setProjects(res.data);
+    } catch { toast.error('Nepodařilo se načíst projekty'); }
+    finally { setLoading(false); }
+  }, []); // eslint-disable-line
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!form.before_image || !form.after_image) {
+      toast.error('Zadejte URL pro fotku PŘED i PO');
+      return;
+    }
+    setCreating(true);
+    try {
+      if (editProject) {
+        await axios.patch(`${API}/admin/gallery/projects/${editProject.id}`, form, { headers });
+        toast.success('Projekt aktualizován!');
+        setEditProject(null);
+      } else {
+        await axios.post(`${API}/admin/gallery/projects`, form, { headers });
+        toast.success('Projekt přidán!');
+      }
+      setForm({ title: '', category: 'Sekání', location: '', date: '', description: '', before_image: '', after_image: '', published: true });
+      setPreviewBefore(false);
+      setPreviewAfter(false);
+      load();
+    } catch (err) {
+      toast.error(parseError(err));
+    } finally { setCreating(false); }
+  };
+
+  const handleEdit = (p) => {
+    setEditProject(p);
+    setForm({
+      title: p.title, category: p.category || 'Sekání', location: p.location || '',
+      date: p.date || '', description: p.description || '',
+      before_image: p.before_image || '', after_image: p.after_image || '', published: p.published,
+    });
+    setPreviewBefore(false);
+    setPreviewAfter(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Smazat projekt z galerie?')) return;
+    try {
+      await axios.delete(`${API}/admin/gallery/projects/${id}`, { headers });
+      toast.success('Projekt smazán');
+      load();
+    } catch { toast.error('Chyba'); }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Create/Edit form */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className={`px-5 py-4 ${editProject ? 'bg-gradient-to-r from-blue-700 to-blue-500' : 'bg-gradient-to-r from-[#1B4332] to-[#2D6A4F]'}`}>
+          <h3 className="text-white font-semibold flex items-center gap-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            <Image className="w-5 h-5" />
+            {editProject ? `Upravit: ${editProject.title}` : 'Přidat projekt Před/Po'}
+          </h3>
+        </div>
+        <form onSubmit={handleCreate} className="p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Název projektu *</Label>
+              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                className="mt-1 h-10" required placeholder="Přerostlá zahrada → nový trávník" data-testid="gallery-title-input" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Kategorie</Label>
+              <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value, tag: e.target.value }))}
+                className="mt-1 h-10 w-full rounded-md border border-gray-200 px-3 text-sm bg-white">
+                {GALLERY_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Lokalita</Label>
+              <Input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                className="mt-1 h-10" placeholder="Dvůr Králové n. L." />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Datum</Label>
+              <Input value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                className="mt-1 h-10" placeholder="Říjen 2024" />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Popis projektu</Label>
+            <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              className="mt-1 h-10" placeholder="Krátký popis co bylo uděláno" />
+          </div>
+
+          {/* Before image */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              Fotka PŘED (URL) *
+              <span className="ml-2 text-gray-400 font-normal normal-case">Nahrajte foto na Google Photos, iCloud nebo jiný hosting a vložte odkaz</span>
+            </Label>
+            <div className="flex gap-2">
+              <Input value={form.before_image} onChange={e => { setForm(f => ({ ...f, before_image: e.target.value })); setPreviewBefore(false); }}
+                className="h-10 flex-1" placeholder="https://..." data-testid="gallery-before-input" required />
+              <Button type="button" variant="outline" size="sm" className="h-10 shrink-0"
+                onClick={() => setPreviewBefore(!previewBefore)} disabled={!form.before_image}>
+                <Eye className="w-4 h-4 mr-1" /> Náhled
+              </Button>
+            </div>
+            {previewBefore && form.before_image && (
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                <img src={form.before_image} alt="PŘED" className="w-full h-full object-cover" onError={() => toast.error('Fotka nenačtena – zkontrolujte URL')} />
+                <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">PŘED</span>
+              </div>
+            )}
+          </div>
+
+          {/* After image */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              Fotka PO (URL) *
+            </Label>
+            <div className="flex gap-2">
+              <Input value={form.after_image} onChange={e => { setForm(f => ({ ...f, after_image: e.target.value })); setPreviewAfter(false); }}
+                className="h-10 flex-1" placeholder="https://..." data-testid="gallery-after-input" required />
+              <Button type="button" variant="outline" size="sm" className="h-10 shrink-0"
+                onClick={() => setPreviewAfter(!previewAfter)} disabled={!form.after_image}>
+                <Eye className="w-4 h-4 mr-1" /> Náhled
+              </Button>
+            </div>
+            {previewAfter && form.after_image && (
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                <img src={form.after_image} alt="PO" className="w-full h-full object-cover" onError={() => toast.error('Fotka nenačtena – zkontrolujte URL')} />
+                <span className="absolute top-2 left-2 bg-[#3FA34D] text-white text-xs font-bold px-2 py-0.5 rounded">PO</span>
+              </div>
+            )}
+          </div>
+
+          {/* Tip box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+            <strong>Tip:</strong> Fotky nahrajte přes <a href="https://photos.google.com" target="_blank" rel="noreferrer" className="underline">Google Photos</a> nebo <a href="https://imgur.com" target="_blank" rel="noreferrer" className="underline">Imgur.com</a> a zkopírujte přímý odkaz na obrázek (musí končit .jpg/.png).
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.published}
+                onChange={e => setForm(f => ({ ...f, published: e.target.checked }))}
+                className="w-4 h-4 accent-[#3FA34D]" />
+              <span className="text-sm font-medium text-gray-700">Zobrazit na webu</span>
+            </label>
+            {editProject && (
+              <Button type="button" variant="outline" size="sm"
+                onClick={() => { setEditProject(null); setForm({ title: '', category: 'Sekání', location: '', date: '', description: '', before_image: '', after_image: '', published: true }); setPreviewBefore(false); setPreviewAfter(false); }}>
+                <X className="w-4 h-4 mr-1" /> Zrušit
+              </Button>
+            )}
+            <Button type="submit" disabled={creating}
+              className={`ml-auto rounded-full px-8 h-10 ${editProject ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#3FA34D] hover:bg-[#2d7a38]'}`}
+              data-testid="create-gallery-btn">
+              {creating ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              {editProject ? 'Uložit změny' : 'Přidat do galerie'}
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      {/* Projects list */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Projekty v galerii ({projects.length})
+          </h3>
+          <Button variant="outline" size="sm" onClick={load} className="h-8">
+            <RefreshCw className="w-3.5 h-3.5 mr-1" /> Obnovit
+          </Button>
+        </div>
+        {loading ? (
+          <div className="flex justify-center py-10"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>
+        ) : projects.length === 0 ? (
+          <p className="text-center text-gray-500 py-10 text-sm">Žádné projekty. Přidejte první zakázku výše.</p>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {projects.map(p => (
+              <div key={p.id} className="px-5 py-4 hover:bg-gray-50 flex items-center gap-4">
+                {/* Before/After thumbnails */}
+                <div className="flex gap-1 shrink-0">
+                  <div className="relative w-16 h-12 rounded overflow-hidden border border-gray-200">
+                    <img src={p.before_image} alt="PŘED" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-red-500/80 text-white">PŘED</span>
+                  </div>
+                  <div className="relative w-16 h-12 rounded overflow-hidden border border-gray-200">
+                    <img src={p.after_image} alt="PO" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-[#3FA34D]/80 text-white">PO</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <p className="font-semibold text-gray-900 text-sm truncate">{p.title}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${p.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {p.published ? 'Zobrazeno' : 'Skryto'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400">{p.category} · {p.location} · {p.date}</p>
+                </div>
+
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => handleEdit(p)}
+                    className="text-blue-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50" title="Upravit">
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(p.id)}
+                    className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50" title="Smazat">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── BLOG TAB ─────────────────────────────────────────────────────────────────
 const BlogTab = ({ token }) => {
   const [posts, setPosts] = useState([]);
@@ -857,6 +1102,7 @@ const TABS = [
   { id: 'vouchers', label: 'Poukazů', icon: Ticket },
   { id: 'coupons', label: 'Kupóny', icon: Tag },
   { id: 'bookings', label: 'Objednávky', icon: ClipboardList },
+  { id: 'gallery', label: 'Galerie', icon: Image },
   { id: 'blog', label: 'Blog', icon: FileText },
 ];
 
@@ -958,6 +1204,7 @@ export default function AdminPage() {
             {activeTab === 'vouchers' && <VouchersTab token={token} />}
             {activeTab === 'coupons' && <CouponsTab token={token} />}
             {activeTab === 'bookings' && <BookingsTab token={token} />}
+            {activeTab === 'gallery' && <GalleryTab token={token} />}
             {activeTab === 'blog' && <BlogTab token={token} />}
           </div>
         </main>

@@ -934,7 +934,8 @@ const BookingPage = () => {
                   </div>
                 )}
 
-                {/* Coupon */}
+                {/* Coupon – skryt pokud je aktivní voucher */}
+                {!activeVoucher && (
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
                   <Label className="text-sm font-semibold flex items-center gap-2">
                     <Tag className="w-4 h-4 text-amber-600" />
@@ -969,6 +970,7 @@ const BookingPage = () => {
                     </p>
                   )}
                 </div>
+                )}
 
                 {/* GDPR */}
                 <label className="flex items-start gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl" data-testid="gdpr-consent">
@@ -996,9 +998,14 @@ const BookingPage = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        {couponDiscount > 0 ? (
+                        {(couponDiscount > 0 || formData.voucher_fixed_discount > 0) ? (
                           <>
                             <p className="text-xs text-gray-400 line-through">{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+                            <p className="text-xs text-[#52B788] mb-0.5">
+                              {formData.voucher_fixed_discount > 0
+                                ? `Sleva ${formData.voucher_fixed_discount} Kč`
+                                : `Sleva ${couponDiscount}%`}
+                            </p>
                             <p className="text-2xl font-bold text-[#3FA34D]">~{getFinalPrice().toLocaleString('cs-CZ')} Kč</p>
                           </>
                         ) : (

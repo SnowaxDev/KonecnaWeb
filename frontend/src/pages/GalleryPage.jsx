@@ -1,58 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { X, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 
-const projects = [
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+// Fallback sample projects (shown when DB is empty)
+const SAMPLE_PROJECTS = [
   {
-    id: 1,
-    title: 'Přerostlá louka → luxusní trávník',
-    category: 'Hrubé sekání',
-    location: 'Dvůr Králové n. L.',
-    date: 'Září 2024',
-    description: 'Zahrada nebyla sekána celé léto. Tráva dosahovala výšky 60 cm. Po hrubém sekání a úklidu vznikl čistý základ pro pravidelnou údržbu.',
-    before: 'https://images.unsplash.com/photo-1723291056776-aec9c390b1d8?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after: 'https://images.unsplash.com/photo-1594498653385-d5172c532c00?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Hrubé sekání',
-    tagColor: 'bg-orange-100 text-orange-800',
+    id: 'sample-1', title: 'Přerostlá louka → luxusní trávník', category: 'Hrubé sekání',
+    location: 'Dvůr Králové n. L.', date: 'Září 2024',
+    description: 'Zahrada nebyla sekána celé léto. Po hrubém sekání vznikl čistý základ pro pravidelnou údržbu.',
+    before_image: 'https://images.unsplash.com/photo-1723291056776-aec9c390b1d8?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    after_image: 'https://images.unsplash.com/photo-1594498653385-d5172c532c00?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    tag: 'Hrubé sekání', tagColor: 'bg-orange-100 text-orange-800',
   },
   {
-    id: 2,
-    title: 'Jarní restart zahrady',
-    category: 'Jarní balíček',
-    location: 'Trutnov',
-    date: 'Duben 2024',
-    description: 'Jarní balíček zahrnoval vertikutaci, hnojení a první sekání sezóny. Trávník se krásně probral a do měsíce byl hustý a zelený.',
-    before: 'https://images.unsplash.com/photo-1738669375238-749c847502cb?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after: 'https://images.unsplash.com/photo-1661133732576-6140941d5421?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Jarní balíček',
-    tagColor: 'bg-pink-100 text-pink-800',
+    id: 'sample-2', title: 'Jarní restart zahrady', category: 'Jarní balíček',
+    location: 'Trutnov', date: 'Duben 2024',
+    description: 'Jarní balíček zahrnoval vertikutaci, hnojení a první sekání sezóny.',
+    before_image: 'https://images.unsplash.com/photo-1738669375238-749c847502cb?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    after_image: 'https://images.unsplash.com/photo-1661133732576-6140941d5421?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    tag: 'Jarní balíček', tagColor: 'bg-pink-100 text-pink-800',
   },
   {
-    id: 3,
-    title: 'Pravidelná letní údržba',
-    category: 'Letní balíček',
-    location: 'Jaroměř',
-    date: 'Červenec 2024',
-    description: 'Zákazník využil letní balíček s pravidelným sekáním každé 2 týdny. Díky hnojení a správné výšce sečení trávník odolával i letnímu horku.',
-    before: 'https://images.unsplash.com/photo-1768055418561-93437e061b32?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after: 'https://images.unsplash.com/photo-1759750909584-b96825e93de8?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Letní balíček',
-    tagColor: 'bg-yellow-100 text-yellow-800',
+    id: 'sample-3', title: 'Pravidelná letní údržba', category: 'Letní balíček',
+    location: 'Jaroměř', date: 'Červenec 2024',
+    description: 'Letní balíček s pravidelným sekáním každé 2 týdny.',
+    before_image: 'https://images.unsplash.com/photo-1768055418561-93437e061b32?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    after_image: 'https://images.unsplash.com/photo-1759750909584-b96825e93de8?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    tag: 'Letní balíček', tagColor: 'bg-yellow-100 text-yellow-800',
   },
   {
-    id: 4,
-    title: 'Podzimní příprava na zimu',
-    category: 'Podzimní balíček',
-    location: 'Náchod',
-    date: 'Říjen 2024',
-    description: 'Podzimní balíček: úklid listí, poslední sekání sezóny, přihnojení na zimu. Zahrada byla připravena tak, aby na jaře co nejdříve ozelněla.',
-    before: 'https://images.unsplash.com/photo-1726484204083-7c9c1daf31b7?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after: 'https://images.unsplash.com/photo-1743627621279-e34a2efac6ac?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Podzimní balíček',
-    tagColor: 'bg-amber-100 text-amber-800',
+    id: 'sample-4', title: 'Podzimní příprava na zimu', category: 'Podzimní balíček',
+    location: 'Náchod', date: 'Říjen 2024',
+    description: 'Podzimní balíček: úklid listí, poslední sekání, přihnojení na zimu.',
+    before_image: 'https://images.unsplash.com/photo-1726484204083-7c9c1daf31b7?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    after_image: 'https://images.unsplash.com/photo-1743627621279-e34a2efac6ac?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
+    tag: 'Podzimní balíček', tagColor: 'bg-amber-100 text-amber-800',
   },
 ];
+
+const TAG_COLORS = {
+  'Hrubé sekání': 'bg-orange-100 text-orange-800',
+  'Jarní balíček': 'bg-pink-100 text-pink-800',
+  'Letní balíček': 'bg-yellow-100 text-yellow-800',
+  'Podzimní balíček': 'bg-amber-100 text-amber-800',
+  'Sekání': 'bg-green-100 text-green-800',
+  'Zahradní práce': 'bg-teal-100 text-teal-800',
+};
+
+const normalizeProject = (p) => ({
+  ...p,
+  tagColor: p.tagColor || TAG_COLORS[p.tag] || TAG_COLORS[p.category] || 'bg-gray-100 text-gray-700',
+});
 
 const CATEGORIES = ['Vše', 'Hrubé sekání', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček'];
 
@@ -69,13 +72,13 @@ const BeforeAfterCard = ({ project, onOpen }) => {
       <div className="relative aspect-[4/3] overflow-hidden">
         {/* Before image */}
         <img
-          src={project.before}
+          src={project.before_image || project.before}
           alt={`Před – ${project.title}`}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${hover ? 'opacity-0' : 'opacity-100'}`}
         />
         {/* After image */}
         <img
-          src={project.after}
+          src={project.after_image || project.after}
           alt={`Po – ${project.title}`}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${hover ? 'opacity-100' : 'opacity-0'}`}
           onMouseEnter={() => setHover(true)}
@@ -126,7 +129,7 @@ const Lightbox = ({ project, onClose, onPrev, onNext }) => {
       >
         <div className="relative aspect-video bg-gray-900">
           <img
-            src={showAfter ? project.after : project.before}
+            src={showAfter ? (project.after_image || project.after) : (project.before_image || project.before)}
             alt={showAfter ? 'Po' : 'Před'}
             className="w-full h-full object-cover"
           />
@@ -168,12 +171,24 @@ const Lightbox = ({ project, onClose, onPrev, onNext }) => {
 };
 
 export default function GalleryPage() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('Vše');
   const [lightboxProject, setLightboxProject] = useState(null);
 
+  useEffect(() => {
+    axios.get(`${API}/gallery/projects`)
+      .then(r => setProjects(r.data.length > 0 ? r.data.map(normalizeProject) : SAMPLE_PROJECTS))
+      .catch(() => setProjects(SAMPLE_PROJECTS))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Build dynamic categories from loaded projects
+  const categories = ['Vše', ...new Set(projects.map(p => p.category || p.tag).filter(Boolean))];
+
   const filtered = activeCategory === 'Vše'
     ? projects
-    : projects.filter(p => p.category === activeCategory);
+    : projects.filter(p => (p.category === activeCategory) || (p.tag === activeCategory));
 
   const currentIdx = lightboxProject ? filtered.findIndex(p => p.id === lightboxProject.id) : -1;
 
@@ -208,7 +223,7 @@ export default function GalleryPage() {
       <section className="py-6 bg-white border-b border-gray-100 sticky top-16 z-30">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {CATEGORIES.map(cat => (
+            {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -229,20 +244,27 @@ export default function GalleryPage() {
       {/* Gallery Grid */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-            {filtered.map(project => (
-              <BeforeAfterCard
-                key={project.id}
-                project={project}
-                onOpen={setLightboxProject}
-              />
-            ))}
-          </div>
-
-          {filtered.length === 0 && (
-            <div className="text-center py-20 text-gray-400">
-              <p className="text-lg">Žádné projekty v této kategorii</p>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-4 border-[#3FA34D] border-t-transparent rounded-full animate-spin" />
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {filtered.map(project => (
+                  <BeforeAfterCard
+                    key={project.id}
+                    project={project}
+                    onOpen={setLightboxProject}
+                  />
+                ))}
+              </div>
+              {filtered.length === 0 && (
+                <div className="text-center py-20 text-gray-400">
+                  <p className="text-lg">Žádné projekty v této kategorii</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

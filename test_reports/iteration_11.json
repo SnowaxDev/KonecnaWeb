@@ -1,0 +1,88 @@
+{
+  "summary": "Verified bug fixes: 1) Fixed amount voucher (50 Kč) correctly deducts from booking price - coupon field hidden, voucher badge shows, price displays strikethrough with '50 Kč' discount. 2) Admin gallery management tab working with full CRUD functionality.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "All public pages",
+        "issues": ["EmailPopup blocks interactions on page load - users must close it first. Minor UX friction but noted."]
+      }
+    ]
+  },
+  "passed_tests": [
+    "POST /api/vouchers creates voucher with fixed_amount type (discount_type='fixed_amount', discount_value=50)",
+    "GET /api/vouchers/:code returns fixed_amount voucher with display_discount showing '50 Kč' NOT '50 %'",
+    "POST /api/vouchers/:code/claim returns correct discount_type='fixed_amount' and discount_value=50",
+    "POST /api/admin/gallery/projects creates new project with all required fields",
+    "GET /api/admin/gallery/projects returns list of all projects (admin)",
+    "GET /api/gallery/projects returns only published projects (public)",
+    "PATCH /api/admin/gallery/projects/:id updates a project",
+    "DELETE /api/admin/gallery/projects/:id deletes a project",
+    "Admin gallery endpoints require authentication (401 without token)",
+    "Voucher landing page /poukaz/TEST50KORUNA shows '50 Kč' (not '%')",
+    "Booking page Step 4 - active voucher badge visible showing 'Poukaz aktivní: TEST50KORUNA / 50 Kč sleva'",
+    "Booking page Step 4 - coupon field HIDDEN when voucher is active (not in DOM)",
+    "Booking page Step 4 - price summary shows strikethrough on original price (400 Kč)",
+    "Booking page Step 4 - getFinalPrice() correctly calculates 400-50=350 Kč",
+    "Booking page Step 4 - shows 'Sleva 50 Kč' text in price summary",
+    "Admin Gallery tab visible in sidebar with label 'Galerie'",
+    "Admin Gallery form has all fields: title, category, location, date, description, before_image URL, after_image URL",
+    "Admin Gallery preview button shows error toast when image URL invalid",
+    "Admin Gallery 'Zobrazit na webu' checkbox for publish control",
+    "Gallery page /nase-prace loads with filter buttons and project cards"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_fixed_voucher_and_gallery.py",
+    "/app/test_reports/pytest/pytest_fixed_voucher_gallery.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_fixed_voucher_and_gallery.py - Created new test file for fixed voucher and gallery CRUD testing"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 pytest tests passed)",
+    "frontend": "100% (all voucher and gallery features working correctly)"
+  },
+  "test_credentials": {
+    "admin_password": "SeknuTo2025!",
+    "test_voucher_fixed_amount": "TEST50KORUNA (50 Kč discount)",
+    "test_voucher_percentage": "TEST50OFF (if exists)"
+  },
+  "seed_data_creation": "Created TEST50OFF and TEST50KORUNA vouchers for testing fixed_amount discount type",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Two bug fixes verified: 1) Fixed amount voucher now correctly shows '50 Kč' on voucher landing page and applies correctly on booking page step 4 - coupon field is hidden when voucher active, price shows strikethrough with correct deduction (400-50=350). 2) Admin Gallery tab at /admin#gallery has full CRUD: create project with before/after image URLs, preview, publish toggle, edit, delete. Public gallery page /nase-prace fetches from /api/gallery/projects and falls back to SAMPLE_PROJECTS when empty.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  },
+  "bugs_fixed_verification": {
+    "bug_1_fixed_amount_voucher": {
+      "description": "Fixed amount voucher (e.g. 50 Kč) not deducting from booking price",
+      "root_cause": "display_discount was showing 'Sleva 0%' instead of applying fixed discount",
+      "fix_verified": true,
+      "evidence": [
+        "GET /api/vouchers/TEST50KORUNA returns display_discount='50 Kč'",
+        "Booking page step 4 shows voucher badge with '50 Kč sleva'",
+        "Coupon field is HIDDEN (not in DOM) when voucher active",
+        "Price summary shows: original 400 Kč (strikethrough), Sleva 50 Kč, final ~350 Kč"
+      ]
+    },
+    "bug_2_admin_gallery": {
+      "description": "Admin gallery management tab for managing before/after photo projects",
+      "fix_verified": true,
+      "evidence": [
+        "Gallery tab visible in admin sidebar",
+        "Form with all fields: title, category, location, date, description, before_image, after_image",
+        "Preview buttons work with error feedback for invalid URLs",
+        "CRUD operations working: create, list, update, delete"
+      ]
+    }
+  }
+}

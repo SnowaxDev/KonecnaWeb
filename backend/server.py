@@ -1077,6 +1077,72 @@ async def delete_voucher(code: str):
     
     return {"message": "Voucher deactivated"}
 
+# ─── GALLERY ENDPOINTS ───────────────────────────────────────────────────────
+
+class GalleryProjectCreate(BaseModel):
+    title: str
+    category: str = "Sekání"
+    location: str = ""
+    date: str = ""
+    description: str = ""
+    before_image: str  # URL
+    after_image: str   # URL
+    tag: Optional[str] = None
+    published: bool = True
+
+@api_router.get("/gallery/projects")
+async def list_gallery_projects():
+    """Public: list published gallery projects"""
+    projects = await db.gallery_projects.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return projects
+
+@api_router.post("/admin/gallery/projects")
+async def admin_create_gallery_project(data: GalleryProjectCreate, request: Request):
+    await verify_admin(request)
+    project = {
+        "id": str(uuid.uuid4()),
+        "title": data.title,
+        "category": data.category,
+        "location": data.location,
+        "date": data.date,
+        "description": data.description,
+        "before_image": data.before_image,
+        "after_image": data.after_image,
+        "tag": data.tag or data.category,
+        "published": data.published,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.gallery_projects.insert_one(project)
+    project.pop("_id", None)
+    return project
+
+@api_router.get("/admin/gallery/projects")
+async def admin_list_gallery_projects(request: Request):
+    await verify_admin(request)
+    projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return projects
+
+@api_router.patch("/admin/gallery/projects/{project_id}")
+async def admin_update_gallery_project(project_id: str, request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    body.pop("id", None)
+    body["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.gallery_projects.update_one({"id": project_id}, {"$set": body})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"success": True}
+
+@api_router.delete("/admin/gallery/projects/{project_id}")
+async def admin_delete_gallery_project(project_id: str, request: Request):
+    await verify_admin(request)
+    result = await db.gallery_projects.delete_one({"id": project_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"success": True}
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 # ─── BLOG ENDPOINTS ───────────────────────────────────────────────────────────
 
 class BlogPostCreate(BaseModel):
