@@ -1077,6 +1077,209 @@ async def delete_voucher(code: str):
     
     return {"message": "Voucher deactivated"}
 
+# ─── BLOG ENDPOINTS ───────────────────────────────────────────────────────────
+
+class BlogPostCreate(BaseModel):
+    title: str
+    slug: str  # SEO URL
+    excerpt: str
+    content: str  # HTML content
+    category: Optional[str] = "Tipy"
+    cover_image: Optional[str] = None
+    author: Optional[str] = "SeknuTo.cz"
+    read_time: Optional[int] = 3
+    published: bool = True
+
+class BlogPost(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    slug: str
+    excerpt: str
+    content: str
+    category: Optional[str] = "Tipy"
+    cover_image: Optional[str] = None
+    author: Optional[str] = "SeknuTo.cz"
+    read_time: Optional[int] = 3
+    published: bool = True
+    published_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: Optional[str] = None
+
+@api_router.get("/blog/posts")
+async def list_blog_posts():
+    """Public: list published posts"""
+    posts = await db.blog_posts.find({"published": True}, {"_id": 0}).sort("published_at", -1).to_list(100)
+    return posts
+
+@api_router.get("/blog/posts/{slug}")
+async def get_blog_post(slug: str):
+    """Public: get post by slug"""
+    post = await db.blog_posts.find_one({"slug": slug, "published": True}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return post
+
+@api_router.post("/admin/blog/posts")
+async def admin_create_post(data: BlogPostCreate, request: Request):
+    await verify_admin(request)
+    existing = await db.blog_posts.find_one({"slug": data.slug})
+    if existing:
+        raise HTTPException(status_code=400, detail="Slug již existuje")
+    post = BlogPost(**data.model_dump())
+    await db.blog_posts.insert_one(post.model_dump())
+    doc = post.model_dump()
+    doc.pop("_id", None)
+    return doc
+
+@api_router.get("/admin/blog/posts")
+async def admin_list_posts(request: Request):
+    await verify_admin(request)
+    posts = await db.blog_posts.find({}, {"_id": 0}).sort("published_at", -1).to_list(200)
+    return posts
+
+@api_router.patch("/admin/blog/posts/{post_id}")
+async def admin_update_post(post_id: str, request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    body["updated_at"] = datetime.now(timezone.utc).isoformat()
+    body.pop("id", None)
+    result = await db.blog_posts.update_one({"id": post_id}, {"$set": body})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return {"success": True}
+
+@api_router.delete("/admin/blog/posts/{post_id}")
+async def admin_delete_post(post_id: str, request: Request):
+    await verify_admin(request)
+    result = await db.blog_posts.delete_one({"id": post_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return {"success": True}
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── ADMIN AUTH ──────────────────────────────────────────────────────────────
+
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'SeknuTo2025!')
+
+class AdminLogin(BaseModel):
+    password: str
+
+@api_router.post("/admin/login")
+async def admin_login(data: AdminLogin):
+    if data.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Nesprávné heslo")
+    # Simple session token
+    token = str(uuid.uuid4())
+    await db.admin_sessions.insert_one({
+        "token": token,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"token": token}
+
+async def verify_admin(request: Request):
+    token = request.headers.get("X-Admin-Token", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    session = await db.admin_sessions.find_one({"token": token})
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return True
+
+# ─── ADMIN STATS ──────────────────────────────────────────────────────────────
+
+@api_router.get("/admin/stats")
+async def admin_stats(request: Request):
+    await verify_admin(request)
+    total_bookings = await db.bookings.count_documents({})
+    pending_bookings = await db.bookings.count_documents({"status": "pending"})
+    active_vouchers = await db.vouchers.count_documents({"status": "active"})
+    total_coupons = await db.coupons.count_documents({})
+    total_subscribers = await db.subscribers.count_documents({})
+
+    # Revenue estimate from confirmed bookings
+    bookings = await db.bookings.find({}, {"estimated_price": 1, "_id": 0}).to_list(1000)
+    total_revenue = sum(b.get("estimated_price", 0) for b in bookings)
+
+    return {
+        "total_bookings": total_bookings,
+        "pending_bookings": pending_bookings,
+        "active_vouchers": active_vouchers,
+        "total_coupons": total_coupons,
+        "total_subscribers": total_subscribers,
+        "total_revenue_estimate": total_revenue,
+    }
+
+# ─── ADMIN BOOKINGS ───────────────────────────────────────────────────────────
+
+@api_router.get("/admin/bookings")
+async def admin_get_bookings(request: Request):
+    await verify_admin(request)
+    bookings = await db.bookings.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return bookings
+
+@api_router.patch("/admin/bookings/{booking_id}/status")
+async def admin_update_booking_status(booking_id: str, request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    new_status = body.get("status")
+    if new_status not in ["pending", "confirmed", "completed", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await db.bookings.update_one({"id": booking_id}, {"$set": {"status": new_status}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return {"success": True}
+
+# ─── ADMIN COUPONS ────────────────────────────────────────────────────────────
+
+class CouponCreate(BaseModel):
+    code: Optional[str] = None  # auto-generated if empty
+    discount_percent: int
+    description: Optional[str] = ""
+
+@api_router.post("/admin/coupons")
+async def admin_create_coupon(data: CouponCreate, request: Request):
+    await verify_admin(request)
+    code = (data.code or generate_coupon_code()).upper()
+    existing = await db.coupons.find_one({"code": code})
+    if existing:
+        raise HTTPException(status_code=400, detail="Kód již existuje")
+    coupon = {
+        "id": str(uuid.uuid4()),
+        "code": code,
+        "discount_percent": data.discount_percent,
+        "description": data.description or f"Sleva {data.discount_percent}%",
+        "uses_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "active": True,
+    }
+    await db.coupons.insert_one(coupon)
+    coupon.pop("_id", None)
+    return coupon
+
+@api_router.get("/admin/coupons")
+async def admin_get_coupons(request: Request):
+    await verify_admin(request)
+    coupons = await db.coupons.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return coupons
+
+@api_router.delete("/admin/coupons/{code}")
+async def admin_delete_coupon(code: str, request: Request):
+    await verify_admin(request)
+    result = await db.coupons.update_one({"code": code.upper()}, {"$set": {"active": False}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Kupón nenalezen")
+    return {"success": True}
+
+# ─── ADMIN VOUCHERS (extends existing) ───────────────────────────────────────
+
+@api_router.get("/admin/vouchers")
+async def admin_get_vouchers(request: Request):
+    await verify_admin(request)
+    vouchers = await db.vouchers.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return vouchers
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 # ─── STRIPE PAYMENT ENDPOINTS ────────────────────────────────────────────────
 
 DEPOSIT_AMOUNT_CZK = 50.0  # Fixed deposit in CZK, deducted from final price

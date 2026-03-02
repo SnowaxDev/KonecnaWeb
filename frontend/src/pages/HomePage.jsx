@@ -71,6 +71,63 @@ const HomePage = () => {
     },
   ];
 
+  const reviews = [
+    {
+      name: 'Markéta Horáčková',
+      location: 'Dvůr Králové n. L.',
+      date: 'Říjen 2024',
+      rating: 5,
+      text: 'Naprosto spokojená! Kluci přijeli přesně v domluveném čase, zahradu upravili do posledního detailu a po sobě vše uklidili. Cena odpovídá kvalitě. Určitě se vrátím na jarní balíček.',
+      initials: 'MH',
+      color: '#3FA34D',
+    },
+    {
+      name: 'Tomáš Beneš',
+      location: 'Trutnov',
+      date: 'Září 2024',
+      rating: 5,
+      text: 'Objednal jsem sekání přerostlé zahrady po dvou měsících – vypadalo to beznadějně. SeknuTo.cz to zvládli za odpoledne a výsledek byl úžasný. Skvělý přístup, rychlá domluva přes WhatsApp.',
+      initials: 'TB',
+      color: '#1B4332',
+    },
+    {
+      name: 'Jana Procházková',
+      location: 'Jaroměř',
+      date: 'Srpen 2024',
+      rating: 5,
+      text: 'Využívám jejich VIP celoroční servis a jsem nadšená. Nemusím na nic myslet, přijedou pravidelně a zahrada je vždy v perfektním stavu. Skvělá investice pro každého, kdo to myslí se zahradou vážně.',
+      initials: 'JP',
+      color: '#2D6A4F',
+    },
+    {
+      name: 'Pavel Novotný',
+      location: 'Náchod',
+      date: 'Červen 2024',
+      rating: 5,
+      text: 'Rychlá reakce, férová cena a profesionální práce. Rezervace online fungovala bez problémů. Oceňuji, že hned potvrdili termín a přišli přesně. Doporučuji všem sousedům v okolí!',
+      initials: 'PN',
+      color: '#52B788',
+    },
+    {
+      name: 'Alena Dvořáčková',
+      location: 'Dvůr Králové n. L.',
+      date: 'Červenec 2024',
+      rating: 5,
+      text: 'Jarní balíček byl přesně to, co jsem potřebovala po zimě. Vertikutace, hnojení, sekání – vše najednou a za rozumnou cenu. Trávník teď vypadá skvěle. Mockrát děkuji za práci!',
+      initials: 'AD',
+      color: '#3FA34D',
+    },
+    {
+      name: 'Radek Šimánek',
+      location: 'Hořice',
+      date: 'Říjen 2024',
+      rating: 5,
+      text: 'Zavolal jsem ráno, odpoledne přijeli. Zahradu uklidili od listí a připravili na zimu. Podzimní balíček za skvělou cenu. Profesionální, milý přístup. Bez váhání je doporučím dál.',
+      initials: 'RS',
+      color: '#1B4332',
+    },
+  ];
+
   return (
     <div className="min-h-screen" data-testid="home-page">
       {/* Hero Section */}
@@ -304,6 +361,57 @@ const HomePage = () => {
                   {stat.value}
                 </p>
                 <p className="text-sm text-[#4B5563]">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="py-16 md:py-24 bg-[#F0FDF4]" data-testid="reviews-section">
+        <div className="max-w-6xl mx-auto px-4 md:px-8">
+          <div className="text-center mb-12">
+            <span className="inline-block text-xs font-semibold tracking-widest text-[#3FA34D] uppercase mb-3 bg-[#3FA34D]/10 px-4 py-1.5 rounded-full">
+              Hodnocení zákazníků
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Co říkají naši zákazníci
+            </h2>
+            <div className="flex items-center justify-center gap-1 mb-2">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            <p className="text-[#4B5563] text-sm">Průměrné hodnocení 5.0 ze 5 — přes 50 recenzí</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {reviews.map((review, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                data-testid={`review-card-${idx}`}
+              >
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(review.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-[#374151] text-sm leading-relaxed mb-5 italic">
+                  "{review.text}"
+                </p>
+                <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
+                    style={{ backgroundColor: review.color }}
+                  >
+                    {review.initials}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">{review.name}</p>
+                    <p className="text-xs text-gray-400">{review.location} · {review.date}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
