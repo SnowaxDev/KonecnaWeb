@@ -872,6 +872,211 @@ async def validate_coupon(data: CouponValidation):
         "message": f"Kupón platný! Sleva {coupon.get('discount_percent', 5)}%"
     }
 
+# ============== VOUCHER ENDPOINTS ==============
+
+@api_router.post("/vouchers", response_model=Voucher)
+async def create_voucher(voucher_data: VoucherCreate):
+    """Create a new voucher (admin endpoint)"""
+    # Check if code already exists
+    existing = await db.vouchers.find_one({"code": voucher_data.code.upper()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Voucher code already exists")
+    
+    voucher = Voucher(
+        code=voucher_data.code.upper(),
+        display_name=voucher_data.display_name,
+        discount_type=voucher_data.discount_type,
+        discount_value=voucher_data.discount_value,
+        free_service_id=voucher_data.free_service_id,
+        max_uses=voucher_data.max_uses,
+        valid_from=voucher_data.valid_from,
+        valid_until=voucher_data.valid_until,
+        campaign_name=voucher_data.campaign_name,
+        flyer_batch=voucher_data.flyer_batch,
+        target_audience=voucher_data.target_audience
+    )
+    
+    await db.vouchers.insert_one(voucher.model_dump())
+    logger.info(f"Voucher created: {voucher.code}")
+    
+    return voucher
+
+@api_router.get("/vouchers")
+async def list_vouchers():
+    """List all vouchers (admin endpoint)"""
+    vouchers = await db.vouchers.find({}, {"_id": 0}).to_list(1000)
+    
+    # Update expired vouchers status
+    now = datetime.now(timezone.utc).isoformat()
+    for v in vouchers:
+        if v.get('status') == 'active':
+            if v.get('valid_until') < now:
+                await db.vouchers.update_one(
+                    {"id": v['id']},
+                    {"$set": {"status": "expired"}}
+                )
+                v['status'] = 'expired'
+            elif v.get('uses_count', 0) >= v.get('max_uses', 1):
+                await db.vouchers.update_one(
+                    {"id": v['id']},
+                    {"$set": {"status": "exhausted"}}
+                )
+                v['status'] = 'exhausted'
+    
+    return vouchers
+
+@api_router.get("/vouchers/{code}")
+async def get_voucher(code: str):
+    """Get voucher by code - for landing page"""
+    voucher = await db.vouchers.find_one({"code": code.upper()}, {"_id": 0})
+    
+    if not voucher:
+        raise HTTPException(status_code=404, detail="Voucher not found")
+    
+    # Check if valid
+    now = datetime.now(timezone.utc)
+    valid_from = datetime.fromisoformat(voucher['valid_from'].replace('Z', '+00:00'))
+    valid_until = datetime.fromisoformat(voucher['valid_until'].replace('Z', '+00:00'))
+    
+    is_valid = True
+    validation_error = None
+    
+    if voucher['status'] != 'active':
+        is_valid = False
+        validation_error = f"Voucher is {voucher['status']}"
+    elif now < valid_from:
+        is_valid = False
+        validation_error = "Voucher not yet valid"
+    elif now > valid_until:
+        is_valid = False
+        validation_error = "Voucher expired"
+        await db.vouchers.update_one({"id": voucher['id']}, {"$set": {"status": "expired"}})
+    elif voucher.get('uses_count', 0) >= voucher.get('max_uses', 1):
+        is_valid = False
+        validation_error = "Voucher exhausted"
+        await db.vouchers.update_one({"id": voucher['id']}, {"$set": {"status": "exhausted"}})
+    
+    # Format discount display
+    if voucher['discount_type'] == 'percentage':
+        display_discount = f"{int(voucher['discount_value'])} %"
+        description = "sleva na celou objednávku"
+    elif voucher['discount_type'] == 'fixed_amount':
+        display_discount = f"{int(voucher['discount_value'])} Kč"
+        description = "sleva na první objednávku"
+    else:  # free_service
+        display_discount = "Zdarma"
+        description = SERVICE_NAMES.get(voucher.get('free_service_id'), 'služba')
+    
+    return {
+        **voucher,
+        "is_valid": is_valid,
+        "validation_error": validation_error,
+        "display_discount": display_discount,
+        "description": description,
+        "valid_until_formatted": valid_until.strftime("%d.%m.%Y %H:%M"),
+        "has_expiration": True
+    }
+
+@api_router.post("/vouchers/{code}/claim")
+async def claim_voucher(code: str):
+    """Claim a voucher - validates and reserves it for the session"""
+    voucher = await db.vouchers.find_one({"code": code.upper()}, {"_id": 0})
+    
+    if not voucher:
+        raise HTTPException(status_code=404, detail="Voucher not found")
+    
+    # Validate
+    now = datetime.now(timezone.utc)
+    valid_until = datetime.fromisoformat(voucher['valid_until'].replace('Z', '+00:00'))
+    
+    if voucher['status'] != 'active':
+        raise HTTPException(status_code=400, detail=f"Voucher is {voucher['status']}")
+    if now > valid_until:
+        raise HTTPException(status_code=400, detail="Voucher expired")
+    if voucher.get('uses_count', 0) >= voucher.get('max_uses', 1):
+        raise HTTPException(status_code=400, detail="Voucher exhausted")
+    
+    logger.info(f"Voucher claimed: {code}")
+    
+    return {
+        "success": True,
+        "voucher_code": voucher['code'],
+        "discount_type": voucher['discount_type'],
+        "discount_value": voucher.get('discount_value'),
+        "free_service_id": voucher.get('free_service_id'),
+        "redirect_url": f"/rezervace?voucher={voucher['code']}&auto_apply=true"
+    }
+
+@api_router.post("/vouchers/{code}/redeem")
+async def redeem_voucher(code: str, booking_id: str, discount_applied: float = 0):
+    """Redeem a voucher when booking is completed"""
+    voucher = await db.vouchers.find_one({"code": code.upper()})
+    
+    if not voucher:
+        raise HTTPException(status_code=404, detail="Voucher not found")
+    
+    # Increment usage count
+    await db.vouchers.update_one(
+        {"code": code.upper()},
+        {"$inc": {"uses_count": 1}}
+    )
+    
+    # Check if exhausted
+    new_uses = voucher.get('uses_count', 0) + 1
+    if new_uses >= voucher.get('max_uses', 1):
+        await db.vouchers.update_one(
+            {"code": code.upper()},
+            {"$set": {"status": "exhausted"}}
+        )
+    
+    # Create redemption record
+    redemption = VoucherRedemption(
+        voucher_id=voucher['id'],
+        voucher_code=code.upper(),
+        booking_id=booking_id,
+        booking_completed=True,
+        discount_applied=discount_applied
+    )
+    
+    await db.voucher_redemptions.insert_one(redemption.model_dump())
+    logger.info(f"Voucher redeemed: {code} for booking {booking_id}")
+    
+    return {"success": True, "redemption_id": redemption.id}
+
+@api_router.get("/vouchers/stats/overview")
+async def get_voucher_stats():
+    """Get voucher statistics for admin dashboard"""
+    active_count = await db.vouchers.count_documents({"status": "active"})
+    total_redemptions = await db.voucher_redemptions.count_documents({})
+    
+    # Calculate total discount
+    redemptions = await db.voucher_redemptions.find({}, {"discount_applied": 1}).to_list(1000)
+    total_discount = sum(r.get('discount_applied', 0) for r in redemptions)
+    
+    # Conversion rate
+    views = await db.voucher_views.count_documents({})
+    conversion_rate = (total_redemptions / views * 100) if views > 0 else 0
+    
+    return {
+        "active": active_count,
+        "redeemed": total_redemptions,
+        "total_discount": total_discount,
+        "conversion_rate": round(conversion_rate, 1)
+    }
+
+@api_router.delete("/vouchers/{code}")
+async def delete_voucher(code: str):
+    """Delete/deactivate a voucher"""
+    result = await db.vouchers.update_one(
+        {"code": code.upper()},
+        {"$set": {"status": "inactive"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Voucher not found")
+    
+    return {"message": "Voucher deactivated"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
