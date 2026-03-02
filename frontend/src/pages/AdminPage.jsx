@@ -19,6 +19,9 @@ const parseError = (err) => {
   }
   return JSON.stringify(detail);
 };
+
+// Returns true if error is 401 Unauthorized
+const isUnauthorized = (err) => err?.response?.status === 401;
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
@@ -133,12 +136,14 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 );
 
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
-const OverviewTab = ({ token }) => {
+const OverviewTab = ({ token, handle401 }) => {
   const [stats, setStats] = useState(null);
   const headers = { 'X-Admin-Token': token };
 
   useEffect(() => {
-    axios.get(`${API}/admin/stats`, { headers }).then(r => setStats(r.data));
+    axios.get(`${API}/admin/stats`, { headers })
+      .then(r => setStats(r.data))
+      .catch(err => { if (!handle401(err)) console.error(err); });
   }, []); // eslint-disable-line
 
   if (!stats) return <div className="flex justify-center py-12"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>;
@@ -177,7 +182,7 @@ const OverviewTab = ({ token }) => {
 };
 
 // ─── VOUCHERS TAB ─────────────────────────────────────────────────────────────
-const VouchersTab = ({ token }) => {
+const VouchersTab = ({ token, handle401 }) => {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -195,7 +200,9 @@ const VouchersTab = ({ token }) => {
     try {
       const res = await axios.get(`${API}/admin/vouchers`, { headers });
       setVouchers(res.data);
-    } catch { toast.error('Nepodařilo se načíst poukazů'); }
+    } catch (err) {
+      if (!handle401(err)) toast.error('Nepodařilo se načíst poukazů');
+    }
     finally { setLoading(false); }
   }, []); // eslint-disable-line
 
@@ -219,7 +226,7 @@ const VouchersTab = ({ token }) => {
       setForm(f => ({ ...f, code: '', display_name: '', campaign_name: '', flyer_batch: '' }));
       load();
     } catch (err) {
-      toast.error(parseError(err));
+      if (!handle401(err)) toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
@@ -228,7 +235,7 @@ const VouchersTab = ({ token }) => {
       await axios.delete(`${API}/vouchers/${code}`, { headers });
       toast.success('Poukaz deaktivován');
       load();
-    } catch { toast.error('Chyba'); }
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
 
   const copyUrl = (code) => {
@@ -379,7 +386,7 @@ const VouchersTab = ({ token }) => {
 };
 
 // ─── COUPONS TAB ──────────────────────────────────────────────────────────────
-const CouponsTab = ({ token }) => {
+const CouponsTab = ({ token, handle401 }) => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -391,7 +398,7 @@ const CouponsTab = ({ token }) => {
     try {
       const res = await axios.get(`${API}/admin/coupons`, { headers });
       setCoupons(res.data);
-    } catch { toast.error('Nepodařilo se načíst kupóny'); }
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst kupóny'); }
     finally { setLoading(false); }
   }, []); // eslint-disable-line
 
@@ -410,7 +417,7 @@ const CouponsTab = ({ token }) => {
       setForm({ code: '', discount_percent: 10, description: '' });
       load();
     } catch (err) {
-      toast.error(parseError(err));
+      if (!handle401(err)) toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
@@ -419,7 +426,7 @@ const CouponsTab = ({ token }) => {
       await axios.delete(`${API}/admin/coupons/${code}`, { headers });
       toast.success('Kupón deaktivován');
       load();
-    } catch { toast.error('Chyba'); }
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
 
   const copyCode = (code) => {
@@ -514,7 +521,7 @@ const CouponsTab = ({ token }) => {
 };
 
 // ─── BOOKINGS TAB ─────────────────────────────────────────────────────────────
-const BookingsTab = ({ token }) => {
+const BookingsTab = ({ token, handle401 }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(null);
@@ -526,7 +533,7 @@ const BookingsTab = ({ token }) => {
     try {
       const res = await axios.get(`${API}/admin/bookings`, { headers });
       setBookings(res.data);
-    } catch { toast.error('Nepodařilo se načíst objednávky'); }
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst objednávky'); }
     finally { setLoading(false); }
   }, []); // eslint-disable-line
 
@@ -538,7 +545,7 @@ const BookingsTab = ({ token }) => {
       await axios.patch(`${API}/admin/bookings/${id}/status`, { status }, { headers });
       toast.success('Status aktualizován');
       load();
-    } catch { toast.error('Chyba'); }
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
     finally { setUpdatingId(null); }
   };
 
@@ -655,7 +662,7 @@ const BookingsTab = ({ token }) => {
 // ─── GALLERY TAB ──────────────────────────────────────────────────────────────
 const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
 
-const GalleryTab = ({ token }) => {
+const GalleryTab = ({ token, handle401 }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -673,7 +680,7 @@ const GalleryTab = ({ token }) => {
     try {
       const res = await axios.get(`${API}/admin/gallery/projects`, { headers });
       setProjects(res.data);
-    } catch { toast.error('Nepodařilo se načíst projekty'); }
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst projekty'); }
     finally { setLoading(false); }
   }, []); // eslint-disable-line
 
@@ -700,7 +707,7 @@ const GalleryTab = ({ token }) => {
       setPreviewAfter(false);
       load();
     } catch (err) {
-      toast.error(parseError(err));
+      if (!handle401(err)) toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
@@ -722,7 +729,7 @@ const GalleryTab = ({ token }) => {
       await axios.delete(`${API}/admin/gallery/projects/${id}`, { headers });
       toast.success('Projekt smazán');
       load();
-    } catch { toast.error('Chyba'); }
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
 
   return (
@@ -898,7 +905,7 @@ const GalleryTab = ({ token }) => {
 };
 
 // ─── BLOG TAB ─────────────────────────────────────────────────────────────────
-const BlogTab = ({ token }) => {
+const BlogTab = ({ token, handle401 }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -916,7 +923,7 @@ const BlogTab = ({ token }) => {
     try {
       const res = await axios.get(`${API}/admin/blog/posts`, { headers });
       setPosts(res.data);
-    } catch { toast.error('Nepodařilo se načíst příspěvky'); }
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst příspěvky'); }
     finally { setLoading(false); }
   }, []); // eslint-disable-line
 
@@ -944,7 +951,7 @@ const BlogTab = ({ token }) => {
       setForm({ title: '', slug: '', excerpt: '', content: '', category: 'Tipy', cover_image: '', author: 'SeknuTo.cz', read_time: 3, published: true });
       load();
     } catch (err) {
-      toast.error(parseError(err));
+      if (!handle401(err)) toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
@@ -965,7 +972,7 @@ const BlogTab = ({ token }) => {
       await axios.delete(`${API}/admin/blog/posts/${id}`, { headers });
       toast.success('Příspěvek smazán');
       load();
-    } catch { toast.error('Chyba'); }
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
 
   return (
@@ -1110,10 +1117,20 @@ export default function AdminPage() {
   const [token, setToken] = useState(() => localStorage.getItem('admin_token'));
   const [activeTab, setActiveTab] = useState('overview');
 
-  const handleLogout = () => {
+  const handleLogout = (silent = false) => {
     localStorage.removeItem('admin_token');
     setToken(null);
+    if (!silent) window.location.reload();
   };
+
+  // Global 401 guard – called by every tab's load/action
+  const handle401 = useCallback((err) => {
+    if (isUnauthorized(err)) {
+      handleLogout(true);
+      return true;
+    }
+    return false;
+  }, []); // eslint-disable-line
 
   if (!token) return <LoginScreen onLogin={setToken} />;
 
@@ -1200,12 +1217,12 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6 pb-24 md:pb-6">
-            {activeTab === 'overview' && <OverviewTab token={token} />}
-            {activeTab === 'vouchers' && <VouchersTab token={token} />}
-            {activeTab === 'coupons' && <CouponsTab token={token} />}
-            {activeTab === 'bookings' && <BookingsTab token={token} />}
-            {activeTab === 'gallery' && <GalleryTab token={token} />}
-            {activeTab === 'blog' && <BlogTab token={token} />}
+            {activeTab === 'overview' && <OverviewTab token={token} handle401={handle401} />}
+            {activeTab === 'vouchers' && <VouchersTab token={token} handle401={handle401} />}
+            {activeTab === 'coupons' && <CouponsTab token={token} handle401={handle401} />}
+            {activeTab === 'bookings' && <BookingsTab token={token} handle401={handle401} />}
+            {activeTab === 'gallery' && <GalleryTab token={token} handle401={handle401} />}
+            {activeTab === 'blog' && <BlogTab token={token} handle401={handle401} />}
           </div>
         </main>
       </div>
