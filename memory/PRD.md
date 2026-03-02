@@ -9,8 +9,13 @@ Konverzní web s rezervačním systémem, emailovými notifikacemi, QR poukazov�
 - Hledají spolehlivou a rychlou službu sekání trávy
 
 ## Core Pages
-- Homepage, Služby, Ceník, Rezervace, O nás, Kontakt
+- Homepage (hero, služby, recenze, FAQ, CTA)
+- /sluzby, /cenik, /o-nas, /kontakt
+- /rezervace (multi-step booking + Stripe záloha 50 Kč)
 - /poukaz/:code (QR poukaz landing page)
+- /nase-prace (galerie before/after)
+- /blog (seznam + detail)
+- /admin (admin dashboard)
 
 ## Architecture
 - Frontend: React, React Router, Tailwind CSS, shadcn/ui
@@ -18,88 +23,84 @@ Konverzní web s rezervačním systémem, emailovými notifikacemi, QR poukazov�
 - Integrations: Resend (email), Google Calendar API, Stripe (platby)
 
 ## Key DB Schema
-- bookings: {id, service, property_size, condition, customer_name, customer_phone, customer_email, property_address, notes, preferred_date, preferred_time, estimated_price, coupon_code, deposit_paid, deposit_session_id}
+- bookings: {id, service, property_size, condition, customer_name, customer_phone, customer_email, property_address, notes, preferred_date, preferred_time, estimated_price, coupon_code, deposit_paid, deposit_session_id, status}
 - subscribers: {email, coupon_code, created_at}
-- coupons: {code, discount_percent, created_at}
-- vouchers: {id, code, display_name, discount_type, discount_value, max_uses, uses_count, valid_from, valid_until, status, campaign_name, flyer_batch, target_audience}
+- coupons: {id, code, discount_percent, description, uses_count, active, created_at}
+- vouchers: {id, code, display_name, discount_type, discount_value, max_uses, uses_count, valid_from, valid_until, status, campaign_name, flyer_batch}
 - voucher_redemptions: {id, voucher_id, voucher_code, booking_id, discount_applied, redeemed_at}
 - payment_transactions: {id, session_id, amount, currency, payment_status, status, metadata, created_at}
+- blog_posts: {id, title, slug, excerpt, content, category, cover_image, author, read_time, published, published_at}
+- admin_sessions: {token, created_at}
 
-## Brand Identity
+## Brand Colors & Fonts
 - Colors: #1B4332 (dark green), #3FA34D (main green), #52B788 (light green), #FF8C42 (orange CTA)
-- Fonts: Poppins (headings), system
+- Fonts: Poppins (headings), Inter (body)
 
 ---
 
 ## What's Been Implemented
 
-### Phase 1: Core Website (completed earlier)
-- Homepage with hero, features, CTA
-- Services page (redesigned card layout)
-- Pricing page (conversion-focused with tiers)
-- About & Contact pages
-- Header & Footer navigation
-- WhatsApp floating button
-- Google Analytics integration
+### Phase 1: Core Website
+- Homepage, Services, Pricing, About, Contact pages
+- Header/Footer navigation (now includes Naše práce + Blog)
+- WhatsApp floating button, Google Analytics
 
-### Phase 2: Booking System (completed)
-- Multi-step booking form (5 steps)
-- Dynamic price calculation (m² vs hourly services)
-- Calendar date picker with Czech locale
-- Service selection (basic + packages)
-- Additional services (mulching, debris removal)
+### Phase 2: Booking System
+- Multi-step form (5 steps) with dynamic price calculation
+- m² vs hourly services differentiation
+- Calendar date picker (Czech locale), time slots
 - Coupon/discount code validation
-- Form validation + GDPR consent
+- GDPR consent, form validation
 - Admin email notifications (Resend)
-- Customer email confirmation (blocked - domain not verified)
 
-### Phase 3: Integrations (completed)
-- Resend email integration (newsletters, notifications)
+### Phase 3: Integrations
+- Resend email (newsletters, notifications)
 - Newsletter popup with coupon delivery
-- Google Calendar API (coded, pending OAuth authorization)
+- Google Calendar API (coded, pending OAuth)
 
-### Phase 4: Voucher System (completed - December 2025)
-- /poukaz/:code route added to App.js
-- VoucherPage.jsx with confetti animation, countdown timer
-- Backend: CRUD endpoints for vouchers
-- POST /api/vouchers - create voucher
-- GET /api/vouchers/:code - get voucher for landing page
-- POST /api/vouchers/:code/claim - claim voucher session
-- POST /api/vouchers/:code/redeem - finalize redemption
-- Auto-apply voucher discount on BookingPage when redirected
+### Phase 4: Voucher System (December 2025)
+- /poukaz/:code route - confetti animation, countdown, CTA
+- Backend CRUD: create, get, claim, redeem vouchers
+- Auto-apply voucher on BookingPage redirect
 
-### Phase 5: Stripe Deposit (completed - December 2025)
-- POST /api/payments/deposit/create - create 50 CZK Stripe checkout
-- GET /api/payments/deposit/status/:session_id - check payment status
-- POST /api/webhook/stripe - Stripe webhook handler
-- payment_transactions collection in MongoDB
-- BookingPage: "Zaplatit zálohu 50 Kč" button
-- Form draft saved to localStorage before Stripe redirect
-- Form restore after returning from Stripe
-- Deposit info badge in step 4
-- EmailPopup hidden on /poukaz/* pages
+### Phase 5: Stripe Deposit (December 2025)
+- POST /api/payments/deposit/create - 50 CZK Stripe checkout
+- GET /api/payments/deposit/status/:session_id
+- Form draft saved/restored via localStorage
+- "Zaplatit zálohu 50 Kč" button + deposit info box
+
+### Phase 6: Admin Dashboard + Content (December 2025)
+- /admin login (password: SeknuTo2025!)
+- Overview stats (bookings, vouchers, coupons, revenue)
+- Voucher management (create with all fields, list, deactivate, copy URL)
+- Coupon management (create, list, deactivate)
+- Booking management (list, expandable details, status change)
+- Blog management (create, edit, delete posts with HTML content)
+- Homepage reviews section (6 sample reviews with star ratings)
+- Gallery /nase-prace (before/after hover cards, filter, lightbox)
+- Blog /blog (list + detail pages with HTML rendering)
 
 ---
 
 ## Prioritized Backlog
 
 ### P0 (Critical - User Action Required)
-- Resend domain verification: User must verify domain at resend.com to send customer emails
-- Google Calendar OAuth: User must authorize via /api/google/auth/url endpoint
+- Resend domain verification: verify at resend.com to send customer emails
+- Google Calendar OAuth: authorize via /api/google/auth/url
 
 ### P1 (High Priority)
-- User testing of booking form fixes (hourly pricing, date picker)
-- Prepare for production deployment (Vercel + Render)
+- User testing of booking form
+- Prepare for production deployment (Vercel + Render or similar)
+- Real photos upload for gallery (replace stock photos)
 
 ### P2 (Medium Priority)
-- Customer testimonials section on homepage
-- Admin dashboard for managing bookings and vouchers
-- Photo gallery of completed work
+- Admin: photo upload for gallery projects
+- Admin: manage gallery projects (CRUD)
+- Contact form admin management
 
 ### P3 (Future/Backlog)
 - Customer portal with booking history
-- Blog for gardening tips
-- Online payment for full service price (not just deposit)
+- Online payment for full service (not just deposit)
 - Repeat booking / subscription feature
 - SMS notifications via Twilio
 
@@ -109,14 +110,18 @@ Konverzní web s rezervačním systémem, emailovými notifikacemi, QR poukazov�
 - POST /api/bookings
 - POST /api/pricing/calculate
 - GET /api/google/auth/url
-- GET /api/google/auth/callback
-- POST /api/vouchers
-- GET /api/vouchers/:code
-- POST /api/vouchers/:code/claim
-- POST /api/vouchers/:code/redeem
-- POST /api/payments/deposit/create
-- GET /api/payments/deposit/status/:session_id
-- POST /api/webhook/stripe
+- POST /api/vouchers | GET /api/vouchers/:code | POST /api/vouchers/:code/claim | POST /api/vouchers/:code/redeem
+- POST /api/payments/deposit/create | GET /api/payments/deposit/status/:session_id
+- POST /api/admin/login
+- GET /api/admin/stats | GET /api/admin/bookings | PATCH /api/admin/bookings/:id/status
+- GET /api/admin/coupons | POST /api/admin/coupons | DELETE /api/admin/coupons/:code
+- GET /api/admin/vouchers
+- GET /api/blog/posts | GET /api/blog/posts/:slug
+- POST /api/admin/blog/posts | GET /api/admin/blog/posts | PATCH /api/admin/blog/posts/:id | DELETE /api/admin/blog/posts/:id
+
+## Admin Credentials
+- URL: /admin
+- Password: SeknuTo2025!
 
 ## Known Blockers
 - Resend: customer emails need domain verification
