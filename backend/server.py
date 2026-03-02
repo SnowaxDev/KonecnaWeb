@@ -52,7 +52,7 @@ except ImportError:
     logger.warning("Google Calendar libraries not available")
 
 # Create the main app
-app = FastAPI()
+app = FastAPI(title="SeknuTo.cz API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -1223,7 +1223,14 @@ async def admin_delete_post(post_id: str, request: Request):
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ─── ADMIN AUTH ──────────────────────────────────────────────────────────────
+# ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
+
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint for Render deployment"""
+    return {"status": "ok", "service": "SeknuTo.cz API", "version": "1.0.0"}
+
+# ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'SeknuTo2025!')
 
