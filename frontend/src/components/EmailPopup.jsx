@@ -21,6 +21,7 @@ const EmailPopup = () => {
     const popupClosed = sessionStorage.getItem('seknuto_popup_closed');
     
     if (window.location.pathname === '/rezervace') return;
+    if (window.location.pathname.startsWith('/poukaz')) return;
     if (savedCoupon) return;
     if (popupClosed) return;
     
