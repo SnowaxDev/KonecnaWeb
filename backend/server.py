@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -8,7 +8,7 @@ import logging
 import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, timedelta
 import requests
@@ -1076,6 +1076,123 @@ async def delete_voucher(code: str):
         raise HTTPException(status_code=404, detail="Voucher not found")
     
     return {"message": "Voucher deactivated"}
+
+# ─── STRIPE PAYMENT ENDPOINTS ────────────────────────────────────────────────
+
+DEPOSIT_AMOUNT_CZK = 50.0  # Fixed deposit in CZK, deducted from final price
+
+class StripeCheckoutRequest(BaseModel):
+    booking_data: Optional[dict] = None  # booking form data to store in metadata
+    origin_url: str  # frontend origin, used to build success/cancel URLs
+
+class PaymentStatusResponse(BaseModel):
+    status: str
+    payment_status: str
+    session_id: str
+    amount_total: int
+    currency: str
+
+# Lazy-load Stripe checkout
+_stripe_checkout = None
+
+def get_stripe_checkout():
+    global _stripe_checkout
+    if _stripe_checkout is None:
+        from emergentintegrations.payments.stripe.checkout import StripeCheckout
+        api_key = os.environ.get('STRIPE_API_KEY', '')
+        _stripe_checkout = StripeCheckout(api_key=api_key, webhook_url="")
+    return _stripe_checkout
+
+@api_router.post("/payments/deposit/create")
+async def create_deposit_session(req: StripeCheckoutRequest):
+    """Create a 50 CZK Stripe deposit checkout session"""
+    from emergentintegrations.payments.stripe.checkout import CheckoutSessionRequest
+    
+    origin = req.origin_url.rstrip('/')
+    success_url = f"{origin}/rezervace?session_id={{CHECKOUT_SESSION_ID}}&payment=success"
+    cancel_url = f"{origin}/rezervace?payment=cancelled"
+    
+    metadata = {
+        "deposit_czk": str(int(DEPOSIT_AMOUNT_CZK)),
+        "type": "booking_deposit",
+    }
+    
+    checkout = get_stripe_checkout()
+    checkout_req = CheckoutSessionRequest(
+        amount=DEPOSIT_AMOUNT_CZK,
+        currency="czk",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=metadata,
+    )
+    session = await checkout.create_checkout_session(checkout_req)
+    
+    # Store pending transaction
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "session_id": session.session_id,
+        "amount": DEPOSIT_AMOUNT_CZK,
+        "currency": "czk",
+        "payment_status": "pending",
+        "status": "initiated",
+        "metadata": metadata,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.payment_transactions.insert_one(transaction)
+    
+    return {"url": session.url, "session_id": session.session_id}
+
+@api_router.get("/payments/deposit/status/{session_id}")
+async def get_deposit_status(session_id: str):
+    """Check the status of a deposit payment"""
+    # Check if already recorded as paid (idempotency)
+    existing = await db.payment_transactions.find_one(
+        {"session_id": session_id, "payment_status": "paid"},
+        {"_id": 0}
+    )
+    if existing:
+        return {"status": existing["status"], "payment_status": "paid", "session_id": session_id}
+    
+    checkout = get_stripe_checkout()
+    status_resp = await checkout.get_checkout_status(session_id)
+    
+    # Update DB only once
+    await db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "payment_status": status_resp.payment_status,
+            "status": status_resp.status,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }}
+    )
+    
+    return {
+        "status": status_resp.status,
+        "payment_status": status_resp.payment_status,
+        "session_id": session_id,
+    }
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Stripe webhook handler"""
+    try:
+        from emergentintegrations.payments.stripe.checkout import StripeCheckout
+        api_key = os.environ.get('STRIPE_API_KEY', '')
+        checkout = StripeCheckout(api_key=api_key, webhook_url="")
+        body = await request.body()
+        sig = request.headers.get("Stripe-Signature", "")
+        event = await checkout.handle_webhook(body, sig)
+        if event and event.payment_status == "paid":
+            await db.payment_transactions.update_one(
+                {"session_id": event.session_id},
+                {"$set": {"payment_status": "paid", "status": "complete"}}
+            )
+        return {"received": True}
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return {"received": True}
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Include the router in the main app
 app.include_router(api_router)

@@ -16,6 +16,7 @@ import PricingPage from "./pages/PricingPage";
 import BookingPage from "./pages/BookingPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import VoucherPage from "./pages/VoucherPage";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/rezervace" element={<BookingPage />} />
             <Route path="/o-nas" element={<AboutPage />} />
             <Route path="/kontakt" element={<ContactPage />} />
+            <Route path="/poukaz/:code" element={<VoucherPage />} />
           </Routes>
         </main>
         <Footer />

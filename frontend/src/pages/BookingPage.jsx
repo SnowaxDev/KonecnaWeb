@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { 
   ChevronLeft, ChevronRight, Check, Calendar as CalendarIcon,
   Scissors, Sprout, Leaf, TreeDeciduous, Package, HelpCircle,
   User, Phone, Mail, MapPin, Loader2, Tag, CheckCircle, XCircle,
-  Sun, Snowflake, Flower2, Truck, ChevronDown, ChevronUp
+  Sun, Snowflake, Flower2, Truck, ChevronDown, ChevronUp, CreditCard, ShieldCheck, Gift
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -28,6 +28,7 @@ const API = `${BACKEND_URL}/api`;
 
 const BookingPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState(null);
@@ -36,6 +37,10 @@ const BookingPage = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [tierInfo, setTierInfo] = useState(null);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState(null);
+  const [paymentPaid, setPaymentPaid] = useState(false);
+  const [activeVoucher, setActiveVoucher] = useState(null);
   
   // Collapsible sections state
   const [expandedSection, setExpandedSection] = useState('basic'); // 'basic', 'packages', 'other'
@@ -56,19 +61,103 @@ const BookingPage = () => {
     estimated_price: 0,
     gdpr_consent: false,
     coupon_code: '',
+    voucher_fixed_discount: 0,
+    deposit_paid: false,
+    deposit_session_id: '',
   });
 
   useEffect(() => {
-    const savedCoupon = localStorage.getItem('seknuto_coupon');
-    if (savedCoupon) {
-      setCouponCode(savedCoupon);
-      validateCoupon(savedCoupon);
+    // Handle voucher from URL (from VoucherPage redirect)
+    const voucherCode = searchParams.get('voucher');
+    const autoApply = searchParams.get('auto_apply');
+    
+    if (voucherCode && autoApply === 'true') {
+      const storedVoucher = localStorage.getItem('active_voucher');
+      if (storedVoucher) {
+        try {
+          const v = JSON.parse(storedVoucher);
+          setActiveVoucher(v);
+          setCouponCode(v.code);
+          // Apply voucher as coupon
+          if (v.discount_type === 'percentage') {
+            setCouponValid(true);
+            setCouponDiscount(v.discount_value);
+            setFormData(prev => ({ ...prev, coupon_code: v.code }));
+            toast.success(`Poukaz aktivován! Sleva ${v.discount_value}%`);
+          } else if (v.discount_type === 'fixed_amount') {
+            setCouponValid(true);
+            // Store as fixed - will be handled in getFinalPrice
+            setFormData(prev => ({ ...prev, coupon_code: v.code, voucher_fixed_discount: v.discount_value }));
+            toast.success(`Poukaz aktivován! Sleva ${v.discount_value} Kč`);
+          }
+        } catch {}
+      }
+    } else {
+      // Check saved coupon from newsletter
+      const savedCoupon = localStorage.getItem('seknuto_coupon');
+      if (savedCoupon) {
+        setCouponCode(savedCoupon);
+        validateCoupon(savedCoupon);
+      }
     }
-  }, []);
+
+    // Handle return from Stripe
+    const sessionId = searchParams.get('session_id');
+    const paymentStatus = searchParams.get('payment');
+    
+    if (sessionId && paymentStatus === 'success') {
+      setPaymentSessionId(sessionId);
+      pollPaymentStatus(sessionId);
+    } else if (paymentStatus === 'cancelled') {
+      toast.error('Platba byla zrušena. Zkuste to znovu.');
+    }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pollPaymentStatus = async (sessionId, attempts = 0) => {
+    const maxAttempts = 8;
+    if (attempts >= maxAttempts) {
+      toast.error('Nepodařilo se ověřit platbu. Kontaktujte nás.');
+      return;
+    }
+    try {
+      const res = await axios.get(`${API}/payments/deposit/status/${sessionId}`);
+      if (res.data.payment_status === 'paid') {
+        setPaymentPaid(true);
+        setCurrentStep(4); // move to contact step after payment
+        toast.success('Záloha 50 Kč zaplacena! Dokončete rezervaci.');
+      } else {
+        setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), 2000);
+      }
+    } catch {
+      setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), 2000);
+    }
+  };
 
   useEffect(() => {
     calculatePrice();
   }, [formData.service, formData.property_size, formData.condition, formData.additional_services]);
+
+  // Restore form draft after Stripe redirect
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      const draft = localStorage.getItem('booking_form_draft');
+      if (draft) {
+        try {
+          const saved = JSON.parse(draft);
+          const restoredForm = {
+            ...saved,
+            preferred_date: saved.preferred_date ? new Date(saved.preferred_date) : null,
+            alternative_date: saved.alternative_date ? new Date(saved.alternative_date) : null,
+          };
+          setFormData(restoredForm);
+          if (saved.couponCode) setCouponCode(saved.couponCode);
+          if (saved.couponDiscount) setCouponDiscount(saved.couponDiscount);
+          if (saved.couponValid !== undefined) setCouponValid(saved.couponValid);
+        } catch {}
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-adjust property_size default based on service type
   useEffect(() => {
@@ -125,10 +214,40 @@ const BookingPage = () => {
   };
 
   const getFinalPrice = () => {
-    if (couponDiscount > 0 && formData.estimated_price > 0) {
-      return Math.round(formData.estimated_price * (1 - couponDiscount / 100));
+    const base = formData.estimated_price;
+    if (!base) return 0;
+    // Voucher fixed discount
+    if (formData.voucher_fixed_discount > 0) {
+      return Math.max(0, base - formData.voucher_fixed_discount);
     }
-    return formData.estimated_price;
+    // Percentage coupon
+    if (couponDiscount > 0) {
+      return Math.round(base * (1 - couponDiscount / 100));
+    }
+    return base;
+  };
+
+  const handlePayDeposit = async () => {
+    if (!validateStep(4)) return;
+    setIsCreatingPayment(true);
+    try {
+      const res = await axios.post(`${API}/payments/deposit/create`, {
+        origin_url: window.location.origin,
+      });
+      // Redirect to Stripe - also save form data to localStorage for restore after return
+      localStorage.setItem('booking_form_draft', JSON.stringify({
+        ...formData,
+        preferred_date: formData.preferred_date ? formData.preferred_date.toISOString() : null,
+        alternative_date: formData.alternative_date ? formData.alternative_date.toISOString() : null,
+        couponCode,
+        couponDiscount,
+        couponValid,
+      }));
+      window.location.href = res.data.url;
+    } catch (err) {
+      toast.error('Nepodařilo se spustit platbu. Zkuste to znovu.');
+      setIsCreatingPayment(false);
+    }
   };
 
   // Basic services - with unit type
@@ -227,16 +346,30 @@ const BookingPage = () => {
   const handleSubmit = async () => {
     if (!validateStep(4)) return;
     
+    // If deposit not yet paid, redirect to Stripe
+    if (!paymentPaid) {
+      await handlePayDeposit();
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       const payload = {
         ...formData,
         preferred_date: formData.preferred_date ? formData.preferred_date.toISOString().split('T')[0] : null,
         alternative_date: formData.alternative_date ? formData.alternative_date.toISOString().split('T')[0] : null,
+        deposit_paid: true,
+        deposit_session_id: paymentSessionId,
       };
       
       const response = await axios.post(`${API}/bookings`, payload);
       setBookingId(response.data.id);
+      
+      // Clear localStorage drafts
+      localStorage.removeItem('booking_form_draft');
+      localStorage.removeItem('active_voucher');
+      localStorage.removeItem('seknuto_coupon');
+      
       setCurrentStep(5);
       toast.success('Rezervace odeslána!');
     } catch (error) {
@@ -789,6 +922,18 @@ const BookingPage = () => {
                   />
                 </div>
 
+                {/* Active Voucher Badge */}
+                {activeVoucher && (
+                  <div className="p-3 bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] rounded-xl flex items-center gap-3" data-testid="active-voucher-badge">
+                    <Gift className="w-5 h-5 text-[#52B788]" />
+                    <div>
+                      <p className="text-white text-sm font-semibold">Poukaz aktivní: {activeVoucher.code}</p>
+                      <p className="text-[#52B788] text-xs">{activeVoucher.display_discount} sleva</p>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-400 ml-auto" />
+                  </div>
+                )}
+
                 {/* Coupon */}
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
                   <Label className="text-sm font-semibold flex items-center gap-2">
@@ -863,6 +1008,27 @@ const BookingPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Deposit info */}
+                <div className={`p-4 rounded-xl border-2 ${paymentPaid ? 'bg-green-50 border-green-300' : 'bg-blue-50 border-blue-200'}`} data-testid="deposit-info">
+                  {paymentPaid ? (
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-6 h-6 text-green-600 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-green-800 text-sm">Záloha 50 Kč zaplacena</p>
+                        <p className="text-xs text-green-600">Bude odectena z finalni ceny</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="w-6 h-6 text-blue-600 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-blue-900 text-sm">Záloha 50 Kč kartou</p>
+                        <p className="text-xs text-blue-600">Zamezuje falešným objednávkám. Odečte se z finální ceny.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -972,7 +1138,7 @@ const BookingPage = () => {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCreatingPayment}
                   className="bg-[#3FA34D] hover:bg-[#2d7a38] rounded-full px-8 h-11 font-semibold"
                   data-testid="btn-submit"
                 >
@@ -981,10 +1147,20 @@ const BookingPage = () => {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Odesílám...
                     </>
+                  ) : isCreatingPayment ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Přesměrovávám...
+                    </>
+                  ) : paymentPaid ? (
+                    <>
+                      Dokončit rezervaci
+                      <Check className="w-4 h-4 ml-2" />
+                    </>
                   ) : (
                     <>
-                      Odeslat
-                      <Check className="w-4 h-4 ml-2" />
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Zaplatit zálohu 50 Kč
                     </>
                   )}
                 </Button>

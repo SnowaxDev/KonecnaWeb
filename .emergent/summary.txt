@@ -1,118 +1,113 @@
 <analysis>**original_problem_statement:**
-The user wants to create a modern, minimalist, and conversion-focused website for SeknuTo.cz, a local lawn care service in the Czech Republic.
+The user wants to create a modern, minimalist, and conversion-focused website for SeknuTo.cz, a local lawn care service in the Czech Republic. The user has provided multiple rounds of feedback, requesting UI/UX redesigns for several pages (Pricing, Services, Booking), bug fixes, and new features.
 
 **PRODUCT REQUIREMENTS:**
 -   **Pages:** Homepage, Services, Pricing, Booking, About Us, Contact.
--   **Brand Identity:** Specific color palette (, , , etc.) and fonts (Poppins for headings, Montserrat for body).
--   **Homepage:** Must include a hero section, 3-column pricing cards, a trust section, a services overview, a How It Works timeline, and a final CTA section.
--   **Critical Feature (Booking Form):** A multi-step (5-step) booking form is required:
-    1.  Service Selection
-    2.  Property Details (with auto-calculated price)
-    3.  Scheduling (calendar widget)
-    4.  Contact Information
-    5.  Confirmation Screen
--   **Backend:**
-    -   API for creating bookings, calculating prices, and checking availability.
-    -   Save bookings to a database.
-    -   Send confirmation emails to customers and notification emails to an admin.
-    -   Integrate with Google Calendar to add new bookings automatically.
--   **Newsletter & Coupons:**
-    -   A pop-up to capture user emails for a newsletter.
-    -   Subscribers should receive a 5% discount coupon via email.
-    -   The booking form must have a field to apply coupon codes.
-    -   Captured emails should be added to a Resend.com contact list/audience.
--   **Analytics:** Integrate Google Analytics.
--   **Design & UX:** The user has requested multiple rounds of UI/UX improvements, focusing on clarity, contrast, better mobile experience, and a more organized booking process. The initial tech stack recommendation was Next.js and PostgreSQL, but the implementation uses FastAPI and MongoDB.
+-   **Brand Identity:** Specific color palette and fonts.
+-   **Core Functionality:** A multi-step booking form with dynamic price calculation, service selection, and scheduling.
+-   **Backend:** FastAPI API to handle bookings, pricing, availability, and integrations. MongoDB for the database.
+-   **Integrations:**
+    -   **Resend:** For transactional emails (booking confirmations, admin notifications, coupons) and managing newsletter contacts.
+    -   **Google Calendar:** To automatically add new bookings to the owner's calendar.
+    -   **Google Analytics:** For tracking website traffic.
+-   **Voucher/Coupon System (Latest Request):** A comprehensive system based on a detailed technical specification provided by the user. This includes:
+    -   Unique, single-use voucher codes.
+    -   A custom landing page () that shows a celebratory popup.
+    -   Automatic application of the discount to the booking flow.
+    -   Backend database schema and API endpoints for voucher management.
 
-**User's preferred language**: The user primarily communicates in Czech. The next agent **MUST** respond in **Czech**.
+**User's preferred language**: Czech. The user consistently communicates in **Czech**. The next agent **MUST** respond in **Czech**.
 
 **what currently exists?**
-A full-stack application has been built using a FastAPI backend and a React frontend. The application includes all the requested pages and a complete, multi-step booking form. Key features like dynamic price calculation, a coupon system, and a newsletter subscription pop-up are implemented. Transactional emails for booking confirmations and coupon delivery are sent via Resend. The design and pricing have been iteratively updated based on user feedback. The backend is partially set up to sync new subscribers with a Resend contacts audience.
+A full-stack application using FastAPI and React. All original pages have been implemented. Major UI/UX redesigns for the Pricing, Services, and Booking pages have been completed based on user feedback. The booking form logic has been refined to fix issues with hourly pricing vs. square meters and improve date selection visibility. The backend sends admin notification emails successfully. Google Calendar integration is configured but requires user authorization. The backend logic for a new, detailed voucher system has just been added.
 
 **Last working item**:
--   **Last item agent was working:** The agent was implementing a large batch of user-requested updates simultaneously:
-    1.  Integrating with Resend Contacts to store newsletter subscribers.
-    2.  Adding Google Analytics tracking.
-    3.  Modifying the newsletter popup to appear immediately and not show again after submission.
-    4.  A comprehensive design and color palette overhaul to improve contrast, readability, and the mobile user experience.
-    The agent completed the code changes for all these items, restarted the backend, and performed a quick visual check via screenshots. The next planned step was to run a full test suite.
+-   **Last item agent was working:** The agent was implementing the comprehensive voucher system based on the user's detailed technical specification. The backend Pydantic models and API endpoints for creating, validating, and redeeming vouchers have been added to . A new frontend page, , has been created to serve as the landing page for scanned QR codes.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
 -   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** The date picker in the booking form was previously buggy, causing test failures. It was fixed, but regression testing is needed.
--   **Issue 2:** The deployment agent reported false positives about missing files. While the main agent dismissed this, it could indicate an underlying issue with the environment or build process that might reappear.
+-   **Issue 1:** Customer-facing emails (booking confirmation, newsletter coupon) are not being sent. This is because the Resend sending domain has not been verified by the user. Emails can only be sent to the user's own admin address ().
+-   **Issue 2:** Google Calendar integration is not functional. The backend code and credentials are in place, but the application has not been authorized by the user to access their calendar.
 
 Issues Detail:
--   **Issue 1:** Calendar Date Selection Bug
-    -   **Attempted fixes:** The agent simplified the  date logic in  and successfully passed tests in a later iteration. However, due to the component's complexity, it remains a high-risk area for regressions.
-    -   **Next debug checklist:** During the next test run, pay close attention to the calendar interactions: selecting a date, ensuring the correct date is stored in the state, and that disabled dates are not clickable. Check the browser console for any errors related to .
-    -   **Why fix this issue and what will be achieved with the fix?** The booking form is unusable without a functional date picker. Fixing it is critical for the core functionality of the application.
-    -   **Status:** TESTING PENDING
+-   **Issue 1:** Resend Domain Verification
+    -   **Attempted fixes:** The agent has identified the root cause from Resend error logs and repeatedly informed the user that they must verify their domain in their Resend account to enable sending emails to customers. The logic was adjusted to ensure admin notification emails are sent even if the customer email fails.
+    -   **Next debug checklist:** This is not a code issue. The agent must remind the user to complete the domain verification process in their Resend account.
+    -   **Why fix this issue and what will be achieved with the fix?** This is critical for customer communication. Fixing it will enable automatic booking confirmations and coupon delivery.
+    -   **Status:** BLOCKED (User Action Required)
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None
 
--   **Issue 2:** Deployment Agent False Positives
-    -   **Attempted fixes:** The agent verified the files exist and services are running, concluding it was a false alarm. No fix was attempted.
-    -   **Next debug checklist:** If the deployment agent is run again and fails, list the exact files it claims are missing and verify their paths and permissions using total 60
--rw-r--r-- 1 root root    29 Jun 18  2025 README.md
-drwxr-xr-x 3 root root  4096 Jan 22 22:17 backend
--rw-r--r-- 1 root root 14029 Jan 27 22:06 backend_test.py
--rw-r--r-- 1 root root  6824 Jan 22 22:16 design_guidelines.json
-drwxr-xr-x 6 root root  4096 Jan 27 22:32 frontend
-drwxr-xr-x 2 root root  4096 Jan 22 22:29 memory
-drwxr-xr-x 2 root root  4096 Jan 27 22:30 test_reports
--rw-r--r-- 1 root root  4774 Jun 18  2025 test_result.md
-drwxr-xr-x 2 root root  4096 Jun 18  2025 tests
--rw-r--r-- 1 root root    86 Jun 18  2025 yarn.lock. Check the deployment agent's logs for more context.
-    -   **Why fix this issue and what will be achieved with the fix?** Ensures the application is genuinely ready for deployment and that the automated checks are reliable.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
+-   **Issue 2:** Google Calendar Authorization
+    -   **Attempted fixes:** The agent successfully implemented the Google Calendar API integration on the backend using the credentials provided by the user. An authorization URL was generated for the user to grant consent. However, the user switched focus to the voucher system before completing the authorization.
+    -   **Next debug checklist:** Regenerate the authorization URL from the  endpoint and provide it to the user. After they authorize, test the booking creation flow to ensure events are added to their calendar.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a core business requirement for the owner to manage their schedule automatically.
+    -   **Status:** BLOCKED (User Action Required)
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1:** Finalize and Test Major Feature Update (P0)
-    -   **Where to resume:** The previous agent just finished implementing code for Resend Contacts integration, Google Analytics, improved popup logic, and a sitewide design overhaul. The next step is to run the testing agent to validate all these changes.
-    -   **What will be achieved with this?** This will verify that the new features are working correctly, the design improvements are applied, and no regressions were introduced, particularly in the complex booking form.
+-   **Task 1:** Complete Voucher System Implementation (P0)
+    -   **Where to resume:** The agent just added backend logic and a placeholder frontend page. The next steps are:
+        1.  Add the route for  to  pointing to .
+        2.  Install the  library using yarn add v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+success Saved lockfile.
+success Saved 2 new dependencies.
+info Direct dependencies
+└─ react-confetti@6.4.0
+info All dependencies
+├─ react-confetti@6.4.0
+└─ tween-functions@1.2.0
+Done in 0.59s..
+        3.  Implement the full UI and logic in  as per the user's technical specification (celebratory popup, API calls, redirect to booking).
+        4.  Modify the  to accept, display, and apply the voucher discount.
+        5.  Thoroughly test the entire flow from voucher landing page to discounted booking.
+    -   **What will be achieved with this?** A key marketing feature will be implemented, allowing the user to track offline campaigns via QR-coded flyers.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something:** No
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P0: Implement Google Calendar Integration:** This is a critical backend requirement from the original prompt. The  function in  is currently a stub and needs to be implemented using the Google Calendar API. This will require asking the user for API credentials/OAuth setup.
-    -   **P1: Set  for Notifications:** The backend logic to send admin notifications is in place, but the  variable is empty. The agent needs to ask the user for their desired admin email and add it to the  file.
-    -   **P1: Add Customer Testimonials Section:** The agent suggested adding a section for social proof/customer reviews to the homepage to increase trust.
-    -   **P2: Add Images to Services:** The agent suggested enhancing the services page with relevant images or illustrations.
+    -   **P0: User-facing Testing of Booking Fixes:** The booking form has been significantly overhauled to fix pricing display, hourly service logic, and date picker visibility. These changes need user verification.
+    -   **P1: Prepare for Hosting:** The user requested assistance in preparing the app for deployment on Vercel (frontend) and Render (backend). This involves ensuring build scripts are correct and environment variables are handled properly for production.
+    -   **P2: Add Customer Testimonials Section:** An agent suggestion to add a social proof section to the homepage to increase trust and conversions.
 
--   **Future Tasks (V2 from PRD):**
+-   **Future Tasks (from PRD):**
     -   Customer portal with booking history.
     -   Photo gallery of completed work.
     -   Blog for gardening tips.
     -   Online payment integration.
 
 **Completed work in this session**
--   Full-stack application skeleton created (FastAPI + React).
--   Implemented all 6 required pages (Homepage, Services, Pricing, Booking, About, Contact).
--   Built a 5-step booking form with dynamic price calculation ().
--   Integrated Resend for sending booking confirmation emails ().
--   Added a newsletter popup with a 5% coupon system and email validation ().
--   Updated all pricing and services on the frontend and backend based on two rounds of detailed user feedback.
--   Redesigned the booking form UI for better clarity, grouping services and packages.
--   Implemented a sitewide design improvement for better contrast and mobile readability (, ).
--   Partially implemented Resend Contacts integration on the backend ().
--   Created and integrated a Google Analytics component ().
+-   **Booking Form Overhaul:**
+    -   Fixed logic to differentiate between m² for area-based services and hodin for hourly services.
+    -   Corrected a price calculation bug where the frontend was not updating the  state correctly, leading to inflated estimates.
+    -   Redesigned the date/time selection step to make the chosen date highly visible and added specific time slots.
+    -   Enabled Sundays for booking as per user request.
+    -   Added informational text (Úklid trávy v ceně) to relevant services.
+-   **UI/UX Redesigns:**
+    -   Redesigned the  to be more conversion-focused with pricing tiers, trust badges, and a comparison table.
+    -   Redesigned the  with a modern, card-based layout consistent with the new pricing page.
+    -   Reverted the  to a previously approved multi-step design at the user's request, after a brief attempt at a new minimalist design.
+-   **Integrations & Backend:**
+    -   **Admin Notifications:** Fixed logic to ensure admin notification emails are sent via Resend even if the customer confirmation email fails (due to unverified domain). Set the admin email to the user-provided address.
+    -   **Google Calendar:** Integrated the Google Calendar API, added credentials to , and created backend endpoints for authorization and event creation.
+    -   **Newsletter Popup:** Redesigned the UI and fixed backend logic to ensure contacts are added to Resend.
+-   **Documentation:**
+    -   Created a comprehensive  file detailing the project's architecture, tech stack, setup instructions, and key environment variables.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Google Calendar Integration is Missing**
-    -   **Debug checklist:** The function  in  is a placeholder. It needs to be fully implemented using the Google Calendar API. The agent will need to use the  to get the correct implementation plan and ask the user for the necessary credentials.
-    -   **Why to solve this issue and what will be achieved with this?** This is a critical requirement from the original problem statement for managing the business's schedule.
-    -   **Should Test frontend/backend/both after fix:** backend
-    -   **Is recurring issue?** N
+-   None that are not already listed in the Pending/In progress Issue list.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -123,86 +118,82 @@ drwxr-xr-x 2 root root  4096 Jun 18  2025 tests
 **Key Technical Concepts**
 -   **Frontend:** React, React Router, Tailwind CSS, shadcn/ui
 -   **Backend:** FastAPI, Pydantic, MongoDB
--   **Integrations:** Resend
+-   **Integrations:** Resend (Email & Contacts), Google Calendar API
 -   **Architecture:** Monolithic repository with a decoupled frontend and backend.
 
 **key DB schema**
 -   **bookings:** 
 -   **subscribers:** 
 -   **coupons:** 
+-   **vouchers:** (New - as per Pydantic models in ) 
 
 **changes in tech stack**
--   The initial prompt recommended a Next.js + PostgreSQL (Supabase) stack. The agent implemented the application using its standard FastAPI + React + MongoDB stack.
+-   None.
 
 **All files of reference**
--   : Contains all backend logic, API endpoints, Pydantic models, and pricing rules.
--   : The complex, multi-step booking form. Core of the application's functionality.
--   : The newsletter subscription popup.
--   : The main frontend file containing the router and GA integration.
--   : Global styles, fonts, and color variables.
--   : The main landing page, recently updated with design improvements.
--   : Stores the  and other environment variables.
--   : The project requirements document created by the agent.
+-   : The monolithic backend file, recently updated with Google Calendar and Voucher system logic.
+-   : The core booking form, recently refactored to fix multiple UI and logic bugs.
+-   : Redesigned for better conversion.
+-   : Redesigned for UI consistency.
+-   : New file for the voucher landing page.
+-   : Needs to be modified to add the new  route.
+-   : Updated with Google API credentials.
+-   : New documentation file.
 
 **Areas that need refactoring**:
--   The  file has grown to over 500 lines and handles all backend responsibilities. It should be modularized by splitting routes, models, and business logic (like pricing calculations) into separate files/directories (e.g., , , ) to improve maintainability.
+-   **CRITICAL:** The  file is now extremely large and unmanageable. It urgently needs to be broken down into a modular structure (e.g., , , ). This should be proposed to the user as a necessary step for future maintenance and scalability.
 
 **key api endpoints**
--   : Creates a new booking.
--   : Subscribes a user to the newsletter and adds them to the Resend audience.
--   : Validates a discount coupon.
--   : Dynamically calculates the price estimate based on service and property details.
--   : Returns a list of available booking dates.
+-   : Creates a new booking and triggers Google Calendar/email logic.
+-   : Calculates price estimates.
+-   : Generates the URL for user to authorize Google Calendar.
+-   : Handles the OAuth2 callback from Google.
+-   : (New) Validates a voucher code.
+-   : (New) Admin endpoint to create vouchers.
 
 **Critical Info for New Agent**
--   **Tech Stack Deviation:** Be aware that the current stack (FastAPI/React/Mongo) differs from the user's initial recommendation (Next.js/Postgres). Do not attempt to migrate.
--   **Google Calendar is P0:** The most critical missing piece is the Google Calendar integration. This should be prioritized.
--   **Admin Email:** The admin notification system is ready but inactive. You need to prompt the user for their email address to enable it.
--   **Testing is Required:** A large number of changes were just made. Your first action should be to run the testing agent to ensure nothing is broken before proceeding with new tasks.
+-   **Top Priority:** Your first task is to complete the voucher system implementation as detailed in the In progress Task List.
+-   **User Authorization Required:** You will need to prompt the user to authorize the Google Calendar integration using the URL from the  endpoint.
+-   **Resend Blocker:** Remind the user that customer-facing emails are disabled until they verify their domain in their Resend account.
+-   **Refactoring Needed:** The backend  is becoming a significant technical debt. Plan to propose a refactoring task to the user after the current high-priority items are completed.
+-   **Follow the Spec:** The user provided a very detailed technical specification for the voucher system (message 280). Adhere to it closely.
 
 **documents and test reports created in this job**
--   /app/memory/PRD.md
--   /app/design_guidelines.json
--   /app/test_reports/iteration_1.json
--   /app/test_reports/iteration_2.json
--   /app/test_reports/iteration_3.json
--   /app/test_reports/iteration_4.json
--   /app/test_reports/iteration_5.json
+-   
+-   
+-    (Last full test run before booking page fixes)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requested integration with Resend Contacts, Google Analytics, immediate popup display, and a full design/readability overhaul for desktop and mobile.
-2.  **Agent:** Acknowledged the requests and created a plan.
-3.  **Agent:** Researched the Resend API for adding contacts.
-4.  **Agent:** Showed work on .
-5.  **Agent:** Showed work on  file.
-6.  **Agent:** Announced the backend update for Resend Contacts and design improvements.
-7.  **Agent:** Rewrote the  component.
-8.  **Agent:** Created the  component.
-9.  **Agent:** Updated  to include the GA component.
-10. **Agent:** Overwrote  and  with design improvements, restarted the backend, took screenshots to verify the popup and mobile view, and stated it was now time to run tests.
+1.  **User:** Requested analysis and fixes for the booking system: hourly services showing m², selected date being invisible in the calendar.
+2.  **Agent:** Analyzed and confirmed the bugs.
+3.  **Agent:** Implemented fixes for hourly service units, price calculation, and calendar UI.
+4.  **User:** Pointed out that the selected date (Feb 12) was still not visible *in the calendar grid* and that Sundays should be available for work.
+5.  **Agent:** Implemented fixes to highlight the selected day in the calendar and enabled Sundays on both frontend and backend.
+6.  **User:** Stated the estimated price is missing in the booking summary and that free cleanup info should be added to mowing services. Also reported that Google Calendar sync is not working and provided the Client ID and Secret.
+7.  **Agent:** Implemented fixes for the price display and added the info text. Configured the backend with the provided Google Calendar credentials.
+8.  **Agent:** Generated the Google Calendar authorization URL.
+9.  **User:** Sent a highly detailed, multi-page technical specification for a new QR-code based voucher/coupon system.
+10. **Agent:** Acknowledged the spec and began implementation, adding models and endpoints to the backend and creating the  file.
 
 **Project Health Check:**
--   **Broken:** None confirmed, but the latest batch of major changes is untested.
--   **Mocked:** The  function in  for Google Calendar integration is a non-functional placeholder.
+-   **Broken:**
+    -   Customer-facing email sending (booking confirmations, coupons) is non-functional due to the unverified Resend domain.
+-   **Mocked:**
+    -   The Google Calendar integration is fully coded but inactive as it's pending user authorization.
 
 **3rd Party Integrations**
--   **Resend:** Used for sending transactional emails (booking confirmations, coupons) and managing a contact audience. Requires a user-provided API key.
+-   **Resend:** Used for emails and contact lists. Requires a User API Key (provided).
+-   **Google Calendar API:** Used for scheduling bookings. Requires User OAuth2 consent (partially configured with user-provided credentials).
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (but not for the very last batch of changes).
+-   **Testing agent used after significant changes:** YES, the last full run was in .
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:**
-    -   
-    -   
-    -   
-    -   
-    -   
--   **Known regressions:** A bug in the calendar date picker appeared in one iteration but was subsequently fixed. It should be watched carefully during testing.
+-   **Test files created:** None. Test reports are in .
+-   **Known regressions:** None confirmed. The booking page was reverted to an older, more stable version at the user's request.
 
 **Credentials to test flow:**
--   A Resend API key is stored in .
+-   Resend API key is in .
+-   Google Client ID and Secret are in .
 
 **What agent forgot to execute**
--   **Google Calendar Integration:** A critical P0 feature from the original prompt was never implemented beyond a placeholder function.
--   **Prompt for Admin Email:** The agent identified the need to set the  for notifications but never asked the user for the email address.
--   **Testing the Final Changes:** The agent implemented a major update involving Resend Contacts, Google Analytics, popup logic, and a design overhaul but did not get to run the testing agent to verify these changes.</analysis>
+-   The agent was mid-task. The immediate next steps are to add the new route to  and install the  dependency to continue the voucher system implementation.</analysis>
