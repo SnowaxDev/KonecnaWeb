@@ -16,7 +16,8 @@ const VoucherPage = () => {
   const [error, setError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
-  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [countdown, setCountdown] = useState({ hours: 23, minutes: 59, seconds: 59 });
+  const [expiry24hDate, setExpiry24hDate] = useState(null);
 
   useEffect(() => {
     loadVoucher();
@@ -35,11 +36,19 @@ const VoucherPage = () => {
       
       setShowPopup(true);
       
-      // Start countdown
+      // 24h countdown from NOW (not from valid_until)
+      const storageKey = `voucher_opened_${voucher.code}`;
+      let openedAt = localStorage.getItem(storageKey);
+      if (!openedAt) {
+        openedAt = new Date().toISOString();
+        localStorage.setItem(storageKey, openedAt);
+      }
+      const expiry24h = new Date(openedAt).getTime() + 24 * 60 * 60 * 1000;
+      setExpiry24hDate(new Date(expiry24h));
+      
       const updateCountdown = () => {
-        const now = new Date().getTime();
-        const expiry = new Date(voucher.valid_until).getTime();
-        const distance = expiry - now;
+        const now = Date.now();
+        const distance = expiry24h - now;
         
         if (distance > 0) {
           setCountdown({
@@ -47,6 +56,8 @@ const VoucherPage = () => {
             minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
             seconds: Math.floor((distance % (1000 * 60)) / 1000)
           });
+        } else {
+          setCountdown({ hours: 0, minutes: 0, seconds: 0 });
         }
       };
       
@@ -177,7 +188,8 @@ const VoucherPage = () => {
 
             <p className="text-center text-sm text-[#FF6B35] mb-4">
               <Clock className="w-4 h-4 inline mr-1" />
-              Nabídka platí do: {voucher.valid_until_formatted}
+              Nabídka platí 24h od prvního otevření – do:{' '}
+              {expiry24hDate ? expiry24hDate.toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '...'}
             </p>
 
             {/* CTA Button */}

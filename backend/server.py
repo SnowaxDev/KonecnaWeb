@@ -244,7 +244,7 @@ class CouponValidation(BaseModel):
 # ============== VOUCHER MODELS ==============
 
 class VoucherCreate(BaseModel):
-    code: str
+    code: Optional[str] = None  # auto-generated if empty
     display_name: str
     discount_type: str  # 'percentage', 'fixed_amount', 'free_service'
     discount_value: Optional[float] = None
@@ -878,12 +878,12 @@ async def validate_coupon(data: CouponValidation):
 async def create_voucher(voucher_data: VoucherCreate):
     """Create a new voucher (admin endpoint)"""
     # Check if code already exists
-    existing = await db.vouchers.find_one({"code": voucher_data.code.upper()})
+    existing = await db.vouchers.find_one({"code": voucher_data.code.upper()}) if voucher_data.code else None
     if existing:
         raise HTTPException(status_code=400, detail="Voucher code already exists")
     
     voucher = Voucher(
-        code=voucher_data.code.upper(),
+        code=(voucher_data.code.upper() if voucher_data.code else generate_coupon_code()),
         display_name=voucher_data.display_name,
         discount_type=voucher_data.discount_type,
         discount_value=voucher_data.discount_value,

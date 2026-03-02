@@ -8,6 +8,17 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+
+// Parse FastAPI/Pydantic validation errors (detail can be array or string)
+const parseError = (err) => {
+  const detail = err?.response?.data?.detail;
+  if (!detail) return 'Neznámá chyba';
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map(e => `${e.loc?.slice(-1)[0] || ''}: ${e.msg}`).join(', ');
+  }
+  return JSON.stringify(detail);
+};
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
@@ -196,7 +207,8 @@ const VouchersTab = ({ token }) => {
     try {
       const payload = {
         ...form,
-        code: form.code || undefined,
+        code: form.code.trim() || undefined,
+        display_name: form.display_name.trim(),
         discount_value: Number(form.discount_value),
         max_uses: Number(form.max_uses),
         valid_from: new Date(form.valid_from).toISOString(),
@@ -207,7 +219,7 @@ const VouchersTab = ({ token }) => {
       setForm(f => ({ ...f, code: '', display_name: '', campaign_name: '', flyer_batch: '' }));
       load();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Chyba při vytváření');
+      toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
@@ -398,7 +410,7 @@ const CouponsTab = ({ token }) => {
       setForm({ code: '', discount_percent: 10, description: '' });
       load();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Chyba při vytváření');
+      toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
@@ -687,7 +699,7 @@ const BlogTab = ({ token }) => {
       setForm({ title: '', slug: '', excerpt: '', content: '', category: 'Tipy', cover_image: '', author: 'SeknuTo.cz', read_time: 3, published: true });
       load();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Chyba');
+      toast.error(parseError(err));
     } finally { setCreating(false); }
   };
 
