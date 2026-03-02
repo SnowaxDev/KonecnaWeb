@@ -241,6 +241,51 @@ class EmailSubscription(BaseModel):
 class CouponValidation(BaseModel):
     code: str
 
+# ============== VOUCHER MODELS ==============
+
+class VoucherCreate(BaseModel):
+    code: str
+    display_name: str
+    discount_type: str  # 'percentage', 'fixed_amount', 'free_service'
+    discount_value: Optional[float] = None
+    free_service_id: Optional[str] = None
+    max_uses: int = 1
+    valid_from: str  # ISO date string
+    valid_until: str  # ISO date string
+    campaign_name: Optional[str] = None
+    flyer_batch: Optional[str] = None
+    target_audience: Optional[str] = None
+
+class Voucher(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    code: str
+    display_name: str
+    discount_type: str
+    discount_value: Optional[float] = None
+    free_service_id: Optional[str] = None
+    max_uses: int = 1
+    uses_count: int = 0
+    valid_from: str
+    valid_until: str
+    campaign_name: Optional[str] = None
+    flyer_batch: Optional[str] = None
+    target_audience: Optional[str] = None
+    status: str = "active"  # 'active', 'inactive', 'expired', 'exhausted'
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class VoucherRedemption(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    voucher_id: str
+    voucher_code: str
+    user_ip: Optional[str] = None
+    user_agent: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
+    booking_id: Optional[str] = None
+    booking_completed: bool = False
+    discount_applied: float = 0
+    redeemed_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ============== COUPON CONFIG ==============
 
 VALID_COUPONS = {}  # Will be populated dynamically
