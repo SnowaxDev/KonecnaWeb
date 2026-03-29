@@ -1,0 +1,94 @@
+{
+  "summary": "CUSTOM ORDER FEATURE TEST for SeknuTo.cz - New 'Služby na objednávku' (custom_order) flow tested. 7/7 backend tests passed (100%). Full UI flow verified through all 5 steps. Standard booking regression passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "=== CUSTOM ORDER FEATURE (NEW) ===",
+    "Step 1: 'Služby na objednávku' section visible with 'ZAKÁZKA' badge",
+    "Step 1: Can select 'Poptávka na zakázkové práce' option showing 'Dle dohody' price",
+    "Step 2: Custom order form shows customer type selection (Soukromá osoba / Firma)",
+    "Step 2: 9 work type checkboxes visible (garden_design, lawn_installation, planting, etc.)",
+    "Step 2: Description textarea visible for custom requirements",
+    "Step 2: Validation error 'Vyberte alespoň jeden typ práce' shown when no work type selected",
+    "Step 3: Shows 'Dle dohody' price instead of calculated price",
+    "Step 3: Calendar date selection works correctly",
+    "Step 4: 'Cena dle dohody' info box visible (amber background)",
+    "Step 4: Coupon section correctly HIDDEN for custom order",
+    "Step 4: Submit button says 'Odeslat poptávku' (not 'Odeslat rezervaci')",
+    "Step 5: Success message 'Vaše poptávka byla úspěšně odeslána'",
+    "Step 5: Shows 'Služby na objednávku' service name",
+    "Step 5: Shows 'Dle dohody' price in confirmation",
+    
+    "=== BACKEND API ===",
+    "POST /api/bookings with service=custom_order returns 200 with booking id",
+    "Custom order booking persisted in database (verified via GET)",
+    "Notes field contains '[ZAKÁZKOVÁ PRÁCE]' marker with customer type and work types",
+    "estimated_price=0 for custom orders (price is 'Dle dohody')",
+    
+    "=== STANDARD BOOKING REGRESSION ===",
+    "Step 1: 'Základní služby' section expanded by default with 5 services",
+    "Step 2: Property size input and price preview visible (~400 Kč for 200m²)",
+    "Step 4: Coupon section visible for standard booking",
+    "Step 4: Price summary shows actual price in Kč",
+    "Step 4: Submit button says 'Odeslat rezervaci'",
+    "POST /api/bookings with service=lawn_mowing returns 200",
+    "POST /api/pricing/calculate returns correct price (200m² × 2 Kč = 400 Kč)",
+    "POST /api/pricing/calculate with condition=overgrown applies 1.5x multiplier"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_custom_order.py",
+    "/app/test_reports/pytest/pytest_custom_order.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CUSTOM ORDER FLOW: Correctly implemented with separate step 2 form (customer type, work types, description)",
+    "PRICE DISPLAY: 'Dle dohody' shown in steps 3, 4, and 5 for custom orders",
+    "BUTTON TEXT: 'Odeslat poptávku' for custom orders vs 'Odeslat rezervaci' for standard",
+    "COUPON SECTION: Correctly hidden for custom orders (line 1051: !isCustomOrder(formData.service))",
+    "NOTES FORMAT: Custom order notes include [ZAKÁZKOVÁ PRÁCE] marker with structured data",
+    "SERVICE_NAMES: custom_order mapped to 'Práce na objednávku' in backend (line 82)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_custom_order.py"
+  ],
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "100% (all custom order steps 1-5 verified, standard booking regression passed)"
+  },
+  "test_credentials": {
+    "admin_password": "SeknuTo2025!",
+    "test_bookings_created": "Multiple custom_order and lawn_mowing test bookings"
+  },
+  "seed_data_creation": "Created test custom_order bookings during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Custom order feature fully tested. New 'Služby na objednávku' section in Step 1 with ZAKÁZKA badge. Step 2 shows special form with customer type (Soukromá osoba/Firma), 9 work type checkboxes, and description textarea. Validation requires at least one work type. Steps 3-5 show 'Dle dohody' instead of price. Step 4 hides coupon section and shows 'Odeslat poptávku' button. Step 5 shows 'poptávka byla úspěšně odeslána'. Standard booking flow unchanged - coupon section visible, price calculated, 'Odeslat rezervaci' button.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["Google Calendar API (pending OAuth)", "Customer confirmation emails (Resend domain unverified)"],
+    "note": "Google Calendar and Resend emails are mocked/not fully configured. Core booking functionality works."
+  },
+  "custom_order_feature_verification": {
+    "step1_section_visible": true,
+    "step1_zakazka_badge": true,
+    "step2_customer_type_buttons": true,
+    "step2_work_type_checkboxes": 9,
+    "step2_description_textarea": true,
+    "step2_validation_error": "Vyberte alespoň jeden typ práce",
+    "step3_dle_dohody_price": true,
+    "step4_coupon_hidden": true,
+    "step4_price_info_box": "Cena dle dohody",
+    "step4_submit_button_text": "Odeslat poptávku",
+    "step5_success_message": "Vaše poptávka byla úspěšně odeslána",
+    "step5_dle_dohody_price": true,
+    "backend_accepts_custom_order": true,
+    "backend_returns_booking_id": true
+  }
+}

@@ -5,7 +5,8 @@ import {
   ChevronLeft, ChevronRight, Check, Calendar as CalendarIcon,
   Scissors, Sprout, Leaf, TreeDeciduous, Package, HelpCircle,
   User, Phone, Mail, MapPin, Loader2, Tag, CheckCircle, XCircle,
-  Sun, Snowflake, Flower2, Truck, ChevronDown, ChevronUp, Banknote, Gift
+  Sun, Snowflake, Flower2, Truck, ChevronDown, ChevronUp, Banknote, Gift,
+  ClipboardList, Building2, Home, Shovel
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -42,6 +43,11 @@ const BookingPage = () => {
   // Collapsible sections state
   const [expandedSection, setExpandedSection] = useState('basic'); // 'basic', 'packages', 'other'
   
+  // Custom order specific state
+  const [customOrderTypes, setCustomOrderTypes] = useState([]);
+  const [customOrderDescription, setCustomOrderDescription] = useState('');
+  const [customOrderCustomerType, setCustomOrderCustomerType] = useState('individual'); // 'individual' | 'company'
+
   const [formData, setFormData] = useState({
     service: '',
     property_size: 100,
@@ -190,11 +196,33 @@ const BookingPage = () => {
     { id: 'debris_removal', label: 'Odvoz odpadu (+400 Kč)' },
   ];
 
+  // Custom order work types
+  const customOrderWorkTypes = [
+    { id: 'garden_design', label: 'Návrh a realizace zahrady', icon: Sprout },
+    { id: 'lawn_installation', label: 'Pokládka trávníku (osev / travní koberec)', icon: Leaf },
+    { id: 'planting', label: 'Výsadba stromů, keřů a záhonů', icon: TreeDeciduous },
+    { id: 'irrigation', label: 'Závlahový systém', icon: Flower2 },
+    { id: 'excavation', label: 'Zemní práce a terénní úpravy', icon: Shovel },
+    { id: 'fencing', label: 'Oplocení a obrubníky', icon: Building2 },
+    { id: 'paving', label: 'Dlažba, chodníky a terasy', icon: MapPin },
+    { id: 'cleanup', label: 'Kompletní úklid a revitalizace zahrady', icon: Scissors },
+    { id: 'other_custom', label: 'Jiné (popište níže)', icon: HelpCircle },
+  ];
+
+  const toggleCustomOrderType = (typeId) => {
+    setCustomOrderTypes(prev =>
+      prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]
+    );
+  };
+
   const timeOptions = [
     { id: 'morning', label: 'Dopoledne', time: '8:00 - 12:00' },
     { id: 'afternoon', label: 'Odpoledne', time: '12:00 - 17:00' },
     { id: 'anytime', label: 'Kdykoliv', time: 'Flexibilní' },
   ];
+
+  // Helper to check if service is custom order
+  const isCustomOrder = (serviceId) => serviceId === 'custom_order';
 
   // Helper to check if service is hourly
   const isHourlyService = (serviceId) => {
@@ -234,6 +262,13 @@ const BookingPage = () => {
         }
         return true;
       case 2:
+        if (isCustomOrder(formData.service)) {
+          if (customOrderTypes.length === 0) {
+            toast.error('Vyberte alespoň jeden typ práce');
+            return false;
+          }
+          return true;
+        }
         if (formData.property_size <= 0) {
           toast.error('Zadejte velikost plochy');
           return false;
@@ -265,8 +300,17 @@ const BookingPage = () => {
     
     setIsSubmitting(true);
     try {
+      // For custom orders, build notes from the custom order form
+      let notesValue = formData.notes;
+      if (isCustomOrder(formData.service)) {
+        const typesText = customOrderTypes.join(', ');
+        const customerTypeText = customOrderCustomerType === 'company' ? 'Firma' : 'Soukromá osoba';
+        notesValue = `[ZAKÁZKOVÁ PRÁCE]\nTyp zákazníka: ${customerTypeText}\nTypy prací: ${typesText}\nPopis: ${customOrderDescription}${formData.notes ? '\nPoznámka: ' + formData.notes : ''}`;
+      }
+
       const payload = {
         ...formData,
+        notes: notesValue,
         preferred_date: formData.preferred_date ? formData.preferred_date.toISOString().split('T')[0] : null,
         alternative_date: formData.alternative_date ? formData.alternative_date.toISOString().split('T')[0] : null,
       };
@@ -279,7 +323,7 @@ const BookingPage = () => {
       localStorage.removeItem('seknuto_coupon');
       
       setCurrentStep(5);
-      toast.success('Rezervace odeslána!');
+      toast.success('Poptávka odeslána!');
     } catch (error) {
       console.error('Booking failed:', error);
       toast.error('Chyba při odesílání. Zkuste to znovu.');
@@ -308,6 +352,8 @@ const BookingPage = () => {
   };
 
   const getServiceName = (id) => {
+    if (id === 'custom_order') return 'Služby na objednávku';
+    if (id === 'other') return 'Jiná služba';
     const service = [...basicServices, ...packages].find(s => s.id === id);
     return service ? service.title : id;
   };
@@ -527,7 +573,50 @@ const BookingPage = () => {
                     <span className="text-sm font-bold text-gray-500">Dle dohody</span>
                   </label>
                 </CollapsibleSection>
-              </div>
+
+                {/* Custom Order Section */}
+                <CollapsibleSection
+                  title="Služby na objednávku"
+                  icon={ClipboardList}
+                  isExpanded={expandedSection === 'custom'}
+                  onToggle={() => setExpandedSection(expandedSection === 'custom' ? null : 'custom')}
+                  badge="ZAKÁZKA"
+                >
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800">
+                      Pro komplexní zahradní úpravy, realizace a větší projekty. Cena bude stanovena po konzultaci.
+                    </p>
+                  </div>
+                  <label
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      formData.service === 'custom_order'
+                        ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                        : 'border-gray-100 hover:border-[#3FA34D]/50'
+                    }`}
+                    data-testid="service-option-custom-order"
+                  >
+                    <input
+                      type="radio"
+                      name="service"
+                      value="custom_order"
+                      checked={formData.service === 'custom_order'}
+                      onChange={() => selectService('custom_order', 'custom')}
+                      className="sr-only"
+                    />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      formData.service === 'custom_order' ? 'bg-[#3FA34D]' : 'bg-gray-100'
+                    }`}>
+                      <ClipboardList className={`w-5 h-5 ${
+                        formData.service === 'custom_order' ? 'text-white' : 'text-gray-500'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 text-sm">Poptávka na zakázkové práce</p>
+                      <p className="text-xs text-gray-500">Zahradní realizace, výsadba, terénní úpravy...</p>
+                    </div>
+                    <span className="text-sm font-bold text-[#3FA34D] whitespace-nowrap">Dle dohody</span>
+                  </label>
+                </CollapsibleSection>              </div>
 
               {/* Selected Service Preview */}
               {formData.service && (
@@ -536,6 +625,9 @@ const BookingPage = () => {
                     <div>
                       <p className="text-xs text-gray-500">Vybraná služba:</p>
                       <p className="font-semibold text-[#3FA34D]">{getServiceName(formData.service)}</p>
+                      {isCustomOrder(formData.service) && (
+                        <p className="text-xs text-amber-600 mt-0.5">Cena bude stanovena po konzultaci</p>
+                      )}
                     </div>
                     <CheckCircle className="w-6 h-6 text-[#3FA34D]" />
                   </div>
@@ -544,8 +636,115 @@ const BookingPage = () => {
             </div>
           )}
 
-          {/* Step 2: Property Details */}
-          {currentStep === 2 && (
+          {/* Step 2: Custom Order Details (only for custom_order service) */}
+          {currentStep === 2 && isCustomOrder(formData.service) && (
+            <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-custom-content">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-[#3FA34D]" />
+                Detaily zakázkové poptávky
+              </h2>
+
+              <div className="space-y-5">
+                {/* Selected Service */}
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <p className="text-xs text-gray-500">Vybraná služba:</p>
+                  <p className="font-semibold text-gray-900">Služby na objednávku</p>
+                </div>
+
+                {/* Customer Type */}
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Typ zákazníka *</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCustomOrderCustomerType('individual')}
+                      className={`p-3 rounded-xl border-2 flex items-center gap-2 transition-all ${
+                        customOrderCustomerType === 'individual'
+                          ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                          : 'border-gray-200 hover:border-[#3FA34D]/50 bg-white'
+                      }`}
+                      data-testid="customer-type-individual"
+                    >
+                      <Home className={`w-5 h-5 ${customOrderCustomerType === 'individual' ? 'text-[#3FA34D]' : 'text-gray-500'}`} />
+                      <span className={`text-sm font-medium ${customOrderCustomerType === 'individual' ? 'text-[#3FA34D]' : 'text-gray-700'}`}>
+                        Soukromá osoba
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCustomOrderCustomerType('company')}
+                      className={`p-3 rounded-xl border-2 flex items-center gap-2 transition-all ${
+                        customOrderCustomerType === 'company'
+                          ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                          : 'border-gray-200 hover:border-[#3FA34D]/50 bg-white'
+                      }`}
+                      data-testid="customer-type-company"
+                    >
+                      <Building2 className={`w-5 h-5 ${customOrderCustomerType === 'company' ? 'text-[#3FA34D]' : 'text-gray-500'}`} />
+                      <span className={`text-sm font-medium ${customOrderCustomerType === 'company' ? 'text-[#3FA34D]' : 'text-gray-700'}`}>
+                        Firma / Organizace
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Work Types */}
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Typy prací * <span className="text-gray-400 font-normal">(vyberte vše, co se týká)</span></Label>
+                  <div className="space-y-2">
+                    {customOrderWorkTypes.map((type) => (
+                      <label
+                        key={type.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          customOrderTypes.includes(type.id)
+                            ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                            : 'border-gray-100 hover:border-gray-200'
+                        }`}
+                        data-testid={`work-type-${type.id}`}
+                      >
+                        <Checkbox
+                          checked={customOrderTypes.includes(type.id)}
+                          onCheckedChange={() => toggleCustomOrderType(type.id)}
+                        />
+                        <type.icon className={`w-4 h-4 ${customOrderTypes.includes(type.id) ? 'text-[#3FA34D]' : 'text-gray-400'}`} />
+                        <span className="text-sm font-medium text-gray-800">{type.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <Label htmlFor="custom-description" className="text-sm font-semibold">
+                    Popis požadavků / rozsah prací
+                  </Label>
+                  <Textarea
+                    id="custom-description"
+                    value={customOrderDescription}
+                    onChange={(e) => setCustomOrderDescription(e.target.value)}
+                    className="mt-2 min-h-[100px] border-2 focus:border-[#3FA34D]"
+                    placeholder="Popište co potřebujete – velikost pozemku, stávající stav, vaše přání a očekávání..."
+                    data-testid="custom-order-description"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Čím více informací, tím přesnější nabídku dostanete.</p>
+                </div>
+
+                {/* Info box */}
+                <div className="p-4 bg-[#1B4332]/5 border border-[#1B4332]/20 rounded-xl flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-[#3FA34D] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#1B4332]">Co se stane po odeslání?</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Do 24 hodin vás kontaktujeme, probereme detaily a domluvíme nezávaznou prohlídku. Cena bude stanovena individuálně.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Property Details (standard services) */}
+          {currentStep === 2 && !isCustomOrder(formData.service) && (
             <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#3FA34D]" />
@@ -658,14 +857,20 @@ const BookingPage = () => {
                     <div>
                       <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
                       <p className="text-sm text-gray-500">
-                        {isHourlyService(formData.service) 
-                          ? `${formData.property_size} hodin` 
+                        {isCustomOrder(formData.service)
+                          ? (customOrderTypes.length > 0 ? customOrderTypes.slice(0, 2).map(t => customOrderWorkTypes.find(w => w.id === t)?.label).filter(Boolean).join(', ') + (customOrderTypes.length > 2 ? '...' : '') : 'Zakázkové práce')
+                          : isHourlyService(formData.service)
+                          ? `${formData.property_size} hodin`
                           : `${formData.property_size} m²`
                         }
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-[#3FA34D]">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+                      {isCustomOrder(formData.service) ? (
+                        <p className="text-lg font-bold text-amber-600">Dle dohody</p>
+                      ) : (
+                        <p className="text-xl font-bold text-[#3FA34D]">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -831,7 +1036,7 @@ const BookingPage = () => {
                 </div>
 
                 {/* Active Voucher Badge */}
-                {activeVoucher && (
+                {activeVoucher && !isCustomOrder(formData.service) && (
                   <div className="p-3 bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] rounded-xl flex items-center gap-3" data-testid="active-voucher-badge">
                     <Gift className="w-5 h-5 text-[#52B788]" />
                     <div>
@@ -842,8 +1047,8 @@ const BookingPage = () => {
                   </div>
                 )}
 
-                {/* Coupon – skryt pokud je aktivní voucher */}
-                {!activeVoucher && (
+                {/* Coupon – skryt pokud je aktivní voucher nebo custom_order */}
+                {!activeVoucher && !isCustomOrder(formData.service) && (
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
                   <Label className="text-sm font-semibold flex items-center gap-2">
                     <Tag className="w-4 h-4 text-amber-600" />
@@ -892,8 +1097,8 @@ const BookingPage = () => {
                   </span>
                 </label>
 
-                {/* Price Summary */}
-                {formData.estimated_price > 0 && (
+                {/* Price Summary - standard services only */}
+                {formData.estimated_price > 0 && !isCustomOrder(formData.service) && (
                   <div className="p-4 bg-gray-900 rounded-xl text-white" data-testid="final-price-summary">
                     <div className="flex justify-between items-center">
                       <div>
@@ -924,6 +1129,21 @@ const BookingPage = () => {
                   </div>
                 )}
 
+                {/* Custom Order - price info */}
+                {isCustomOrder(formData.service) && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl" data-testid="custom-order-price-info">
+                    <div className="flex items-center gap-3">
+                      <ClipboardList className="w-5 h-5 text-amber-600 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-amber-800 text-sm">Cena dle dohody</p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          Po odeslání poptávky vás kontaktujeme do 24 hodin a domluvíme cenovou nabídku.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Platba na místě */}
                 <div className="p-4 rounded-xl border-2 bg-[#F0FDF4] border-[#3FA34D]/30" data-testid="payment-onsite-info">
                   <div className="flex items-center gap-3">
@@ -948,7 +1168,12 @@ const BookingPage = () => {
               </div>
               
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Děkujeme! 🎉</h2>
-              <p className="text-gray-600 mb-6">Rezervace byla úspěšně odeslána.</p>
+              <p className="text-gray-600 mb-6">
+                {isCustomOrder(formData.service)
+                  ? 'Vaše poptávka byla úspěšně odeslána.'
+                  : 'Rezervace byla úspěšně odeslána.'
+                }
+              </p>
 
               <div className="w-full max-w-sm bg-gray-50 rounded-xl p-4 mb-6 text-left">
                 <div className="space-y-2 text-sm">
@@ -956,32 +1181,41 @@ const BookingPage = () => {
                     <span className="text-gray-500">Služba:</span>
                     <span className="font-medium">{getServiceName(formData.service)}</span>
                   </div>
-                  <div className="flex justify-between py-1.5 border-b border-gray-200">
-                    <span className="text-gray-500">{isHourlyService(formData.service) ? 'Hodin:' : 'Plocha:'}</span>
-                    <span className="font-medium">
-                      {isHourlyService(formData.service) 
-                        ? `${formData.property_size} hod`
-                        : `${formData.property_size} m²`
-                      }
-                    </span>
-                  </div>
+                  {!isCustomOrder(formData.service) && (
+                    <div className="flex justify-between py-1.5 border-b border-gray-200">
+                      <span className="text-gray-500">{isHourlyService(formData.service) ? 'Hodin:' : 'Plocha:'}</span>
+                      <span className="font-medium">
+                        {isHourlyService(formData.service) 
+                          ? `${formData.property_size} hod`
+                          : `${formData.property_size} m²`
+                        }
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between py-1.5 border-b border-gray-200">
                     <span className="text-gray-500">Termín:</span>
                     <span className="font-medium">{formData.preferred_date?.toLocaleDateString('cs-CZ')}</span>
                   </div>
-                  <div className="flex justify-between py-1.5 border-b border-gray-200">
-                    <span className="text-gray-500">Čas:</span>
-                    <span className="font-medium">{getTimeName(formData.preferred_time)}</span>
-                  </div>
+                  {!isCustomOrder(formData.service) && (
+                    <div className="flex justify-between py-1.5 border-b border-gray-200">
+                      <span className="text-gray-500">Čas:</span>
+                      <span className="font-medium">{getTimeName(formData.preferred_time)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between py-2 bg-[#F0FDF4] -mx-2 px-2 rounded">
                     <span className="font-medium">Cena:</span>
-                    <span className="font-bold text-[#3FA34D]">~{getFinalPrice().toLocaleString('cs-CZ')} Kč</span>
+                    <span className={`font-bold ${isCustomOrder(formData.service) ? 'text-amber-600' : 'text-[#3FA34D]'}`}>
+                      {isCustomOrder(formData.service) ? 'Dle dohody' : `~${getFinalPrice().toLocaleString('cs-CZ')} Kč`}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-gray-500 mb-4">
-                Brzy vás budeme kontaktovat pro potvrzení termínu.
+                {isCustomOrder(formData.service)
+                  ? 'Do 24 hodin vás kontaktujeme pro upřesnění detailů a cenovou nabídku.'
+                  : 'Brzy vás budeme kontaktovat pro potvrzení termínu.'
+                }
               </p>
 
               <div className="w-full max-w-sm bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-xl p-3 mb-4 flex items-center gap-3">
@@ -1014,6 +1248,9 @@ const BookingPage = () => {
                     setCouponCode('');
                     setCouponValid(null);
                     setCouponDiscount(0);
+                    setCustomOrderTypes([]);
+                    setCustomOrderDescription('');
+                    setCustomOrderCustomerType('individual');
                   }}
                   className="bg-[#3FA34D] hover:bg-[#2d7a38] rounded-full px-6"
                   data-testid="btn-new-booking"
@@ -1064,7 +1301,7 @@ const BookingPage = () => {
                     </>
                   ) : (
                     <>
-                      Odeslat rezervaci
+                      {isCustomOrder(formData.service) ? 'Odeslat poptávku' : 'Odeslat rezervaci'}
                       <Check className="w-4 h-4 ml-2" />
                     </>
                   )}
