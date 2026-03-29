@@ -1,0 +1,132 @@
+{
+  "summary": "FULL ORDER SYSTEM TEST for SeknuTo.cz Czech lawn care - Stripe REMOVED, payment now on-site. 23/23 backend tests passed (100%). All booking flow steps 1-5 verified. Price calculation, coupons, vouchers, admin order management all working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "=== BOOKING FORM STEP 1: SERVICE SELECTION ===",
+    "Step 1 loads with service categories: Základní služby, Sezónní balíčky, Jiná služba",
+    "Can select lawn_mowing service (Sekání trávy bez hnojení)",
+    "Can select overgrown service (Hrubé sekání přerostlá)",
+    "Can select garden_work service (Zahradnické práce)",
+    "Selecting a service enables Next button",
+    "NO Stripe/payment/deposit elements visible in step 1",
+    
+    "=== BOOKING FORM STEP 2: SIZE + CONDITION ===",
+    "Step 2 shows property size input",
+    "Step 2 shows condition selection (normal/overgrown/very_neglected)",
+    "Additional services checkboxes visible (mulching, debris removal)",
+    "For hourly service (garden_work), shows 'Odhadovaný počet hodin' not 'm²'",
+    "Price preview updates dynamically (200m² = ~400 Kč)",
+    
+    "=== BOOKING FORM STEP 3: DATE + TIME ===",
+    "Calendar shows Czech month names (leden, únor, etc.)",
+    "Can select a date in the future",
+    "Selected date is highlighted in green box",
+    "Time slot options: Dopoledne, Odpoledne, Kdykoliv",
+    "Past dates are disabled",
+    
+    "=== BOOKING FORM STEP 4: CONTACT + SUMMARY ===",
+    "All contact fields present: Jméno, Telefon, Email, Adresa zahrady",
+    "Coupon field visible (Slevový kupón with Ověřit button)",
+    "PAYMENT ON SITE info box shows: Banknote icon, 'Platba na místě po dokončení práce'",
+    "NO Stripe/credit card/deposit elements anywhere in step 4",
+    "Price summary shows estimated price with 'Kč' currency",
+    "Submit button says 'Odeslat rezervaci' NOT 'Zaplatit zálohu'",
+    "GDPR consent checkbox required before submit",
+    
+    "=== BOOKING SUBMISSION ===",
+    "POST /api/bookings with all required fields returns 200 with booking id",
+    "POST /api/bookings stores booking in DB correctly (verified via GET)",
+    "POST /api/bookings with coupon_code stores coupon in booking",
+    "Step 5 confirmation shows: 'Děkujeme!', booking details, 'Platba na místě' info",
+    "Step 5 has 'Nová rezervace' button that resets form",
+    
+    "=== PRICE CALCULATION ===",
+    "POST /api/pricing/calculate for lawn_mowing 100m² returns 200 Kč",
+    "POST /api/pricing/calculate for lawn_mowing 300m² returns 600 Kč (higher than 100m²)",
+    "POST /api/pricing/calculate with condition=overgrown returns 1.5x price (300 Kč for 100m²)",
+    "POST /api/pricing/calculate for garden_work 2 hours returns 700 Kč",
+    "Mulching additional service adds 0.5 Kč/m² (+50 Kč for 100m²)",
+    "Booking form dynamically shows price as user changes size/service",
+    
+    "=== COUPON SYSTEM IN BOOKING ===",
+    "POST /api/admin/coupons creates coupon with discount_percent",
+    "POST /api/coupons/validate for valid code returns discount_percent",
+    "Invalid coupon code shows 'Neplatný kupón' error in red",
+    "POST /api/coupons/validate for INVALID_CODE returns 404",
+    
+    "=== VOUCHER IN BOOKING ===",
+    "POST /api/vouchers creates percentage voucher (status=active)",
+    "POST /api/vouchers creates fixed_amount voucher (status=active)",
+    "GET /api/vouchers/:code returns voucher with is_valid=true",
+    "POST /api/vouchers/:code/claim returns redirect_url with voucher params",
+    "Voucher landing page (/poukaz/:code) loads with confetti and 24h countdown",
+    "Click 'UPLATNIT POUKAZ A OBJEDNAT' redirects to /rezervace?voucher=CODE&auto_apply=true",
+    "In booking form: coupon field is HIDDEN when voucher active",
+    "Voucher badge shows 'Poukaz aktivní: CODE' with discount",
+    "Price summary shows strikethrough original price and discounted price",
+    
+    "=== ADMIN ORDER MANAGEMENT ===",
+    "Login to /admin with SeknuTo2025! shows dashboard",
+    "Navigate to Objednávky tab shows bookings list",
+    "Click on booking row expands to show customer details",
+    "Status change buttons visible: Čeká, Potvrzeno, Dokončeno, Zrušeno",
+    "PATCH /api/admin/bookings/:id/status updates status correctly",
+    "Customer phone visible in expanded booking",
+    "Customer email visible in expanded booking",
+    
+    "=== UI READABILITY ===",
+    "Booking page has clear step indicator (1-5 steps shown)",
+    "Service names are in Czech and readable",
+    "Price estimate is clearly formatted with 'Kč' currency",
+    "All form labels are in Czech",
+    "Error messages are readable and in Czech ('Neplatný kupón')"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_booking_flow_no_stripe.py",
+    "/app/test_reports/pytest/pytest_booking_no_stripe.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "STRIPE REMOVED: No Stripe/deposit code in BookingPage.jsx - payment is now on-site only",
+    "Submit button correctly says 'Odeslat rezervaci' instead of 'Zaplatit zálohu'",
+    "Payment info box shows Banknote icon with 'Platba na místě po dokončení práce'",
+    "Voucher system working: landing page with confetti, 24h countdown, auto-apply to booking",
+    "Coupon field correctly hidden when voucher is active",
+    "Price calculation correct for all service types including hourly services"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_booking_flow_no_stripe.py"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "100% (all booking steps, voucher flow, admin management working)"
+  },
+  "test_credentials": {
+    "admin_password": "SeknuTo2025!",
+    "test_voucher_created": "TESTLANDING25 (25% discount)"
+  },
+  "seed_data_creation": "Created test bookings and vouchers during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Stripe deposit REMOVED entirely. Payment is now on-site (cash or bank transfer). BookingPage.jsx has no Stripe code. Step 4 shows 'Platba na místě po dokončení práce' info box with Banknote icon. Submit button says 'Odeslat rezervaci'. All booking flow steps 1-5 verified. Voucher system working with landing page, confetti, countdown, and auto-apply. Admin order management working with status changes.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": [],
+    "note": "Stripe payment REMOVED entirely - no mocking needed. Resend email API real but domain unverified."
+  },
+  "stripe_removal_verification": {
+    "step1_no_stripe": true,
+    "step4_no_stripe": true,
+    "step4_payment_onsite_visible": true,
+    "submit_button_text": "Odeslat rezervaci",
+    "step5_payment_onsite_info": true
+  }
+}
