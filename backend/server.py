@@ -79,6 +79,7 @@ SERVICE_NAMES = {
     'debris_removal': 'Odvoz odpadu',
     'debris_hourly': 'Odvoz odpadu',
     'other': 'Jiná služba',
+    'custom_order': 'Práce na objednávku',
 }
 
 async def get_google_credentials():
