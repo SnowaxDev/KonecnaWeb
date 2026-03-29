@@ -198,14 +198,13 @@ const BookingPage = () => {
 
   // Custom order work types
   const customOrderWorkTypes = [
-    { id: 'garden_design', label: 'Návrh a realizace zahrady', icon: Sprout },
-    { id: 'lawn_installation', label: 'Pokládka trávníku (osev / travní koberec)', icon: Leaf },
-    { id: 'planting', label: 'Výsadba stromů, keřů a záhonů', icon: TreeDeciduous },
-    { id: 'irrigation', label: 'Závlahový systém', icon: Flower2 },
-    { id: 'excavation', label: 'Zemní práce a terénní úpravy', icon: Shovel },
-    { id: 'fencing', label: 'Oplocení a obrubníky', icon: Building2 },
-    { id: 'paving', label: 'Dlažba, chodníky a terasy', icon: MapPin },
-    { id: 'cleanup', label: 'Kompletní úklid a revitalizace zahrady', icon: Scissors },
+    { id: 'terrain_work', label: 'Terénní úpravy (kopání děr, vykopávky...)', icon: Shovel },
+    { id: 'lawn_mowing_custom', label: 'Sekání trávy', icon: Scissors },
+    { id: 'hedge_trimming', label: 'Sekání / zkracování plotu a keřů', icon: TreeDeciduous },
+    { id: 'garden_cleanup', label: 'Čištění zahrady (ozimování, úklid listí...)', icon: Leaf },
+    { id: 'planting', label: 'Výsadba (stromy, keře, záhony)', icon: Sprout },
+    { id: 'fertilizing', label: 'Hnojení', icon: Flower2 },
+    { id: 'event_prep', label: 'Příprava na akci (grill, firemní akce...)', icon: Package },
     { id: 'other_custom', label: 'Jiné (popište níže)', icon: HelpCircle },
   ];
 
