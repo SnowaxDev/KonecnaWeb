@@ -4,8 +4,5 @@
   ],
   "buildCommand": "yarn build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
-  "env": {
-    "REACT_APP_BACKEND_URL": "@react_app_backend_url"
-  }
+  "framework": "create-react-app"
 }
