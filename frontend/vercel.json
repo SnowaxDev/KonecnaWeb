@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "installCommand": "yarn install",
   "buildCommand": "yarn build",
   "outputDirectory": "build",
   "framework": "create-react-app"
