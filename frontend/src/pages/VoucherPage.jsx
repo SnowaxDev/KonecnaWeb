@@ -21,7 +21,7 @@ const VoucherPage = () => {
 
   useEffect(() => {
     loadVoucher();
-  }, [code]);
+  }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (voucher && voucher.is_valid) {

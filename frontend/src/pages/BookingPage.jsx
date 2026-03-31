@@ -105,21 +105,19 @@ const BookingPage = () => {
     // Skip price calculation for custom orders and 'other'
     if (formData.service === 'custom_order' || formData.service === 'other') return;
     calculatePrice();
-  }, [formData.service, formData.property_size, formData.condition, formData.additional_services]);
+  }, [formData.service, formData.property_size, formData.condition, formData.additional_services]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-adjust property_size default based on service type
   useEffect(() => {
     if (formData.service) {
       const isHourly = ['garden_work', 'debris_hourly'].includes(formData.service);
       if (isHourly) {
-        // For hourly services, default to 2 hours
         setFormData(prev => ({ ...prev, property_size: 2 }));
       } else if (formData.property_size < 50) {
-        // For m2 services, default to 100m2 if size is too small
         setFormData(prev => ({ ...prev, property_size: 100 }));
       }
     }
-  }, [formData.service]);
+  }, [formData.service]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const calculatePrice = async () => {
     if (!formData.service || formData.property_size <= 0) return;
