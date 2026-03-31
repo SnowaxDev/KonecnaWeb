@@ -1,6 +1,7 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
+import axios from "axios";
 
 // Layout Components
 import Header from "./components/Header";
@@ -20,6 +21,21 @@ import VoucherPage from "./pages/VoucherPage";
 import AdminPage from "./pages/AdminPage";
 import GalleryPage from "./pages/GalleryPage";
 import { BlogListPage, BlogDetailPage } from "./pages/BlogPage";
+
+// Set axios base timeout
+axios.defaults.timeout = 15000;
+
+// Global axios response interceptor – network/CORS errors
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      // Network error or CORS – log pro debugging
+      console.error('[API] Network/CORS error:', error.message, 'URL:', error.config?.url);
+    }
+    return Promise.reject(error);
+  }
+);
 
 function App() {
   return (

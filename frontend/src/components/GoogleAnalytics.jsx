@@ -7,8 +7,7 @@ const GA_MEASUREMENT_ID = process.env.REACT_APP_GA_ID;
 // Initialize Google Analytics
 export const initGA = () => {
   if (!GA_MEASUREMENT_ID) {
-    console.log('Google Analytics: GA_MEASUREMENT_ID not configured');
-    return;
+    return; // Tiše ignorovat pokud GA není nakonfigurováno
   }
 
   // Load gtag script
