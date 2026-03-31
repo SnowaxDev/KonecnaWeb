@@ -1,0 +1,109 @@
+{
+  "summary": "Security and Functionality Audit Tests for SeknuTo.cz - iteration 16. All 11 backend tests passed (100%). Security fixes SEC-001, SEC-002, SEC-006 verified. Functionality fixes FUNC-003, FUNC-004, PERF-002 verified. Custom order UI flow tested successfully. Admin page handles new paginated bookings format correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "=== SECURITY TESTS (SEC-001, SEC-002, SEC-006) ===",
+    "SEC-001: POST /api/vouchers without X-Admin-Token returns 401",
+    "SEC-001: GET /api/vouchers without X-Admin-Token returns 401",
+    "SEC-001: DELETE /api/vouchers/{code} without X-Admin-Token returns 401",
+    "SEC-002: DELETE /api/auth/google/disconnect without X-Admin-Token returns 401",
+    "SEC-006: Admin login returns token successfully",
+    "SEC-006: GET /api/vouchers with valid token returns list",
+    
+    "=== FUNCTIONALITY TESTS (FUNC-003, FUNC-004, PERF-002) ===",
+    "FUNC-003: Coupon marked as used after booking (second validation returns 'Tento kupón již byl použit')",
+    "FUNC-004: Booking with custom_order service succeeds (validated service)",
+    "PERF-002: GET /api/admin/bookings returns {bookings: [], total: N} paginated format",
+    "Pydantic: Booking with invalid service 'invalid_service_xyz' returns 422",
+    "Standard booking with lawn_mowing service succeeds via API",
+    
+    "=== ADMIN PAGE UI ===",
+    "Admin login works correctly",
+    "Admin dashboard loads",
+    "Bookings tab displays 14 bookings (handles new paginated format)",
+    "Vouchers tab loads with admin token authentication",
+    
+    "=== CUSTOM ORDER UI FLOW ===",
+    "Step 1: 'Služby na objednávku' section with 'ZAKÁZKA' badge visible",
+    "Step 1: Can select 'Poptávka na zakázkové práce' option",
+    "Step 2: Customer type selection (Soukromá osoba / Firma) works",
+    "Step 2: Work type checkboxes work",
+    "Step 2: Description textarea works",
+    "Step 3: 'Dle dohody' price displayed for custom order",
+    "Step 3: Calendar date selection works",
+    "Step 4: Coupon section correctly hidden for custom order",
+    "Step 4: 'Cena dle dohody' info box visible",
+    "Step 4: Submit button says 'Odeslat poptávku'",
+    "Step 5: Success message 'Vaše poptávka byla úspěšně odeslána'",
+    "Step 5: 'Služby na objednávku' service name displayed",
+    "Step 5: 'Dle dohody' price shown in confirmation"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_security_audit.py",
+    "/app/test_reports/pytest/pytest_security_audit.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SEC-001: verify_admin() correctly added to POST/GET/DELETE /vouchers endpoints",
+    "SEC-002: verify_admin() correctly added to DELETE /auth/google/disconnect",
+    "SEC-006: Admin session tokens have 24h expiration (line 1317: timedelta(hours=24))",
+    "FUNC-001: Atomic redeem_voucher uses find_one_and_update (line 1057)",
+    "FUNC-003: Coupon marked as used in create_booking (lines 630-635)",
+    "FUNC-004: custom_order added to SERVICE_NAMES_CZ (line 416)",
+    "PERF-002: admin_get_bookings returns {bookings, total, skip, limit} (line 1355)",
+    "Rate limiting active: 5/min admin login, 30/min vouchers, 20/min coupons"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_security_audit.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (Admin page and custom order flow verified)"
+  },
+  "test_credentials": {
+    "admin_password": "SeknuTo2025!",
+    "test_coupons_created": "Multiple TEST* prefixed coupons for FUNC-003 testing"
+  },
+  "seed_data_creation": "Created test coupons and bookings during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Security audit complete. All SEC-001/002/006 fixes verified - voucher endpoints and google disconnect now require X-Admin-Token. FUNC-003 verified - coupons marked as used after booking. FUNC-004 verified - custom_order is valid service. PERF-002 verified - admin bookings returns paginated format {bookings, total}. Rate limiting active via slowapi. Admin page correctly handles new paginated format. Custom order UI flow works end-to-end.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["Google Calendar API (pending OAuth)", "Customer confirmation emails (Resend domain unverified)"],
+    "note": "Google Calendar and Resend emails are mocked/not fully configured. Core booking and security functionality works."
+  },
+  "security_audit_verification": {
+    "SEC-001_vouchers_auth": {
+      "POST_without_token": "401 Unauthorized",
+      "GET_without_token": "401 Unauthorized",
+      "DELETE_without_token": "401 Unauthorized"
+    },
+    "SEC-002_google_disconnect_auth": {
+      "DELETE_without_token": "401 Unauthorized"
+    },
+    "SEC-006_admin_session": {
+      "login_returns_token": true,
+      "token_expiration": "24 hours"
+    },
+    "SEC-007_rate_limiting": {
+      "admin_login": "5/minute",
+      "vouchers_GET": "30/minute",
+      "coupons_validate": "20/minute"
+    }
+  },
+  "functionality_verification": {
+    "FUNC-001_atomic_redeem": "find_one_and_update prevents race conditions",
+    "FUNC-003_coupon_used": "Coupon marked used=True, active=False after booking",
+    "FUNC-004_custom_order": "custom_order in SERVICE_NAMES_CZ and valid_services",
+    "PERF-002_pagination": "Returns {bookings: array, total: int, skip: int, limit: int}"
+  }
+}

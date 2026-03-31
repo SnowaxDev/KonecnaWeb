@@ -41,6 +41,7 @@ const SERVICE_NAMES = {
   garden_work: 'Zahradnické práce',
   debris_hourly: 'Odvoz odpadu',
   other: 'Jiná služba',
+  custom_order: 'Práce na objednávku',
 };
 
 const STATUS_LABELS = {
@@ -532,7 +533,8 @@ const BookingsTab = ({ token, handle401 }) => {
     setLoading(true);
     try {
       const res = await axios.get(`${API}/admin/bookings`, { headers });
-      setBookings(res.data);
+      // Handle both old array format and new paginated format
+      setBookings(Array.isArray(res.data) ? res.data : res.data.bookings || []);
     } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst objednávky'); }
     finally { setLoading(false); }
   }, []); // eslint-disable-line

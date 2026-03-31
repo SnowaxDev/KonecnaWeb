@@ -3,11 +3,16 @@ from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import logging
 import asyncio
+import random
+import string
 from pathlib import Path
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -53,6 +58,11 @@ except ImportError:
 
 # Create the main app
 app = FastAPI(title="SeknuTo.cz API", version="1.0.0")
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -189,19 +199,42 @@ ID rezervace: {booking.id}""",
 class BookingCreate(BaseModel):
     service: str
     property_size: int
-    condition: str
+    condition: str = "normal"
     additional_services: List[str] = []
     preferred_date: str
-    preferred_time: str
+    preferred_time: str = "anytime"
     alternative_date: Optional[str] = None
     customer_name: str
     customer_phone: str
     customer_email: EmailStr
     property_address: str
     notes: Optional[str] = ""
-    estimated_price: int
+    estimated_price: int = 0
     gdpr_consent: bool = True
     coupon_code: Optional[str] = None
+    voucher_fixed_discount: Optional[int] = 0
+
+    @field_validator('service')
+    @classmethod
+    def validate_service(cls, v):
+        valid_services = set(SERVICE_PRICES.keys()) | set(PACKAGE_TIERED_PRICING.keys()) | {'other', 'custom_order'}
+        if v not in valid_services:
+            raise ValueError(f'Neplatná služba: {v}')
+        return v
+
+    @field_validator('condition')
+    @classmethod
+    def validate_condition(cls, v):
+        if v not in ('normal', 'overgrown', 'very_neglected'):
+            raise ValueError(f'Neplatný stav: {v}')
+        return v
+
+    @field_validator('preferred_time')
+    @classmethod
+    def validate_time(cls, v):
+        if v not in ('morning', 'afternoon', 'anytime'):
+            raise ValueError(f'Neplatný čas: {v}')
+        return v
 
 class Booking(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -293,8 +326,6 @@ VALID_COUPONS = {}  # Will be populated dynamically
 
 def generate_coupon_code():
     """Generate a unique coupon code"""
-    import random
-    import string
     return 'SEKNU' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
 
 # ============== PRICING CONFIG ==============
@@ -381,7 +412,8 @@ SERVICE_NAMES_CZ = {
     "vip_annual": "🌀 Celoroční VIP servis",
     "garden_work": "Zahradnické práce (ruční)",
     "debris_hourly": "Odvoz odpadu (hodinová sazba)",
-    "other": "Jiná služba"
+    "other": "Jiná služba",
+    "custom_order": "Práce na objednávku",
 }
 
 TIME_NAMES_CZ = {
@@ -576,11 +608,12 @@ async def google_auth_callback(code: str):
         
     except Exception as e:
         logger.error(f"Google OAuth callback error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Chyba autorizace Google. Zkuste to znovu nebo kontaktujte správce.")
 
 @api_router.delete("/auth/google/disconnect")
-async def google_auth_disconnect():
-    """Disconnect Google Calendar"""
+async def google_auth_disconnect(request: Request):
+    """Disconnect Google Calendar (admin only)"""
+    await verify_admin(request)
     await db.google_tokens.delete_one({"type": "owner"})
     logger.info("Google Calendar disconnected")
     return {"message": "Google Calendar disconnected"}
@@ -592,6 +625,14 @@ async def create_booking(booking_data: BookingCreate):
     
     await db.bookings.insert_one(doc)
     logger.info(f"New booking created: {booking.id} for {booking.customer_name}")
+
+    # Mark coupon as used if provided
+    if booking_data.coupon_code:
+        await db.coupons.update_one(
+            {"code": booking_data.coupon_code.upper()},
+            {"$set": {"used": True, "active": False}, "$inc": {"uses_count": 1}}
+        )
+        logger.info(f"Coupon {booking_data.coupon_code} marked as used for booking {booking.id}")
     
     # Add booking email to Resend Contacts (independent of email sending)
     if resend and RESEND_API_KEY:
@@ -707,7 +748,6 @@ async def calculate_price(data: PriceCalculation):
 @api_router.get("/availability")
 async def get_availability():
     # Return available dates (next 30 days, including weekends)
-    from datetime import timedelta
     today = datetime.now(timezone.utc).date()
     available_dates = []
     
@@ -857,14 +897,16 @@ async def subscribe_email(data: EmailSubscription):
     }
 
 @api_router.post("/coupons/validate")
-async def validate_coupon(data: CouponValidation):
+@limiter.limit("20/minute")
+async def validate_coupon(request: Request, data: CouponValidation):
     """Validate a coupon code"""
     coupon = await db.coupons.find_one({"code": data.code.upper()}, {"_id": 0})
     
     if not coupon:
         raise HTTPException(status_code=404, detail="Neplatný slevový kód")
     
-    if coupon.get("used"):
+    # Check if coupon is used (used=True) or deactivated (active=False)
+    if coupon.get("used") or coupon.get("active") is False:
         raise HTTPException(status_code=400, detail="Tento kupón již byl použit")
     
     return {
@@ -876,8 +918,9 @@ async def validate_coupon(data: CouponValidation):
 # ============== VOUCHER ENDPOINTS ==============
 
 @api_router.post("/vouchers", response_model=Voucher)
-async def create_voucher(voucher_data: VoucherCreate):
-    """Create a new voucher (admin endpoint)"""
+async def create_voucher(voucher_data: VoucherCreate, request: Request):
+    """Create a new voucher (admin only)"""
+    await verify_admin(request)
     # Check if code already exists
     existing = await db.vouchers.find_one({"code": voucher_data.code.upper()}) if voucher_data.code else None
     if existing:
@@ -903,31 +946,29 @@ async def create_voucher(voucher_data: VoucherCreate):
     return voucher
 
 @api_router.get("/vouchers")
-async def list_vouchers():
-    """List all vouchers (admin endpoint)"""
-    vouchers = await db.vouchers.find({}, {"_id": 0}).to_list(1000)
-    
-    # Update expired vouchers status
+async def list_vouchers(request: Request):
+    """List all vouchers (admin only)"""
+    await verify_admin(request)
+
     now = datetime.now(timezone.utc).isoformat()
-    for v in vouchers:
-        if v.get('status') == 'active':
-            if v.get('valid_until') < now:
-                await db.vouchers.update_one(
-                    {"id": v['id']},
-                    {"$set": {"status": "expired"}}
-                )
-                v['status'] = 'expired'
-            elif v.get('uses_count', 0) >= v.get('max_uses', 1):
-                await db.vouchers.update_one(
-                    {"id": v['id']},
-                    {"$set": {"status": "exhausted"}}
-                )
-                v['status'] = 'exhausted'
-    
+
+    # Batch update expired vouchers (single query instead of N+1)
+    await db.vouchers.update_many(
+        {"status": "active", "valid_until": {"$lt": now}},
+        {"$set": {"status": "expired"}}
+    )
+    # Batch update exhausted vouchers
+    await db.vouchers.update_many(
+        {"status": "active", "$expr": {"$gte": ["$uses_count", "$max_uses"]}},
+        {"$set": {"status": "exhausted"}}
+    )
+
+    vouchers = await db.vouchers.find({}, {"_id": 0}).to_list(1000)
     return vouchers
 
 @api_router.get("/vouchers/{code}")
-async def get_voucher(code: str):
+@limiter.limit("30/minute")
+async def get_voucher(request: Request, code: str):
     """Get voucher by code - for landing page"""
     voucher = await db.vouchers.find_one({"code": code.upper()}, {"_id": 0})
     
@@ -979,7 +1020,8 @@ async def get_voucher(code: str):
     }
 
 @api_router.post("/vouchers/{code}/claim")
-async def claim_voucher(code: str):
+@limiter.limit("20/minute")
+async def claim_voucher(request: Request, code: str):
     """Claim a voucher - validates and reserves it for the session"""
     voucher = await db.vouchers.find_one({"code": code.upper()}, {"_id": 0})
     
@@ -1010,26 +1052,34 @@ async def claim_voucher(code: str):
 
 @api_router.post("/vouchers/{code}/redeem")
 async def redeem_voucher(code: str, booking_id: str, discount_applied: float = 0):
-    """Redeem a voucher when booking is completed"""
-    voucher = await db.vouchers.find_one({"code": code.upper()})
-    
-    if not voucher:
-        raise HTTPException(status_code=404, detail="Voucher not found")
-    
-    # Increment usage count
-    await db.vouchers.update_one(
-        {"code": code.upper()},
-        {"$inc": {"uses_count": 1}}
+    """Redeem a voucher when booking is completed - atomic operation prevents race conditions"""
+    # Atomically find and increment uses_count only if still valid
+    voucher = await db.vouchers.find_one_and_update(
+        {
+            "code": code.upper(),
+            "status": "active",
+            "$expr": {"$lt": ["$uses_count", "$max_uses"]}
+        },
+        {"$inc": {"uses_count": 1}},
+        return_document=True
     )
-    
-    # Check if exhausted
-    new_uses = voucher.get('uses_count', 0) + 1
-    if new_uses >= voucher.get('max_uses', 1):
+
+    if not voucher:
+        # Check if voucher exists at all for a better error message
+        existing = await db.vouchers.find_one({"code": code.upper()})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Voucher not found")
+        raise HTTPException(status_code=400, detail="Voucher nelze uplatnit – již byl použit, expiroval nebo je neaktivní")
+
+    # After increment, check if now exhausted
+    new_uses_count = voucher.get('uses_count', 0) + 1  # find_one_and_update returns doc BEFORE update when return_document not AFTER
+    # Recalculate: uses_count in returned doc is the value after inc (return_document=True means AFTER)
+    if voucher.get('uses_count', 0) >= voucher.get('max_uses', 1):
         await db.vouchers.update_one(
             {"code": code.upper()},
             {"$set": {"status": "exhausted"}}
         )
-    
+
     # Create redemption record
     redemption = VoucherRedemption(
         voucher_id=voucher['id'],
@@ -1038,10 +1088,9 @@ async def redeem_voucher(code: str, booking_id: str, discount_applied: float = 0
         booking_completed=True,
         discount_applied=discount_applied
     )
-    
     await db.voucher_redemptions.insert_one(redemption.model_dump())
     logger.info(f"Voucher redeemed: {code} for booking {booking_id}")
-    
+
     return {"success": True, "redemption_id": redemption.id}
 
 @api_router.get("/vouchers/stats/overview")
@@ -1066,8 +1115,9 @@ async def get_voucher_stats():
     }
 
 @api_router.delete("/vouchers/{code}")
-async def delete_voucher(code: str):
-    """Delete/deactivate a voucher"""
+async def delete_voucher(code: str, request: Request):
+    """Delete/deactivate a voucher (admin only)"""
+    await verify_admin(request)
     result = await db.vouchers.update_one(
         {"code": code.upper()},
         {"$set": {"status": "inactive"}}
@@ -1239,10 +1289,11 @@ class AdminLogin(BaseModel):
     password: str
 
 @api_router.post("/admin/login")
-async def admin_login(data: AdminLogin):
+@limiter.limit("5/minute")
+async def admin_login(request: Request, data: AdminLogin):
     if data.password != ADMIN_PASSWORD:
+        logger.warning(f"Failed admin login attempt from {request.client.host if request.client else 'unknown'}")
         raise HTTPException(status_code=401, detail="Nesprávné heslo")
-    # Simple session token
     token = str(uuid.uuid4())
     await db.admin_sessions.insert_one({
         "token": token,
@@ -1251,12 +1302,23 @@ async def admin_login(data: AdminLogin):
     return {"token": token}
 
 async def verify_admin(request: Request):
+    """Verify admin token with 24h expiration"""
     token = request.headers.get("X-Admin-Token", "")
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     session = await db.admin_sessions.find_one({"token": token})
     if not session:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    # Check session age (24 hours)
+    created_at = session.get("created_at", "")
+    if created_at:
+        try:
+            created = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            if datetime.now(timezone.utc) - created > timedelta(hours=24):
+                await db.admin_sessions.delete_one({"token": token})
+                raise HTTPException(status_code=401, detail="Session vypršela, přihlaste se znovu")
+        except ValueError:
+            pass
     return True
 
 # ─── ADMIN STATS ──────────────────────────────────────────────────────────────
@@ -1286,10 +1348,11 @@ async def admin_stats(request: Request):
 # ─── ADMIN BOOKINGS ───────────────────────────────────────────────────────────
 
 @api_router.get("/admin/bookings")
-async def admin_get_bookings(request: Request):
+async def admin_get_bookings(request: Request, skip: int = 0, limit: int = 100):
     await verify_admin(request)
-    bookings = await db.bookings.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
-    return bookings
+    bookings = await db.bookings.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.bookings.count_documents({})
+    return {"bookings": bookings, "total": total, "skip": skip, "limit": limit}
 
 @api_router.patch("/admin/bookings/{booking_id}/status")
 async def admin_update_booking_status(booking_id: str, request: Request):
@@ -1481,6 +1544,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_db_client():
+    """Create MongoDB indexes on startup for performance"""
+    try:
+        await db.bookings.create_index("id", unique=True)
+        await db.bookings.create_index("status")
+        await db.bookings.create_index([("created_at", -1)])
+        await db.vouchers.create_index("code", unique=True, sparse=True)
+        await db.vouchers.create_index("status")
+        await db.coupons.create_index("code", unique=True, sparse=True)
+        await db.admin_sessions.create_index("token", unique=True)
+        await db.admin_sessions.create_index(
+            "created_at",
+            expireAfterSeconds=86400  # TTL – sessiony automaticky expirují po 24h
+        )
+        await db.blog_posts.create_index("slug", unique=True, sparse=True)
+        await db.blog_posts.create_index([("published_at", -1)])
+        logger.info("MongoDB indexes created successfully")
+    except Exception as e:
+        logger.warning(f"Index creation warning (may already exist): {str(e)}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

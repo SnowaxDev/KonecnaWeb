@@ -102,6 +102,8 @@ const BookingPage = () => {
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    // Skip price calculation for custom orders and 'other'
+    if (formData.service === 'custom_order' || formData.service === 'other') return;
     calculatePrice();
   }, [formData.service, formData.property_size, formData.condition, formData.additional_services]);
 
