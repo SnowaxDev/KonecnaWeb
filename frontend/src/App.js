@@ -1,6 +1,7 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
 
 // Layout Components
 import Header from "./components/Header";
@@ -55,6 +56,7 @@ function App() {
           } />
         </Routes>
         <Toaster position="top-center" richColors />
+        <Analytics />
       </BrowserRouter>
     </div>
   );
