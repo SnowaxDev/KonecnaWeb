@@ -20,7 +20,7 @@ const ServicesPage = () => {
       unit: 'Kč/m²',
       description: 'Profesionální sekání trávníků všech velikostí s možností hnojení a mulčování.',
       features: [
-        { label: 'Bez hnojení', price: '2 Kč/m²' },
+        { label: 'Bez hnojení', price: '2,5 Kč/m²' },
         { label: 'S hnojením', price: '3,33 Kč/m²' },
         { label: 'Přerostlá tráva', price: '3-4 Kč/m²' },
         { label: 'Mulčování', price: '+0,5 Kč/m²' },
@@ -442,7 +442,7 @@ const ServicesPage = () => {
               <tbody>
                 <tr className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium">✂️ Sekání trávy</td>
-                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">od 2 Kč/m²</td>
+                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">od 2,5 Kč/m²</td>
                   <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">1-3 hod</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Objednat →</Link>
