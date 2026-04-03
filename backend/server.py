@@ -332,7 +332,7 @@ def generate_coupon_code():
 
 SERVICE_PRICES = {
     # Sekání trávy (základní služby)
-    "lawn_mowing": 2,              # Kč/m² - bez hnojení
+    "lawn_mowing": 2.5,              # Kč/m² - bez hnojení
     "lawn_with_fertilizer": 3.33,  # Kč/m² - s hnojením
     "overgrown": 3.5,              # Kč/m² - přerostlá tráva (3-4 Kč)
     
