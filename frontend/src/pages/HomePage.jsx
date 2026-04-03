@@ -46,7 +46,7 @@ const HomePage = () => {
   ];
 
   const stats = [
-    { value: '500+', label: 'Spokojených zákazníků' },
+    { value: '50+', label: 'Spokojených zákazníků' },
     { value: '98%', label: 'Úspěšnost' },
     { value: '24h', label: 'Rychlá odpověď' },
     { value: '5★', label: 'Průměrné hodnocení' },
@@ -382,7 +382,7 @@ const HomePage = () => {
                 <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
               ))}
             </div>
-            <p className="text-[#4B5563] text-sm">Průměrné hodnocení 5.0 ze 5 — přes 50 recenzí</p>
+            <p className="text-[#4B5563] text-sm">Průměrné hodnocení 5.0 ze 5 — přes 20 recenzí</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -139,7 +139,7 @@ const AboutPage = () => {
           <div className="bg-[#F0FDF4] rounded-2xl p-8">
             <div className="grid grid-cols-3 gap-6 text-center">
               <div>
-                <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>500+</p>
+                <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>50+</p>
                 <p className="text-sm text-[#4B5563]">Spokojených zákazníků</p>
               </div>
               <div>
