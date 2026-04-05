@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Phone, Mail, MapPin, MessageCircle, Clock, Send, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
@@ -74,6 +75,12 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen pt-20" data-testid="contact-page">
+      <SEOHead
+        title="Kontakt | SeknuTo.cz – Sekání trávy Dvůr Králové"
+        description="Kontaktujte SeknuTo.cz pro nezávaznou cenovou nabídku. Tel: 730 588 372. Zahradnické služby ve Dvoře Králové nad Labem a okolí."
+        canonical="https://seknuto.cz/kontakt"
+        schema={SCHEMAS.localBusiness}
+      />
       {/* Hero */}
       <section className="py-12 md:py-20 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">

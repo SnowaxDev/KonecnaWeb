@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Admin panel – neindexovat
+Disallow: /admin
+Disallow: /admin/
+
+# API – neindexovat
+Disallow: /api/
+
+# Voucher stránky – neindexovat
+Disallow: /poukaz/
+
+# Sitemap
+Sitemap: https://seknuto.cz/sitemap.xml
+
+Crawl-delay: 1

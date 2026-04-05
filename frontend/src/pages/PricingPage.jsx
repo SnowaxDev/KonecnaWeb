@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import SEOHead from '../components/SEOHead';
 
 const PricingPage = () => {
   const [service, setService] = useState('lawn_mowing');
@@ -47,6 +48,12 @@ const PricingPage = () => {
 
   return (
     <div className="min-h-screen pt-16" data-testid="pricing-page">
+      <SEOHead
+        title="Ceník zahradnických služeb | Sekání trávy od 2,5 Kč/m²"
+        description="Transparentní ceník zahradnických služeb SeknuTo.cz. Sekání trávy od 2,5 Kč/m², vertikutace, hnojení, sezónní balíčky. Žádné skryté poplatky."
+        canonical="https://seknuto.cz/cenik"
+        keywords="ceník sekání trávy, cena zahradník Dvůr Králové, cena vertikutace, cena hnojení trávníku"
+      />
       {/* Hero - Compact & Action-focused */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">

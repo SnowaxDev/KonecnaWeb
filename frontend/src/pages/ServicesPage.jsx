@@ -6,6 +6,7 @@ import {
   Star, Shield, Clock, Phone, Zap, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
 
 const ServicesPage = () => {
   const [expandedService, setExpandedService] = useState(null);
@@ -180,6 +181,12 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen pt-16" data-testid="services-page">
+      <SEOHead
+        title="Zahradnické služby Dvůr Králové | Sekání, vertikutace, hnojení"
+        description="Kompletní zahradnické služby ve Dvoře Králové nad Labem – sekání trávy, vertikutace, hnojení, sezónní balíčky, celoroční VIP servis. Rezervujte online."
+        canonical="https://seknuto.cz/sluzby"
+        schema={SCHEMAS.breadcrumb([{ name: 'Úvod', url: '/' }, { name: 'Služby', url: '/sluzby' }])}
+      />
       {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">

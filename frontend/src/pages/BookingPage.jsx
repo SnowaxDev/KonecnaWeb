@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import SEOHead from '../components/SEOHead';
 import { 
   ChevronLeft, ChevronRight, Check, Calendar as CalendarIcon,
   Scissors, Sprout, Leaf, TreeDeciduous, Package, HelpCircle,
@@ -396,6 +397,11 @@ const BookingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50" data-testid="booking-page">
+      <SEOHead
+        title="Online rezervace | SeknuTo.cz"
+        description="Rezervujte zahradnické služby online. Vyberte termín, zadejte kontakt a my se ozveme. Sekání trávy, vertikutace, hnojení a další."
+        canonical="https://seknuto.cz/rezervace"
+      />
       {/* Compact Header */}
       <div className="bg-white border-b border-gray-200 py-4 px-4 mt-16">
         <div className="max-w-3xl mx-auto">

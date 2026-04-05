@@ -12,6 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '../components/ui/accordion';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
 
 const HomePage = () => {
   const services = [
@@ -54,20 +55,28 @@ const HomePage = () => {
 
   const faqItems = [
     {
+      question: 'Kolik stojí sekání trávy ve Dvoře Králové?',
+      answer: 'Běžné sekání trávy stojí 2,5 Kč za metr čtvereční. Pro zahradu 300 m² zaplatíte 750 Kč. Nabízíme transparentní ceny bez skrytých poplatků. Pro přesnou kalkulaci zavolejte 730 588 372 nebo použijte náš online rezervační formulář.',
+    },
+    {
       question: 'Jak často byste doporučovali sekat trávník?',
-      answer: 'Doporučujeme sekat trávník jednou týdně během vegetačního období (duben-říjen). V horkém létě můžete frekvenci snížit na jednou za dva týdny.',
+      answer: 'Doporučujeme sekat trávník jednou za 7–10 dní během vegetačního období (duben–říjen). V horkém létě můžete frekvenci snížit na jednou za dva týdny. V SeknuTo.cz nabízíme pravidelnou údržbu i jednorázové sekání.',
     },
     {
       question: 'Jaké oblasti pokrýváte vašimi službami?',
-      answer: 'Působíme v Dvoře Králové nad Labem a okolí do vzdálenosti 30 km. Zahrnuje to např. Trutnov, Jaroměř, Náchod a okolní vesnice.',
+      answer: 'Působíme v Dvoře Králové nad Labem a okolí do vzdálenosti 30 km – zahrnuje to Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolní vesnice.',
     },
     {
-      question: 'Jak dlouho dopředu je nutné objednat službu?',
-      answer: 'Ideálně 3-5 dní předem, ale v případě volných kapacit jsme schopni dojet i do 24 hodin. Kontaktujte nás pro aktuální dostupnost.',
+      question: 'Jak rychle můžete přijet?',
+      answer: 'Běžně se dokážeme domluvit na termínu do 3–5 dnů. V případě volné kapacity jsme schopni dojet i do 24 hodin. V sezóně (duben–září) doporučujeme rezervovat termín s týdenním předstihem.',
+    },
+    {
+      question: 'Co zahrnuje celoroční VIP servis?',
+      answer: 'VIP balíček za 6 900 Kč/rok zahrnuje: 10× sekání, 4× hnojení, 2× vertikutaci, jarní a podzimní balíček, odvoz bioodpadu a zimní úklid sněhu. Kompletní péče o zahradu po celý rok bez starostí.',
     },
     {
       question: 'Co je zahrnuto v ceně základní služby?',
-      answer: 'V základní ceně je zahrnuto sekání trávníku na požadovanou výšku. Odvoz odpadu a další služby (hnojení, vertikutace) jsou za příplatek.',
+      answer: 'V základní ceně je zahrnuto sekání trávníku na požadovanou výšku a úklid posečené trávy. Odvoz odpadu a další služby (hnojení, vertikutace) jsou za příplatek dle ceníku.',
     },
   ];
 
@@ -130,6 +139,12 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen" data-testid="home-page">
+      <SEOHead
+        title="Sekání trávy Dvůr Králové | SeknuTo.cz – Od 2,5 Kč/m²"
+        description="Profesionální sekání trávy ve Dvoře Králové nad Labem od 2,5 Kč/m². Vertikutace, hnojení, sezónní balíčky. Rychlá domluva ☎ 730 588 372"
+        canonical="https://seknuto.cz"
+        schema={[SCHEMAS.localBusiness, SCHEMAS.faqPage(faqItems)]}
+      />
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-28 pb-16 md:pb-24 overflow-hidden" data-testid="hero-section">
         {/* Background */}

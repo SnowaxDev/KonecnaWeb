@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Users, Heart, MapPin, Leaf, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import SEOHead from '../components/SEOHead';
 
 const AboutPage = () => {
   const values = [
@@ -29,6 +30,12 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen pt-20" data-testid="about-page">
+      <SEOHead
+        title="O nás | SeknuTo.cz – Zahradnické služby Dvůr Králové"
+        description="Jsme lokální tým zahradníků z Dvůru Králové nad Labem. Poskytujeme profesionální sekání trávy a zahradnické služby s důrazem na spolehlivost a férové ceny."
+        canonical="https://seknuto.cz/o-nas"
+        keywords="zahradník Dvůr Králové, zahradnická firma Královéhradecký kraj, lokální zahradnické služby"
+      />
       {/* Hero */}
       <section className="py-12 md:py-20 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 md:px-8">

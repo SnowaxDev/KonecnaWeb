@@ -1,6 +1,7 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
+import { HelmetProvider } from "react-helmet-async";
 import axios from "axios";
 
 // Layout Components
@@ -39,6 +40,7 @@ axios.interceptors.response.use(
 
 function App() {
   return (
+    <HelmetProvider>
     <div className="App">
       <BrowserRouter>
         <GoogleAnalytics />
@@ -73,6 +75,7 @@ function App() {
         <Toaster position="top-center" richColors />
       </BrowserRouter>
     </div>
+    </HelmetProvider>
   );
 }
 

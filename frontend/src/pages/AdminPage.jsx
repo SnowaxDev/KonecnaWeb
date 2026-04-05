@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import SEOHead from '../components/SEOHead';
 import {
   LayoutDashboard, Ticket, Tag, ClipboardList, LogOut,
   Plus, Trash2, Check, X, RefreshCw, Eye, EyeOff, Copy,
@@ -73,6 +74,7 @@ const LoginScreen = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen bg-[#1B4332] flex items-center justify-center p-4">
+      <SEOHead title="Admin | SeknuTo.cz" description="Admin panel" noindex={true} />
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-12 h-12 bg-[#3FA34D] rounded-full flex items-center justify-center">
