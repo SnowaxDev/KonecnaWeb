@@ -24,7 +24,7 @@ const PricingPage = () => {
   const [calculatedPrice, setCalculatedPrice] = useState(null);
 
   const servicePrices = {
-    lawn_mowing: 2,
+    lawn_mowing: 2.5,
     lawn_with_fertilizer: 3.33,
     overgrown: 3.5,
     spring_package: 10,
@@ -72,7 +72,7 @@ const PricingPage = () => {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span>4.9/5 hodnocení</span>
+              <span>5/5 hodnocení (20 recenzí)</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#3FA34D]" />
@@ -112,7 +112,7 @@ const PricingPage = () => {
                 <ul className="space-y-2.5 mb-6">
                   <li className="flex items-center gap-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    Sekání trávy: 2 Kč/m²
+                    Sekání trávy: 2,5 Kč/m²
                   </li>
                   <li className="flex items-center gap-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
@@ -258,7 +258,7 @@ const PricingPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="lawn_mowing">Sekání (2 Kč/m²)</SelectItem>
+                      <SelectItem value="lawn_mowing">Sekání (2,5 Kč/m²)</SelectItem>
                       <SelectItem value="lawn_with_fertilizer">S hnojením (3,33 Kč/m²)</SelectItem>
                       <SelectItem value="spring_package">Jarní balíček (10 Kč/m²)</SelectItem>
                       <SelectItem value="summer_package">Letní balíček (3,5 Kč/m²)</SelectItem>

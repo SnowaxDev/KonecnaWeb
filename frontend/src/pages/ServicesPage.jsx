@@ -17,11 +17,11 @@ const ServicesPage = () => {
       icon: Scissors,
       title: 'Sekání trávy',
       subtitle: 'Základní služba',
-      price: '2',
+      price: '2.5',
       unit: 'Kč/m²',
       description: 'Profesionální sekání trávníků všech velikostí s možností hnojení a mulčování.',
       features: [
-        { label: 'Bez hnojení', price: '2 Kč/m²' },
+        { label: 'Bez hnojení', price: '2,5 Kč/m²' },
         { label: 'S hnojením', price: '3,33 Kč/m²' },
         { label: 'Přerostlá tráva', price: '3-4 Kč/m²' },
         { label: 'Mulčování', price: '+0,5 Kč/m²' },
@@ -205,7 +205,7 @@ const ServicesPage = () => {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span>4.9/5 hodnocení</span>
+              <span>5/5 hodnocení (20 recenzí)</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#3FA34D]" />

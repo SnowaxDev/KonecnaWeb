@@ -20,8 +20,8 @@ const HomePage = () => {
       icon: Scissors,
       title: 'Sekání trávy',
       description: 'Profesionální sekání trávníků s možností hnojení. Pravidelná údržba nebo jednorázová služba.',
-      price: 'od 2 Kč/m²',
-      features: ['Sekání bez hnojení: 2 Kč/m²', 'Sekání s hnojením: 3,33 Kč/m²', 'Mulčování: +0,5 Kč/m²'],
+      price: 'od 2,5 Kč/m²',
+      features: ['Sekání bez hnojení: 2,5 Kč/m²', 'Sekání s hnojením: 3,83 Kč/m²', 'Mulčování: +0,5 Kč/m²'],
     },
     {
       icon: Sprout,
