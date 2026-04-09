@@ -327,6 +327,45 @@ input:focus, textarea:focus, select:focus {
     outline-offset: 2px;
 }
 
+/* ============================================
+   GLOBAL ACTIVE / CLICK FEEDBACK
+   Kontrastní efekt při kliknutí na VŠECHNY
+   interaktivní prvky
+   ============================================ */
+
+/* Všechna tlačítka, role=button, klikatelné linky */
+button:active:not([disabled]),
+[role="button"]:active,
+a:active {
+    transform: scale(0.96);
+    filter: brightness(0.85);
+    transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+/* Service výběrové karty v BookingPage - label radio */
+label:active {
+    transform: scale(0.98);
+    transition: transform 0.08s ease;
+}
+
+/* ============================================
+   CALENDAR – zvýraznění vybraného dne
+   ============================================ */
+
+/* Hover na dny v kalendáři */
+.rdp-button:hover:not([disabled]):not([aria-selected="true"]) {
+    background-color: #d1fae5 !important;
+    color: #1a5c26 !important;
+}
+
+/* Kliknutý den - feedback */
+.rdp-button:active:not([disabled]) {
+    transform: scale(0.88) !important;
+    background-color: #2E8B3E !important;
+    color: white !important;
+    border-radius: 9999px !important;
+}
+
 /* Selection color */
 ::selection {
     background: #2E8B3E;

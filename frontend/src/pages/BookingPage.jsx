@@ -176,11 +176,11 @@ const BookingPage = () => {
 
   // Basic services - with unit type
   const basicServices = [
-    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2,5 Kč/m²', unit: 'm2', info: '✓ Úklid trávy v ceně' },
-    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²', unit: 'm2', info: '✓ Úklid trávy v ceně' },
-    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²', unit: 'm2', info: '✓ Úklid trávy v ceně' },
+    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2,5 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
     { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: '300-450 Kč/hod', unit: 'hours' },
-    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: '400 Kč/hod', unit: 'hours' },
+    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: '400 Kč/hod', unit: 'hours', info: 'extra – více práce (nakládka + odvoz)' },
   ];
 
   // Packages - all per m2
@@ -485,7 +485,7 @@ const BookingPage = () => {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 text-sm">{service.title}</p>
                           {service.info && (
-                            <p className="text-xs text-green-600">{service.info}</p>
+                            <p className={`text-xs ${service.id === 'debris_hourly' ? 'text-amber-600' : 'text-green-600'}`}>{service.info}</p>
                           )}
                         </div>
                         <span className="text-sm font-bold text-[#3FA34D] whitespace-nowrap">{service.price}</span>

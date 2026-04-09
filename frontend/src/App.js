@@ -46,6 +46,8 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <GoogleAnalytics />
+        <Analytics />
+        <SpeedInsights />
         <Routes>
           {/* Admin - no header/footer */}
           <Route path="/admin" element={<AdminPage />} />

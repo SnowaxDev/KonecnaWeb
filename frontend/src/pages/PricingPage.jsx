@@ -105,7 +105,7 @@ const PricingPage = () => {
                 </div>
                 
                 <div className="mb-5">
-                  <span className="text-3xl font-bold text-gray-900">od 2</span>
+                  <span className="text-3xl font-bold text-gray-900">od 2,5</span>
                   <span className="text-gray-500 ml-1">Kč/m²</span>
                 </div>
 
@@ -347,15 +347,21 @@ const PricingPage = () => {
               </thead>
               <tbody>
                 <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 font-medium text-gray-900">Sekání trávy</td>
-                  <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">2 Kč/m²</td>
-                  <td className="py-4 px-4 text-center text-sm text-gray-500">Základní sekání</td>
+                  <td className="py-4 px-4 font-medium text-gray-900">
+                    Sekání trávy
+                    <p className="text-xs text-[#3FA34D] font-normal mt-0.5">✓ Úklid posečené trávy v ceně</p>
+                  </td>
+                  <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">2,5 Kč/m²</td>
+                  <td className="py-4 px-4 text-center text-sm text-gray-500">Sekání + úklid trávy</td>
                   <td className="py-4 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline">Objednat →</Link>
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 font-medium text-gray-900">Sekání + hnojení</td>
+                  <td className="py-4 px-4 font-medium text-gray-900">
+                    Sekání + hnojení
+                    <p className="text-xs text-[#3FA34D] font-normal mt-0.5">✓ Úklid posečené trávy v ceně</p>
+                  </td>
                   <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">3,33 Kč/m²</td>
                   <td className="py-4 px-4 text-center text-sm text-gray-500">Sekání + NPK hnojivo</td>
                   <td className="py-4 px-4 text-right">
@@ -374,7 +380,10 @@ const PricingPage = () => {
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 font-medium text-gray-900">Odvoz odpadu</td>
+                  <td className="py-4 px-4 font-medium text-gray-900">
+                    Odvoz odpadu
+                    <p className="text-xs text-gray-400 font-normal mt-0.5">extra – více práce</p>
+                  </td>
                   <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">400 Kč/hod</td>
                   <td className="py-4 px-4 text-center text-sm text-gray-500">Nakládka + odvoz</td>
                   <td className="py-4 px-4 text-right">
