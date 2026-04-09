@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import SEOHead from '../components/SEOHead';
 import {
   LayoutDashboard, Ticket, Tag, ClipboardList, LogOut,
   Plus, Trash2, Check, X, RefreshCw, Eye, EyeOff, Copy,
   TrendingUp, Users, Leaf, CreditCard, ChevronDown, ChevronUp,
-  Calendar, Phone, Mail, MapPin, Edit3, FileText, Bold, Italic, Image
+  Calendar, Phone, Mail, MapPin, Edit3, FileText, Bold, Italic, Image,
+  MessageSquare, Upload, CheckCheck, Archive, ExternalLink
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -141,12 +142,16 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
 const OverviewTab = ({ token, handle401 }) => {
   const [stats, setStats] = useState(null);
+  const [newMessages, setNewMessages] = useState(0);
   const headers = { 'X-Admin-Token': token };
 
   useEffect(() => {
     axios.get(`${API}/admin/stats`, { headers })
       .then(r => setStats(r.data))
       .catch(err => { if (!handle401(err)) console.error(err); });
+    axios.get(`${API}/admin/contact`, { headers })
+      .then(r => setNewMessages(r.data.filter(m => m.status === 'new').length))
+      .catch(() => {}); // non-critical
   }, []); // eslint-disable-line
 
   if (!stats) return <div className="flex justify-center py-12"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>;
@@ -156,8 +161,8 @@ const OverviewTab = ({ token, handle401 }) => {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard icon={ClipboardList} label="Objednávek celkem" value={stats.total_bookings} color="bg-[#3FA34D]" />
         <StatCard icon={Calendar} label="Čeká na potvrzení" value={stats.pending_bookings} color="bg-amber-500" />
+        <StatCard icon={MessageSquare} label="Nových zpráv" value={newMessages} color="bg-blue-500" />
         <StatCard icon={Ticket} label="Aktivních poukazů" value={stats.active_vouchers} color="bg-purple-500" />
-        <StatCard icon={Tag} label="Kupónů" value={stats.total_coupons} color="bg-blue-500" />
         <StatCard icon={Users} label="Odběratelů" value={stats.total_subscribers} color="bg-[#1B4332]" />
         <StatCard icon={TrendingUp} label="Odhadovaný obrat" value={`${stats.total_revenue_estimate.toLocaleString('cs-CZ')} Kč`} color="bg-emerald-600" />
       </div>
@@ -165,7 +170,7 @@ const OverviewTab = ({ token, handle401 }) => {
       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <h3 className="font-semibold text-gray-900 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Rychlé akce</h3>
         <p className="text-sm text-gray-500 mb-4">Nejčastěji používané funkce</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <a href="/admin#vouchers" className="flex items-center gap-3 p-3 rounded-lg border-2 border-[#3FA34D]/30 bg-[#F0FDF4] hover:border-[#3FA34D] transition-colors">
             <Ticket className="w-5 h-5 text-[#3FA34D]" />
             <span className="text-sm font-medium text-[#1B4332]">Nový poukaz</span>
@@ -177,6 +182,12 @@ const OverviewTab = ({ token, handle401 }) => {
           <a href="/admin#bookings" className="flex items-center gap-3 p-3 rounded-lg border-2 border-amber-200 bg-amber-50 hover:border-amber-400 transition-colors">
             <ClipboardList className="w-5 h-5 text-amber-600" />
             <span className="text-sm font-medium text-amber-800">Objednávky</span>
+          </a>
+          <a href="/admin#contact" className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${newMessages > 0 ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-400'}`}>
+            <MessageSquare className={`w-5 h-5 ${newMessages > 0 ? 'text-blue-600' : 'text-gray-400'}`} />
+            <span className={`text-sm font-medium ${newMessages > 0 ? 'text-blue-800' : 'text-gray-600'}`}>
+              Zprávy {newMessages > 0 && <span className="ml-1 bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{newMessages}</span>}
+            </span>
           </a>
         </div>
       </div>
@@ -673,6 +684,10 @@ const GalleryTab = ({ token, handle401 }) => {
   const [editProject, setEditProject] = useState(null);
   const [previewBefore, setPreviewBefore] = useState(false);
   const [previewAfter, setPreviewAfter] = useState(false);
+  const [uploadingBefore, setUploadingBefore] = useState(false);
+  const [uploadingAfter, setUploadingAfter] = useState(false);
+  const beforeFileRef = useRef(null);
+  const afterFileRef = useRef(null);
   const [form, setForm] = useState({
     title: '', category: 'Sekání', location: '', date: '',
     description: '', before_image: '', after_image: '', published: true,
@@ -690,10 +705,36 @@ const GalleryTab = ({ token, handle401 }) => {
 
   useEffect(() => { load(); }, [load]);
 
+  // Upload image file → backend /admin/gallery/upload
+  const uploadFile = async (file, field) => {
+    const isB = field === 'before_image';
+    if (isB) setUploadingBefore(true); else setUploadingAfter(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await axios.post(`${API}/admin/gallery/upload`, formData, {
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+      });
+      // URL returned is /uploads/xxx.jpg – prefix with backend URL for display
+      const fullUrl = `${BACKEND_URL}${res.data.url}`;
+      setForm(f => ({ ...f, [field]: fullUrl }));
+      toast.success('Fotka nahrána!');
+    } catch (err) {
+      if (!handle401(err)) toast.error(parseError(err) || 'Nepodařilo se nahrát fotku');
+    } finally {
+      if (isB) setUploadingBefore(false); else setUploadingAfter(false);
+    }
+  };
+
+  const handleFileChange = (e, field) => {
+    const file = e.target.files[0];
+    if (file) uploadFile(file, field);
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.before_image || !form.after_image) {
-      toast.error('Zadejte URL pro fotku PŘED i PO');
+      toast.error('Nahrajte nebo zadejte URL pro fotku PŘED i PO');
       return;
     }
     setCreating(true);
@@ -735,6 +776,67 @@ const GalleryTab = ({ token, handle401 }) => {
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
+
+  // Reusable image input with upload button
+  const ImageInputField = ({ label, field, uploading, fileRef, required }) => (
+    <div className="space-y-2">
+      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        {label} {required && '*'}
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          value={form[field]}
+          onChange={e => { setForm(f => ({ ...f, [field]: e.target.value })); }}
+          className="h-10 flex-1 text-sm"
+          placeholder="https://... nebo nahrajte soubor →"
+          data-testid={`gallery-${field === 'before_image' ? 'before' : 'after'}-input`}
+        />
+        {/* Hidden file input */}
+        <input
+          type="file"
+          ref={fileRef}
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          className="hidden"
+          onChange={e => handleFileChange(e, field)}
+        />
+        {/* Upload button */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-10 shrink-0 border-[#3FA34D] text-[#3FA34D] hover:bg-[#F0FDF4]"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          data-testid={`upload-${field === 'before_image' ? 'before' : 'after'}-btn`}
+        >
+          {uploading
+            ? <RefreshCw className="w-4 h-4 animate-spin" />
+            : <><Upload className="w-4 h-4 mr-1" /> Nahrát</>
+          }
+        </Button>
+        {/* Preview toggle */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-10 shrink-0"
+          onClick={() => field === 'before_image' ? setPreviewBefore(v => !v) : setPreviewAfter(v => !v)}
+          disabled={!form[field]}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+      </div>
+      {/* Image preview */}
+      {((field === 'before_image' && previewBefore) || (field === 'after_image' && previewAfter)) && form[field] && (
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+          <img src={form[field]} alt={label} className="w-full h-full object-cover" onError={() => toast.error('Fotka nenačtena – zkontrolujte URL')} />
+          <span className={`absolute top-2 left-2 text-white text-xs font-bold px-2 py-0.5 rounded ${field === 'before_image' ? 'bg-red-500' : 'bg-[#3FA34D]'}`}>
+            {field === 'before_image' ? 'PŘED' : 'PO'}
+          </span>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -778,53 +880,23 @@ const GalleryTab = ({ token, handle401 }) => {
               className="mt-1 h-10" placeholder="Krátký popis co bylo uděláno" />
           </div>
 
-          {/* Before image */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              Fotka PŘED (URL) *
-              <span className="ml-2 text-gray-400 font-normal normal-case">Nahrajte foto na Google Photos, iCloud nebo jiný hosting a vložte odkaz</span>
-            </Label>
-            <div className="flex gap-2">
-              <Input value={form.before_image} onChange={e => { setForm(f => ({ ...f, before_image: e.target.value })); setPreviewBefore(false); }}
-                className="h-10 flex-1" placeholder="https://..." data-testid="gallery-before-input" required />
-              <Button type="button" variant="outline" size="sm" className="h-10 shrink-0"
-                onClick={() => setPreviewBefore(!previewBefore)} disabled={!form.before_image}>
-                <Eye className="w-4 h-4 mr-1" /> Náhled
-              </Button>
-            </div>
-            {previewBefore && form.before_image && (
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
-                <img src={form.before_image} alt="PŘED" className="w-full h-full object-cover" onError={() => toast.error('Fotka nenačtena – zkontrolujte URL')} />
-                <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">PŘED</span>
-              </div>
-            )}
-          </div>
+          {/* Before image with upload */}
+          <ImageInputField
+            label="Fotka PŘED"
+            field="before_image"
+            uploading={uploadingBefore}
+            fileRef={beforeFileRef}
+            required
+          />
 
-          {/* After image */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              Fotka PO (URL) *
-            </Label>
-            <div className="flex gap-2">
-              <Input value={form.after_image} onChange={e => { setForm(f => ({ ...f, after_image: e.target.value })); setPreviewAfter(false); }}
-                className="h-10 flex-1" placeholder="https://..." data-testid="gallery-after-input" required />
-              <Button type="button" variant="outline" size="sm" className="h-10 shrink-0"
-                onClick={() => setPreviewAfter(!previewAfter)} disabled={!form.after_image}>
-                <Eye className="w-4 h-4 mr-1" /> Náhled
-              </Button>
-            </div>
-            {previewAfter && form.after_image && (
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
-                <img src={form.after_image} alt="PO" className="w-full h-full object-cover" onError={() => toast.error('Fotka nenačtena – zkontrolujte URL')} />
-                <span className="absolute top-2 left-2 bg-[#3FA34D] text-white text-xs font-bold px-2 py-0.5 rounded">PO</span>
-              </div>
-            )}
-          </div>
-
-          {/* Tip box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
-            <strong>Tip:</strong> Fotky nahrajte přes <a href="https://photos.google.com" target="_blank" rel="noreferrer" className="underline">Google Photos</a> nebo <a href="https://imgur.com" target="_blank" rel="noreferrer" className="underline">Imgur.com</a> a zkopírujte přímý odkaz na obrázek (musí končit .jpg/.png).
-          </div>
+          {/* After image with upload */}
+          <ImageInputField
+            label="Fotka PO"
+            field="after_image"
+            uploading={uploadingAfter}
+            fileRef={afterFileRef}
+            required
+          />
 
           <div className="flex items-center gap-3 pt-2">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -904,6 +976,180 @@ const GalleryTab = ({ token, handle401 }) => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+// ─── CONTACT TAB ──────────────────────────────────────────────────────────────
+const CONTACT_STATUS_LABELS = {
+  new:      { label: 'Nová',      color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  read:     { label: 'Přečtená',  color: 'bg-gray-100 text-gray-600 border-gray-200' },
+  archived: { label: 'Archivová', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+};
+
+const ContactTab = ({ token, handle401 }) => {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const headers = { 'X-Admin-Token': token };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/contact`, { headers });
+      setMessages(res.data);
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst zprávy'); }
+    finally { setLoading(false); }
+  }, []); // eslint-disable-line
+
+  useEffect(() => { load(); }, [load]);
+
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.patch(`${API}/admin/contact/${id}/status`, { status }, { headers });
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, status } : m));
+      toast.success(status === 'read' ? 'Označeno jako přečtené' : 'Archivováno');
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
+  };
+
+  const deleteMessage = async (id) => {
+    if (!window.confirm('Smazat tuto zprávu?')) return;
+    try {
+      await axios.delete(`${API}/admin/contact/${id}`, { headers });
+      setMessages(prev => prev.filter(m => m.id !== id));
+      toast.success('Zpráva smazána');
+    } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
+  };
+
+  const filtered = filter === 'all' ? messages : messages.filter(m => m.status === filter);
+  const newCount = messages.filter(m => m.status === 'new').length;
+
+  return (
+    <div className="space-y-4">
+      {/* Header + filter */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-gray-500">Celkem {messages.length} zpráv</p>
+          {newCount > 0 && (
+            <span className="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{newCount} nových</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Filter buttons */}
+          {[
+            { key: 'all', label: 'Vše' },
+            { key: 'new', label: 'Nové' },
+            { key: 'read', label: 'Přečtené' },
+            { key: 'archived', label: 'Archiv' },
+          ].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                filter === f.key ? 'bg-[#3FA34D] text-white border-[#3FA34D]' : 'border-gray-200 text-gray-500 hover:border-gray-400'
+              }`}>
+              {f.label}
+            </button>
+          ))}
+          <Button variant="outline" size="sm" onClick={load} className="h-8 ml-1">
+            <RefreshCw className="w-3.5 h-3.5 mr-1" /> Obnovit
+          </Button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-10"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-xl border p-10 text-center">
+          <MessageSquare className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">{filter === 'all' ? 'Žádné zprávy' : 'Žádné zprávy v tomto filtru'}</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(msg => {
+            const isOpen = expanded === msg.id;
+            const s = CONTACT_STATUS_LABELS[msg.status] || CONTACT_STATUS_LABELS.new;
+            return (
+              <div key={msg.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${msg.status === 'new' ? 'border-blue-200' : 'border-gray-100'}`}
+                data-testid={`contact-msg-${msg.id}`}>
+                <button
+                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setExpanded(isOpen ? null : msg.id);
+                    if (!isOpen && msg.status === 'new') updateStatus(msg.id, 'read');
+                  }}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${msg.status === 'new' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                    <div className="min-w-0">
+                      <p className={`text-sm truncate ${msg.status === 'new' ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>{msg.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{msg.message?.slice(0, 60)}{msg.message?.length > 60 ? '...' : ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${s.color}`}>{s.label}</span>
+                    <span className="text-xs text-gray-400 hidden sm:block whitespace-nowrap">
+                      {new Date(msg.created_at).toLocaleDateString('cs-CZ')}
+                    </span>
+                    {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="px-5 pb-5 border-t border-gray-100 bg-gray-50">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      {/* Left: contact info */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                          <a href={`mailto:${msg.email}`} className="hover:text-[#3FA34D] truncate">{msg.email}</a>
+                        </div>
+                        {msg.phone && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                            <a href={`tel:${msg.phone}`} className="hover:text-[#3FA34D]">{msg.phone}</a>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-400">
+                          {new Date(msg.created_at).toLocaleString('cs-CZ')}
+                        </p>
+                      </div>
+                      {/* Right: message */}
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Zpráva</p>
+                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-200 whitespace-pre-wrap">{msg.message}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 flex-wrap">
+                      <a href={`mailto:${msg.email}?subject=Re: Váš dotaz – SeknuTo.cz`}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-[#3FA34D] text-[#3FA34D] hover:bg-[#F0FDF4] font-medium transition-all">
+                        <ExternalLink className="w-3.5 h-3.5" /> Odpovědět emailem
+                      </a>
+                      {msg.status !== 'read' && (
+                        <button onClick={() => updateStatus(msg.id, 'read')}
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 font-medium">
+                          <CheckCheck className="w-3.5 h-3.5" /> Přečteno
+                        </button>
+                      )}
+                      {msg.status !== 'archived' && (
+                        <button onClick={() => updateStatus(msg.id, 'archived')}
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 font-medium">
+                          <Archive className="w-3.5 h-3.5" /> Archivovat
+                        </button>
+                      )}
+                      <button onClick={() => deleteMessage(msg.id)}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-red-200 text-red-500 hover:bg-red-50 font-medium ml-auto">
+                        <Trash2 className="w-3.5 h-3.5" /> Smazat
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -1110,6 +1356,7 @@ const BlogTab = ({ token, handle401 }) => {
 // ─── MAIN ADMIN PAGE ──────────────────────────────────────────────────────────
 const TABS = [
   { id: 'overview', label: 'Přehled', icon: LayoutDashboard },
+  { id: 'contact', label: 'Zprávy', icon: MessageSquare },
   { id: 'vouchers', label: 'Poukazů', icon: Ticket },
   { id: 'coupons', label: 'Kupóny', icon: Tag },
   { id: 'bookings', label: 'Objednávky', icon: ClipboardList },
@@ -1222,6 +1469,7 @@ export default function AdminPage() {
 
           <div className="p-6 pb-24 md:pb-6">
             {activeTab === 'overview' && <OverviewTab token={token} handle401={handle401} />}
+            {activeTab === 'contact' && <ContactTab token={token} handle401={handle401} />}
             {activeTab === 'vouchers' && <VouchersTab token={token} handle401={handle401} />}
             {activeTab === 'coupons' && <CouponsTab token={token} handle401={handle401} />}
             {activeTab === 'bookings' && <BookingsTab token={token} handle401={handle401} />}

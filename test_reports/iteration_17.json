@@ -1,0 +1,98 @@
+{
+  "summary": "Iteration 17 - Testing new Admin Panel features: Contact Messages Management and Gallery Upload. All 12 backend tests passed (100%). Frontend UI tests passed for Overview tab (Nových zpráv StatCard), Contact Messages tab (filters, expand, archive, delete), and Gallery tab (upload buttons). All features working as expected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "=== BACKEND API TESTS (12/12 passed) ===",
+    "Admin login works with password SeknuTo2025!",
+    "GET /api/admin/contact returns list of 11 messages",
+    "GET /api/admin/contact requires authentication (401)",
+    "PATCH /api/admin/contact/{id}/status to 'read' works",
+    "PATCH /api/admin/contact/{id}/status to 'archived' works",
+    "PATCH /api/admin/contact/{id}/status requires authentication (401)",
+    "DELETE /api/admin/contact/{id} requires authentication (401)",
+    "DELETE /api/admin/contact/nonexistent-id returns 404",
+    "POST /api/admin/gallery/upload requires authentication (401)",
+    "POST /api/admin/gallery/upload with valid PNG succeeds, returns URL",
+    "POST /api/admin/gallery/upload rejects invalid file type (400)",
+    "GET /api/admin/stats returns expected fields",
+    
+    "=== FRONTEND UI TESTS ===",
+    "Admin login page loads with data-testid selectors",
+    "Overview tab shows 'Nových zpráv' StatCard with count (7)",
+    "Overview tab shows 'Rychlé akce' with 4 cards including 'Zprávy'",
+    "Zprávy quick action card shows badge with new message count",
+    "Zprávy tab exists in sidebar (data-testid='admin-tab-contact')",
+    "Zprávy tab loads 11 contact messages",
+    "Filter buttons (Vše, Nové, Přečtené, Archiv) work correctly",
+    "Clicking message expands to show details (name, email, phone, message)",
+    "'Odpovědět emailem' button visible in expanded message",
+    "'Přečteno' button visible for marking as read",
+    "'Smazat' button visible for deleting message",
+    "Status badges (Nová, Přečtená, Archivová) display correctly",
+    "Galerie tab shows form with 'Přidat projekt Před/Po'",
+    "Gallery form has 'Nahrát' (Upload) button for BEFORE image (data-testid='upload-before-btn')",
+    "Gallery form has 'Nahrát' (Upload) button for AFTER image (data-testid='upload-after-btn')",
+    "Gallery URL inputs still work for direct URL entry",
+    "All sidebar tabs visible: Přehled, Zprávy, Poukazů, Kupóny, Objednávky, Galerie, Blog"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_admin_contact_gallery.py",
+    "/app/test_reports/pytest/pytest_admin_contact_gallery.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Contact messages API properly secured with verify_admin() middleware",
+    "Gallery upload validates file type (JPG, PNG, WEBP, GIF only)",
+    "Gallery upload has 10MB file size limit",
+    "Uploaded files served via /uploads/ static mount",
+    "Contact messages have proper status flow: new -> read -> archived",
+    "Frontend correctly fetches new message count for Overview StatCard"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_admin_contact_gallery.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (All UI features verified)"
+  },
+  "test_credentials": {
+    "admin_password": "SeknuTo2025!",
+    "app_url": "https://booking-system-test-7.preview.emergentagent.com",
+    "admin_url": "https://booking-system-test-7.preview.emergentagent.com/admin"
+  },
+  "seed_data_creation": "11 contact messages exist in DB (7 new, 4 read/archived)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New admin features fully tested: 1) Contact Messages tab with GET/PATCH/DELETE endpoints and UI filters/actions, 2) Gallery Upload with POST /api/admin/gallery/upload endpoint and 'Nahrát' buttons in UI. All endpoints require X-Admin-Token authentication. Rate limiting on admin login (5/min) - use cached token in tests.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["Google Calendar API (pending OAuth)", "Customer confirmation emails (Resend domain unverified)"],
+    "note": "Google Calendar and Resend emails are mocked/not fully configured. Core admin functionality works."
+  },
+  "features_verified": {
+    "admin_contact_messages": {
+      "GET_list": "Returns array of messages with id, name, email, phone, message, status, created_at",
+      "PATCH_status": "Updates message status to read/archived",
+      "DELETE": "Removes message from database",
+      "authentication": "All endpoints require X-Admin-Token"
+    },
+    "admin_gallery_upload": {
+      "POST_upload": "Accepts multipart/form-data with file, returns {url, filename}",
+      "file_validation": "Only allows image/jpeg, image/png, image/webp, image/gif",
+      "size_limit": "10MB maximum",
+      "static_serving": "Files served via /uploads/ mount"
+    },
+    "overview_new_messages": {
+      "stat_card": "'Nových zpráv' StatCard shows count of messages with status='new'",
+      "quick_action": "'Zprávy' quick action card with badge showing new count"
+    }
+  }
+}

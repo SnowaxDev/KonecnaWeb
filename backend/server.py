@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -63,6 +64,11 @@ app = FastAPI(title="SeknuTo.cz API", version="1.0.0")
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Static file serving for uploaded images
+UPLOADS_DIR = ROOT_DIR / "uploads"
+UPLOADS_DIR.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -1190,6 +1196,68 @@ async def admin_delete_gallery_project(project_id: str, request: Request):
     result = await db.gallery_projects.delete_one({"id": project_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
+    return {"success": True}
+
+@api_router.post("/admin/gallery/upload")
+async def admin_upload_gallery_image(request: Request, file: UploadFile = File(...)):
+    """Upload gallery image – stores in /uploads, returns URL path"""
+    await verify_admin(request)
+    # Validate file type
+    allowed = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
+    if file.content_type not in allowed:
+        raise HTTPException(status_code=400, detail="Nepodporovaný formát souboru. Použijte JPG, PNG nebo WEBP.")
+    
+    # Ensure uploads directory exists
+    uploads_dir = ROOT_DIR / "uploads"
+    uploads_dir.mkdir(exist_ok=True)
+    
+    # Unique filename
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+    filename = f"{uuid.uuid4()}.{ext}"
+    filepath = uploads_dir / filename
+    
+    # Read and save
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10 MB limit
+        raise HTTPException(status_code=413, detail="Soubor je příliš velký (max. 10 MB)")
+    
+    with open(filepath, "wb") as f:
+        f.write(content)
+    
+    # Return the URL (served as static files via /uploads/ mount)
+    url = f"/uploads/{filename}"
+    return {"url": url, "filename": filename}
+
+# ─── CONTACT MESSAGES ADMIN ──────────────────────────────────────────────────
+
+@api_router.get("/admin/contact")
+async def admin_list_contact_messages(request: Request):
+    """Admin: list all contact form messages"""
+    await verify_admin(request)
+    messages = await db.contact_messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return messages
+
+@api_router.patch("/admin/contact/{message_id}/status")
+async def admin_update_contact_status(message_id: str, request: Request):
+    """Admin: mark message as read/archived"""
+    await verify_admin(request)
+    body = await request.json()
+    new_status = body.get("status", "read")
+    result = await db.contact_messages.update_one(
+        {"id": message_id},
+        {"$set": {"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"success": True}
+
+@api_router.delete("/admin/contact/{message_id}")
+async def admin_delete_contact_message(message_id: str, request: Request):
+    """Admin: delete a contact message"""
+    await verify_admin(request)
+    result = await db.contact_messages.delete_one({"id": message_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
     return {"success": True}
 
 # ─────────────────────────────────────────────────────────────────────────────
