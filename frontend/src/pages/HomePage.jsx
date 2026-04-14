@@ -457,6 +457,25 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Firmy.cz Banner */}
+      <section className="py-8 bg-white" data-testid="firmy-cz-banner">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <a 
+            href="https://www.firmy.cz/detail/13988364-seknuto-cz-dvur-kralove-nad-labem.html#pridat-hodnoceni" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            data-testid="firmy-cz-link"
+          >
+            <img 
+              width="249" 
+              src="https://www.firmy.cz/img/widgets/firmy-ohodnotte-nas-tmave.svg" 
+              alt="SeknuTo.cz na Firmy.cz" 
+              className="inline-block hover:opacity-80 transition-opacity"
+            />
+          </a>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 md:py-24 bg-[#222222]" data-testid="cta-section">
         <div className="max-w-4xl mx-auto px-4 md:px-8 text-center">
