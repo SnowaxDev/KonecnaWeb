@@ -1,417 +1,191 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Calculator, CheckCircle, ArrowRight, Star, Shield, Clock,
-  Scissors, Sprout, Package, Phone, Zap, TrendingUp
+  CheckCircle, ArrowRight, Star, Shield, Clock,
+  Scissors, Sprout, Package, Phone, Zap,
+  MessageCircle, MapPin, Truck, Flame, TreeDeciduous, Leaf
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
 import SEOHead from '../components/SEOHead';
 
 const PricingPage = () => {
-  const [service, setService] = useState('lawn_mowing');
-  const [size, setSize] = useState(200);
-  const [condition, setCondition] = useState('normal');
-  const [calculatedPrice, setCalculatedPrice] = useState(null);
+  const steps = [
+    { 
+      num: '01', 
+      icon: MessageCircle, 
+      title: 'Pošlete poptávku', 
+      description: 'Vyplňte jednoduchý formulář, zavolejte nebo napište na WhatsApp. Popište, co potřebujete – sekání, likvidaci pozemku, sezónní péči.',
+      color: 'bg-[#3FA34D]'
+    },
+    { 
+      num: '02', 
+      icon: MapPin, 
+      title: 'Bezplatná obhlídka', 
+      description: 'Přijedeme přímo k vám, zhodnotíme stav zahrady nebo pozemku a na místě připravíme přesnou kalkulaci. Obhlídka je zcela zdarma a nezávazná.',
+      color: 'bg-[#2E8B3E]'
+    },
+    { 
+      num: '03', 
+      icon: CheckCircle, 
+      title: 'Cena předem', 
+      description: 'Přesnou cenu vždy znáte ještě před zahájením prací. Žádná překvapení, žádné skryté poplatky. Odsouhlasíte a my začneme.',
+      color: 'bg-[#1B4332]'
+    },
+    { 
+      num: '04', 
+      icon: Truck, 
+      title: 'Práce hotova', 
+      description: 'Dorazíme v domluveném termínu, odvedeme kvalitní práci a po sobě vše uklidíme. Platíte až po dokončení – hotově nebo převodem.',
+      color: 'bg-[#111827]'
+    },
+  ];
 
-  const servicePrices = {
-    lawn_mowing: 2.5,
-    lawn_with_fertilizer: 3.90,
-    overgrown: 3.5,
-    spring_package: 10,
-    summer_package: 3.5,
-    autumn_package: 12,
-    vip_annual: 20,
-  };
+  const services = [
+    { icon: Scissors, title: 'Sekání trávy', desc: 'Pravidelné i jednorázové sekání trávníků všech velikostí, s hnojením i bez.' },
+    { icon: Flame, title: 'Likvidace pozemků', desc: 'Kompletní vyčištění zarostlých parcel, zahrad a pozemků – křoviny, nálety, vysoká tráva.' },
+    { icon: Sprout, title: 'Sezónní balíčky', desc: 'Jarní restart, letní údržba, podzimní příprava na zimu, zimní úklid sněhu.' },
+    { icon: TreeDeciduous, title: 'Zahradnické práce', desc: 'Pletí, výsadba, údržba záhonů, úprava terénu, odstranění kořenů.' },
+    { icon: Truck, title: 'Odvoz odpadu', desc: 'Nakládka a ekologická likvidace zahradního odpadu – listí, větve, tráva, zemina.' },
+    { icon: Package, title: 'VIP Celoroční servis', desc: 'Kompletní celoroční péče o zahradu – vertikutace, hnojení, sekání, zimní úklid.' },
+  ];
 
-  const conditionMultipliers = {
-    normal: 1,
-    overgrown: 1.5,
-    very_neglected: 2,
-  };
-
-  const calculatePrice = () => {
-    const basePrice = servicePrices[service] || 2;
-    const multiplier = conditionMultipliers[condition] || 1;
-    const total = Math.round(basePrice * size * multiplier);
-    setCalculatedPrice(total);
-  };
+  const benefits = [
+    { icon: Star, title: '5/5 hodnocení', desc: 'Přes 20 spokojených zákazníků nás hodnotí na plný počet hvězd.' },
+    { icon: Shield, title: 'Cena vždy předem', desc: 'Nikdy nezačínáme bez odsouhlasené ceny. Žádná překvapení.' },
+    { icon: Clock, title: 'Odpověď do 24h', desc: 'Na každou poptávku odpovídáme nejpozději do druhého dne.' },
+    { icon: MapPin, title: 'Dvůr Králové + 30 km', desc: 'Pokrýváme Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolí.' },
+  ];
 
   return (
     <div className="min-h-screen pt-16" data-testid="pricing-page">
       <SEOHead
-        title="Ceník zahradnických služeb | Orientační ceny a kalkulace na míru | SeknuTo.cz"
-        description="Orientační ceník služeb SeknuTo.cz. Sekání trávy od 2,5 Kč/m², sezónní balíčky, likvidace pozemků. Získejte přesnou kalkulaci po bezplatné obhlídce."
+        title="Jak funguje kalkulace | Bezplatná obhlídka zahrady | SeknuTo.cz"
+        description="Jak zjistíte cenu za sekání trávy nebo likvidaci pozemku? Pošlete poptávku, přijedeme na bezplatnou obhlídku a sdělíme přesnou cenu předem. Dvůr Králové a okolí."
         canonical="https://seknuto.cz/cenik"
-        keywords="ceník sekání trávy, cena zahradník Dvůr Králové, cena vertikutace, cena likvidace pozemku"
+        keywords="cena sekání trávy, kalkulace zahradník, bezplatná obhlídka zahrady, cena likvidace pozemku, zahradnické služby Dvůr Králové, cena údržba zahrady"
       />
-      {/* Hero - Compact & Action-focused */}
+
+      {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
             <Zap className="w-4 h-4 text-[#3FA34D]" />
-            <span className="text-sm font-medium text-[#3FA34D]">Orientační ceny • Přesná kalkulace po obhlídce</span>
+            <span className="text-sm font-medium text-[#3FA34D]">Bezplatná obhlídka • Cena vždy předem</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Ceník zahradnických služeb
+            Jak zjistíte cenu?
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto mb-6">
-            Od jednorázového sekání po celoroční péči. Všechny ceny jsou <strong>orientační</strong> – finální částka závisí na náročnosti zakázky.
+            Každá zahrada je jiná. Proto nabízíme <strong>bezplatnou obhlídku</strong> na místě, 
+            kde vám sdělíme přesnou cenu ještě před zahájením prací.
           </p>
           
-          {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span>4.9/5 hodnocení</span>
+              <span>5/5 hodnocení</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#3FA34D]" />
-              <span>Cena vždy předem</span>
+              <span>Bez skrytých poplatků</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#3FA34D]" />
-              <span>Reakce do 24h</span>
+              <span>Odpověď do 24h</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Pricing Cards */}
+      {/* How it works - 4 steps */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid lg:grid-cols-3 gap-6">
-            
-            {/* Card 1: Jednorázové služby */}
-            <Card className="rounded-2xl border-2 border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <Scissors className="w-6 h-6 text-gray-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Jednorázově</h3>
-                    <p className="text-xs text-gray-500">Pro konkrétní potřeby</p>
-                  </div>
-                </div>
-                
-                <div className="mb-5">
-                  <span className="text-3xl font-bold text-gray-900">od 2,5</span>
-                  <span className="text-gray-500 ml-1">Kč/m²</span>
-                </div>
-
-                <ul className="space-y-2.5 mb-6">
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    Sekání trávy: od 2,5 Kč/m²
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    S hnojením: od 3,90 Kč/m²
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    Přerostlá tráva: od 4,5 Kč/m²
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    Odvoz odpadu: Dle rozsahu
-                  </li>
-                </ul>
-
-                <Link to="/rezervace" className="block">
-                  <Button variant="outline" className="w-full h-11 rounded-xl border-2 border-gray-200 hover:border-[#3FA34D] hover:bg-[#F0FDF4]">
-                    Poptat
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Card 2: Sezónní balíčky - POPULAR */}
-            <Card className="rounded-2xl border-2 border-[#3FA34D] shadow-xl relative lg:scale-105 bg-white">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3FA34D] text-white text-xs font-bold px-4 py-1 rounded-full">
-                NEJOBLÍBENĚJŠÍ
-              </div>
-              <CardContent className="p-6 pt-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-[#F0FDF4] rounded-xl flex items-center justify-center">
-                    <Sprout className="w-6 h-6 text-[#3FA34D]" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Sezónní balíčky</h3>
-                    <p className="text-xs text-[#3FA34D] font-medium">Úspora 20-25%</p>
-                  </div>
-                </div>
-                
-                <div className="mb-5">
-                  <span className="text-3xl font-bold text-gray-900">od 900</span>
-                  <span className="text-gray-500 ml-1">Kč</span>
-                </div>
-
-                <ul className="space-y-2.5 mb-6">
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    <span>🌸 Jarní restart: <strong>od 8 Kč/m²</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    <span>☀️ Letní údržba: <strong>od 3 Kč/m²</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    <span>🍂 Podzimní příprava: <strong>od 10 Kč/m²</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#3FA34D]" />
-                    <span>❄️ Zimní úklid: <strong>Individuální</strong></span>
-                  </li>
-                </ul>
-
-                <Link to="/rezervace" className="block">
-                  <Button className="w-full h-11 rounded-xl bg-[#3FA34D] hover:bg-[#2d7a38] text-white font-semibold">
-                    Poptat balíček
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                
-                <p className="text-center text-xs text-gray-400 mt-3">
-                  Cena závisí na velikosti zahrady
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Card 3: VIP Celoroční */}
-            <Card className="rounded-2xl border-2 border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-lg bg-gradient-to-b from-white to-gray-50">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <Package className="w-6 h-6 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">VIP Celoroční</h3>
-                    <p className="text-xs text-amber-600 font-medium">Úspora až 35%</p>
-                  </div>
-                </div>
-                
-                <div className="mb-5">
-                  <span className="text-3xl font-bold text-gray-900">od 18</span>
-                  <span className="text-gray-500 ml-1">Kč/m²/rok</span>
-                </div>
-
-                <ul className="space-y-2.5 mb-6">
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-amber-500" />
-                    Jarní + podzimní balíček
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-amber-500" />
-                    Pravidelné letní sekání
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-amber-500" />
-                    4× sezónní hnojení
-                  </li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-amber-500" />
-                    Zimní úklid sněhu zdarma
-                  </li>
-                </ul>
-
-                <Link to="/rezervace" className="block">
-                  <Button variant="outline" className="w-full h-11 rounded-xl border-2 border-amber-300 text-amber-700 hover:bg-amber-50">
-                    Poptat VIP
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Quick Calculator - Inline */}
-      <section className="py-12 bg-gray-50" data-testid="price-calculator-section">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="bg-[#3FA34D] px-6 py-4 flex items-center gap-3">
-              <Calculator className="w-6 h-6 text-white" />
-              <h2 className="text-lg font-bold text-white">Rychlá kalkulace ceny</h2>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid md:grid-cols-4 gap-4 items-end">
-                {/* Service */}
-                <div>
-                  <Label className="text-xs font-medium text-gray-500 mb-1.5 block">Služba</Label>
-                  <Select value={service} onValueChange={setService}>
-                    <SelectTrigger className="h-11" data-testid="calc-service-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lawn_mowing">Sekání (od 2,5 Kč/m²)</SelectItem>
-                      <SelectItem value="lawn_with_fertilizer">S hnojením (od 3,90 Kč/m²)</SelectItem>
-                      <SelectItem value="spring_package">Jarní balíček (od 10 Kč/m²)</SelectItem>
-                      <SelectItem value="summer_package">Letní balíček (od 3,5 Kč/m²)</SelectItem>
-                      <SelectItem value="autumn_package">Podzimní balíček (od 12 Kč/m²)</SelectItem>
-                      <SelectItem value="vip_annual">VIP roční (od 20 Kč/m²)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Size */}
-                <div>
-                  <Label className="text-xs font-medium text-gray-500 mb-1.5 block">Plocha (m²)</Label>
-                  <Input
-                    type="number"
-                    value={size}
-                    onChange={(e) => setSize(parseInt(e.target.value) || 0)}
-                    className="h-11"
-                    min="1"
-                    data-testid="calc-size-input"
-                  />
-                </div>
-
-                {/* Condition */}
-                <div>
-                  <Label className="text-xs font-medium text-gray-500 mb-1.5 block">Stav</Label>
-                  <Select value={condition} onValueChange={setCondition}>
-                    <SelectTrigger className="h-11" data-testid="calc-condition-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Běžný (×1)</SelectItem>
-                      <SelectItem value="overgrown">Přerostlý (×1.5)</SelectItem>
-                      <SelectItem value="very_neglected">Zanedbaný (×2)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Calculate */}
-                <Button 
-                  onClick={calculatePrice}
-                  className="h-11 bg-[#222] hover:bg-[#333] text-white"
-                  data-testid="calc-button"
-                >
-                  Spočítat
-                </Button>
-              </div>
-
-              {/* Result */}
-              {calculatedPrice !== null && (
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between p-4 bg-[#F0FDF4] rounded-xl gap-4" data-testid="calc-result">
-                  <div>
-                    <p className="text-sm text-gray-600">Orientační cena:</p>
-                    <p className="text-3xl font-bold text-[#3FA34D]">
-                      {calculatedPrice.toLocaleString('cs-CZ')} Kč
-                    </p>
-                  </div>
-                  <Link to="/rezervace">
-                    <Button className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-6 h-11">
-                      Poptat
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Price Comparison Table */}
-      <section className="py-12 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Porovnání služeb
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-10" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            4 jednoduché kroky
           </h2>
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 border-gray-100">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Služba</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Cena</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Obsahuje</th>
-                  <th className="text-right py-3 px-4"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 font-medium text-gray-900">Sekání trávy</td>
-                  <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">od 2,5 Kč/m²</td>
-                  <td className="py-4 px-4 text-center text-sm text-gray-500">Základní sekání</td>
-                  <td className="py-4 px-4 text-right">
-                    <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline">Poptat →</Link>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 font-medium text-gray-900">Sekání + hnojení</td>
-                  <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">od 3,90 Kč/m²</td>
-                  <td className="py-4 px-4 text-center text-sm text-gray-500">Sekání + NPK hnojivo</td>
-                  <td className="py-4 px-4 text-right">
-                    <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline">Poptat →</Link>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50 bg-[#F0FDF4]/50">
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    🌸 Jarní balíček
-                    <span className="ml-2 text-xs bg-[#3FA34D] text-white px-2 py-0.5 rounded">-20%</span>
-                  </td>
-                  <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">od 8 Kč/m²</td>
-                  <td className="py-4 px-4 text-center text-sm text-gray-500">Vertikutace + hnojení + sekání</td>
-                  <td className="py-4 px-4 text-right">
-                    <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline">Poptat →</Link>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 font-medium text-gray-900">Likvidace pozemků</td>
-                  <td className="py-4 px-4 text-center text-[#3FA34D] font-bold">Projektová cena</td>
-                  <td className="py-4 px-4 text-center text-sm text-gray-500">Kompletní vyčištění pozemku</td>
-                  <td className="py-4 px-4 text-right">
-                    <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline">Poptat →</Link>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50 bg-amber-50/50">
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    🌀 VIP Celoroční
-                    <span className="ml-2 text-xs bg-amber-500 text-white px-2 py-0.5 rounded">-35%</span>
-                  </td>
-                  <td className="py-4 px-4 text-center text-amber-600 font-bold">od 18 Kč/m²/rok</td>
-                  <td className="py-4 px-4 text-center text-sm text-gray-500">Kompletní celoroční péče</td>
-                  <td className="py-4 px-4 text-right">
-                    <Link to="/rezervace" className="text-amber-600 text-sm font-medium hover:underline">Poptat →</Link>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {steps.map((step) => (
+              <div key={step.num} className="text-center" data-testid={`step-${step.num}`}>
+                <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                  <step.icon className="w-7 h-7 text-white" />
+                </div>
+                <span className="text-xs font-bold text-[#3FA34D] mb-1 block">KROK {step.num}</span>
+                <h3 className="font-bold text-gray-900 mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  {step.title}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link to="/rezervace">
+              <Button className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-8 h-12 font-semibold shadow-lg">
+                Poslat nezávaznou poptávku
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Urgency CTA */}
+      {/* What we offer */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Co vše pro vás uděláme
+          </h2>
+          <p className="text-center text-gray-500 mb-10 max-w-xl mx-auto">
+            Kompletní zahradnické služby od jednorázového sekání po celoroční péči. Cenu vždy stanovíme individuálně po obhlídce.
+          </p>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {services.map((service, idx) => (
+              <Card key={idx} className="rounded-2xl border-2 border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-lg">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-[#F0FDF4] rounded-xl flex items-center justify-center mb-4">
+                    <service.icon className="w-6 h-6 text-[#3FA34D]" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2">{service.title}</h3>
+                  <p className="text-sm text-gray-500 mb-4 leading-relaxed">{service.desc}</p>
+                  <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline inline-flex items-center gap-1">
+                    Poptat <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section className="py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefits.map((item, idx) => (
+              <div key={idx} className="text-center p-6 bg-[#F8FAFC] rounded-2xl border border-gray-100">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100">
+                  <item.icon className="w-6 h-6 text-[#3FA34D]" />
+                </div>
+                <h4 className="font-bold text-gray-900 mb-1">{item.title}</h4>
+                <p className="text-xs text-gray-500">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
       <section className="py-12 bg-[#222]">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-[#3FA34D]" />
-                <span className="text-[#3FA34D] font-medium text-sm">Sezóna začíná!</span>
-              </div>
               <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                Potřebujete přesnou kalkulaci?
+                Potřebujete pomoct se zahradou?
               </h2>
               <p className="text-gray-400 text-sm">
-                Pošlete nezávaznou poptávku. Odpovíme do 24 hodin s cenovou nabídkou na míru.
+                Pošlete nezávaznou poptávku. Přijedeme, prohlédneme a sdělíme přesnou cenu. Zdarma.
               </p>
             </div>
             

@@ -32,7 +32,7 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { href: '/sluzby', label: 'Služby' },
-                { href: '/cenik', label: 'Ceník' },
+                { href: '/cenik', label: 'Jak to funguje' },
                 { href: '/rezervace', label: 'Rezervace' },
                 { href: '/o-nas', label: 'O nás' },
                 { href: '/kontakt', label: 'Kontakt' },

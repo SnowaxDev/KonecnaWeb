@@ -17,14 +17,14 @@ const ServicesPage = () => {
       icon: Scissors,
       title: 'Sekání trávy',
       subtitle: 'Základní služba',
-      price: 'od 2,5',
-      unit: 'Kč/m²',
-      description: 'Profesionální sekání trávníků všech velikostí. Cena závisí na ploše a stavu porostu.',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Profesionální sekání trávníků všech velikostí – pravidelná údržba i jednorázové služby.',
       features: [
-        { label: 'Bez hnojení', price: 'od 2,5 Kč/m²' },
-        { label: 'S hnojením', price: 'od 3,90 Kč/m²' },
-        { label: 'Přerostlá tráva', price: 'od 4,5 Kč/m²' },
-        { label: 'Mulčování', price: '+0,5 Kč/m²' },
+        { label: 'Sekání bez hnojení', price: '✓' },
+        { label: 'Sekání s hnojením NPK', price: '✓' },
+        { label: 'Přerostlá tráva / hrubé sekání', price: '✓' },
+        { label: 'Mulčování', price: '✓' },
       ],
       time: 'Dle rozsahu',
       color: 'bg-emerald-50 border-emerald-200',
@@ -36,9 +36,9 @@ const ServicesPage = () => {
       icon: Flame,
       title: 'Likvidace a čištění pozemků',
       subtitle: 'Zarostlé parcely',
-      price: 'Projektová',
-      unit: 'cena',
-      description: 'Kompletní vyčištění zarostlých pozemků – křoviny, náletové dřeviny, přerostlá vegetace.',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Kompletní vyčištění zarostlých pozemků, parcel a zahrad – křoviny, nálety, přerostlá vegetace.',
       features: [
         { label: 'Kácení křovin a náletů', price: '✓' },
         { label: 'Mulčování vysoké trávy', price: '✓' },
@@ -55,14 +55,14 @@ const ServicesPage = () => {
       icon: TreeDeciduous,
       title: 'Zahradnické práce',
       subtitle: 'Ruční práce',
-      price: 'Dle',
-      unit: 'rozsahu',
-      description: 'Pletí, výsadba, údržba záhonů, odstranění kořenů a úprava terénu. Cena po individuální domluvě.',
+      price: 'Po domluvě',
+      unit: '',
+      description: 'Pletí, výsadba, údržba záhonů, odstranění kořenů, úprava terénu a další práce na zahradě.',
       features: [
-        { label: 'Pletí záhonů', price: 'Dle rozsahu' },
-        { label: 'Výsadba rostlin', price: 'Dle rozsahu' },
-        { label: 'Úprava terénu', price: 'Dle rozsahu' },
-        { label: 'Odvoz odpadu', price: 'Dle rozsahu' },
+        { label: 'Pletí záhonů', price: '✓' },
+        { label: 'Výsadba rostlin', price: '✓' },
+        { label: 'Úprava terénu', price: '✓' },
+        { label: 'Odvoz odpadu', price: '✓' },
       ],
       time: 'Dle rozsahu',
       color: 'bg-amber-50 border-amber-200',
@@ -78,8 +78,8 @@ const ServicesPage = () => {
       emoji: '🌸',
       title: 'Jarní balíček',
       subtitle: 'Restart po zimě',
-      price: 'od 8',
-      unit: 'Kč/m²',
+      price: 'Po obhlídce',
+      unit: '',
       popular: true,
       description: 'Kompletní jarní obnova trávníku po zimě.',
       features: [
@@ -88,7 +88,7 @@ const ServicesPage = () => {
         'První sekání + vyhrabání',
         'Ošetření proti mechu',
       ],
-      savings: '-20%',
+      savings: '',
       time: '3-5 hod',
       season: 'Březen - Květen',
       color: 'from-pink-50 to-rose-50',
@@ -100,8 +100,8 @@ const ServicesPage = () => {
       emoji: '☀️',
       title: 'Letní balíček',
       subtitle: 'Pravidelná údržba',
-      price: 'od 3',
-      unit: 'Kč/m²/měs',
+      price: 'Po obhlídce',
+      unit: '',
       description: 'Pravidelné sekání 2× měsíčně s hnojením NPK.',
       features: [
         'Sekání 2× měsíčně',
@@ -109,7 +109,7 @@ const ServicesPage = () => {
         'Mulčování na přání',
         'Kontrola zdraví trávníku',
       ],
-      savings: '-15%',
+      savings: '',
       time: 'Pravidelně',
       season: 'Červen - Srpen',
       color: 'from-yellow-50 to-amber-50',
@@ -121,8 +121,8 @@ const ServicesPage = () => {
       emoji: '🍂',
       title: 'Podzimní balíček',
       subtitle: 'Příprava na zimu',
-      price: 'od 10',
-      unit: 'Kč/m²',
+      price: 'Po obhlídce',
+      unit: '',
       description: 'Vertikutace, podzimní hnojení a kompletní úklid listí.',
       features: [
         'Vertikutace + hnojení',
@@ -130,7 +130,7 @@ const ServicesPage = () => {
         'Odvoz odpadu',
         'Příprava na zimu',
       ],
-      savings: '-20%',
+      savings: '',
       time: '3-5 hod',
       season: 'Září - Listopad',
       color: 'from-orange-50 to-amber-50',
@@ -142,12 +142,12 @@ const ServicesPage = () => {
       emoji: '❄️',
       title: 'Zimní balíček',
       subtitle: 'Úklid sněhu',
-      price: 'Individuální',
-      unit: 'cena',
+      price: 'Po obhlídce',
+      unit: '',
       description: 'Odklízení sněhu z chodníků, cest a ploch včetně solení.',
       features: [
         'Ruční odklízení chodníků',
-        'Plošné odklízení: od 8 Kč/m²',
+        'Plošné odklízení sněhu',
         'Solení/posyp dle potřeby',
         'Paušál dle domluvy',
       ],
@@ -164,8 +164,8 @@ const ServicesPage = () => {
     icon: Package,
     title: 'VIP Celoroční servis',
     subtitle: 'Kompletní péče bez starostí',
-    price: 'od 18',
-    unit: 'Kč/m²/rok',
+    price: 'Individuální',
+    unit: 'kalkulace',
     description: 'Všechny sezónní služby v jednom balíčku. Žádné starosti po celý rok.',
     features: [
       '2× vertikutace (jaro + podzim)',
@@ -175,17 +175,17 @@ const ServicesPage = () => {
       '2× odvoz odpadu',
       'Zimní úklid sněhu ZDARMA',
     ],
-    savings: 'Úspora až 35%',
-    minSize: 'do 100 m²',
+    savings: 'Výhodný balíček',
+    minSize: '',
   };
 
   return (
     <div className="min-h-screen pt-16" data-testid="services-page">
       <SEOHead
-        title="Zahradnické služby Dvůr Králové | Sekání trávy, likvidace pozemků | SeknuTo.cz"
-        description="Kompletní nabídka zahradnických služeb ve Dvoře Králové: sekání trávy od 2,5 Kč/m², likvidace zarostlých pozemků, sezónní balíčky. Bezplatná obhlídka a kalkulace."
+        title="Zahradnické služby Dvůr Králové | Sekání trávy, likvidace pozemků, údržba zahrad | SeknuTo.cz"
+        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, likvidace zarostlých pozemků a parcel, sezónní balíčky, vertikutace, hnojení, odvoz odpadu. Bezplatná obhlídka."
         canonical="https://seknuto.cz/sluzby"
-        keywords="zahradnické služby Dvůr Králové, sekání trávy, likvidace pozemků, čištění zarostlých pozemků, sezónní balíčky zahrada"
+        keywords="zahradnické služby Dvůr Králové, sekání trávy, likvidace pozemků, čištění zarostlých parcel, vertikutace, hnojení trávníku, údržba zahrad Trutnov, sekání trávy Vrchlabí, odvoz odpadu zahrada"
       />
       {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
@@ -314,7 +314,7 @@ const ServicesPage = () => {
             </div>
             <span className="hidden sm:inline-flex items-center gap-1 bg-[#3FA34D] text-white text-xs font-bold px-3 py-1.5 rounded-full">
               <Zap className="w-3 h-3" />
-              ÚSPORA 15-20%
+              VÝHODNÉ BALÍČKY
             </span>
           </div>
 
@@ -441,46 +441,35 @@ const ServicesPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Služba</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Cena</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700 hidden sm:table-cell">Čas</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Co obsahuje</th>
                   <th className="text-right py-3 px-4"></th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium">✂️ Sekání trávy</td>
-                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">od 2,5 Kč/m²</td>
-                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">Dle rozsahu</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Sekání, hnojení, mulčování</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
                   </td>
                 </tr>
                 <tr className="border-t border-gray-100 hover:bg-gray-50 bg-orange-50/50">
                   <td className="py-3 px-4 font-medium">🔥 Likvidace pozemků</td>
-                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">Projektová cena</td>
-                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">Dle rozsahu</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Křoviny, nálety, vysoká tráva</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
                   </td>
                 </tr>
                 <tr className="border-t border-gray-100 hover:bg-gray-50 bg-pink-50/50">
-                  <td className="py-3 px-4 font-medium">
-                    🌸 Jarní balíček
-                    <span className="ml-2 text-[10px] bg-[#3FA34D] text-white px-1.5 py-0.5 rounded">-20%</span>
-                  </td>
-                  <td className="py-3 px-4 text-center text-[#3FA34D] font-bold">od 8 Kč/m²</td>
-                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">3-5 hod</td>
+                  <td className="py-3 px-4 font-medium">🌸 Sezónní balíčky</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Jaro, léto, podzim, zima</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
                   </td>
                 </tr>
                 <tr className="border-t border-gray-100 hover:bg-gray-50 bg-amber-50/50">
-                  <td className="py-3 px-4 font-medium">
-                    🌀 VIP Celoroční
-                    <span className="ml-2 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded">-35%</span>
-                  </td>
-                  <td className="py-3 px-4 text-center text-amber-600 font-bold">od 18 Kč/m²/rok</td>
-                  <td className="py-3 px-4 text-center text-gray-500 hidden sm:table-cell">Celoročně</td>
+                  <td className="py-3 px-4 font-medium">🌀 VIP Celoroční</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Kompletní celoroční péče</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-amber-600 font-medium hover:underline">Poptat →</Link>
                   </td>

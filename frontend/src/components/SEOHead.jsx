@@ -6,9 +6,9 @@ const SITE_PHONE = '+420730588372';
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 const DEFAULT_SEO = {
-  title: 'Sekání trávy Dvůr Králové | SeknuTo.cz – Od 2,5 Kč/m²',
-  description: 'Profesionální sekání trávy ve Dvoře Králové nad Labem od 2,5 Kč/m². Vertikutace, hnojení, sezónní balíčky. Rychlá domluva ☎ 730 588 372',
-  keywords: 'sekání trávy Dvůr Králové, zahradnické služby Dvůr Králové, údržba zahrad, vertikutace trávníku, hnojení trávníku, sekání trávy Trutnov, sekání trávy Vrchlabí',
+  title: 'Sekání trávy Dvůr Králové | Zahradnické služby | SeknuTo.cz',
+  description: 'Profesionální sekání trávy, likvidace zarostlých pozemků a údržba zahrad ve Dvoře Králové nad Labem a okolí. Bezplatná obhlídka a kalkulace na míru. ☎ 730 588 372',
+  keywords: 'sekání trávy Dvůr Králové, zahradnické služby, likvidace pozemků, čištění zarostlých parcel, údržba zahrad, vertikutace trávníku, hnojení trávníku, sekání trávy Trutnov, sekání trávy Vrchlabí, zahradník Dvůr Králové',
   canonical: SITE_URL,
   image: DEFAULT_IMAGE,
 };
@@ -76,7 +76,7 @@ export const SCHEMAS = {
     '@id': `${SITE_URL}/#business`,
     name: SITE_NAME,
     image: `${SITE_URL}/logo.png`,
-    description: 'Profesionální sekání trávy a zahradnické služby ve Dvoře Králové nad Labem. Férové ceny, rychlá domluva, spolehlivost.',
+    description: 'Profesionální sekání trávy, likvidace pozemků a zahradnické služby ve Dvoře Králové nad Labem. Bezplatná obhlídka, cena vždy předem.',
     url: SITE_URL,
     telephone: SITE_PHONE,
     priceRange: 'Kč Kč',
@@ -127,10 +127,16 @@ export const SCHEMAS = {
           itemOffered: {
             '@type': 'Service',
             name: 'Sekání trávy',
-            description: 'Profesionální sekání trávníku od 2,5 Kč/m²',
+            description: 'Profesionální sekání trávníku – cena po bezplatné obhlídce',
           },
-          price: '2.5',
-          priceCurrency: 'CZK',
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Likvidace a čištění pozemků',
+            description: 'Kompletní vyčištění zarostlých pozemků a parcel',
+          },
         },
         {
           '@type': 'Offer',
@@ -145,10 +151,8 @@ export const SCHEMAS = {
           itemOffered: {
             '@type': 'Service',
             name: 'Celoroční VIP servis',
-            description: 'Kompletní péče o zahradu za 6 900 Kč/rok',
+            description: 'Kompletní celoroční péče o zahradu',
           },
-          price: '6900',
-          priceCurrency: 'CZK',
         },
       ],
     },

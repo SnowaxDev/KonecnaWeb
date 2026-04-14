@@ -174,28 +174,28 @@ const BookingPage = () => {
     return base;
   };
 
-  // Basic services – orientační ceny, bez hodinových sazeb
+  // Basic services – bez cen, vše po obhlídce
   const basicServices = [
-    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: 'od 2,5 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
-    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: 'od 3,90 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
-    { id: 'overgrown', icon: Leaf, title: 'Přerostlá tráva / hrubé sekání', price: 'od 4,5 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
-    { id: 'land_clearing', icon: Flame, title: 'Likvidace a čištění pozemků', price: 'Projektová cena', unit: 'project', info: 'Zarostlé parcely, křoviny, náletové dřeviny' },
-    { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: 'Dle rozsahu', unit: 'project', info: 'Pletí, výsadba, úpravy terénu – dle domluvy' },
-    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: 'Dle objemu', unit: 'project', info: 'Nakládka a ekologická likvidace' },
+    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: 'Po obhlídce', unit: 'project', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: 'Po obhlídce', unit: 'project', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'overgrown', icon: Leaf, title: 'Přerostlá tráva / hrubé sekání', price: 'Po obhlídce', unit: 'project', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'land_clearing', icon: Flame, title: 'Likvidace a čištění pozemků', price: 'Po obhlídce', unit: 'project', info: 'Zarostlé parcely, křoviny, náletové dřeviny' },
+    { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: 'Po domluvě', unit: 'project', info: 'Pletí, výsadba, úpravy terénu' },
+    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: 'Po domluvě', unit: 'project', info: 'Nakládka a ekologická likvidace' },
   ];
 
-  // Packages – orientační ceny
+  // Packages – bez cen
   const packages = [
-    { id: 'spring_package', icon: Flower2, title: '🌸 Jarní balíček', price: 'od 8 Kč/m²', color: 'border-pink-300 bg-pink-50', unit: 'm2' },
-    { id: 'summer_package', icon: Sun, title: '☀️ Letní balíček', price: 'od 3 Kč/m²', color: 'border-yellow-300 bg-yellow-50', unit: 'm2' },
-    { id: 'autumn_package', icon: Leaf, title: '🍂 Podzimní balíček', price: 'od 10 Kč/m²', color: 'border-orange-300 bg-orange-50', unit: 'm2' },
-    { id: 'winter_snow', icon: Snowflake, title: '❄️ Zimní balíček', price: 'Individuální', color: 'border-blue-300 bg-blue-50', unit: 'm2' },
-    { id: 'vip_annual', icon: Package, title: '🌀 VIP Celoroční', price: 'od 18 Kč/m²/rok', color: 'border-green-400 bg-green-50', popular: true, unit: 'm2' },
+    { id: 'spring_package', icon: Flower2, title: '🌸 Jarní balíček', price: 'Po obhlídce', color: 'border-pink-300 bg-pink-50', unit: 'project' },
+    { id: 'summer_package', icon: Sun, title: '☀️ Letní balíček', price: 'Po obhlídce', color: 'border-yellow-300 bg-yellow-50', unit: 'project' },
+    { id: 'autumn_package', icon: Leaf, title: '🍂 Podzimní balíček', price: 'Po obhlídce', color: 'border-orange-300 bg-orange-50', unit: 'project' },
+    { id: 'winter_snow', icon: Snowflake, title: '❄️ Zimní balíček', price: 'Po obhlídce', color: 'border-blue-300 bg-blue-50', unit: 'project' },
+    { id: 'vip_annual', icon: Package, title: '🌀 VIP Celoroční', price: 'Individuální', color: 'border-green-400 bg-green-50', popular: true, unit: 'project' },
   ];
 
   const additionalServices = [
-    { id: 'mulching', label: 'Mulčování (+0,5 Kč/m²)' },
-    { id: 'debris_removal', label: 'Odvoz odpadu (+400 Kč)' },
+    { id: 'mulching', label: 'Mulčování' },
+    { id: 'debris_removal', label: 'Odvoz odpadu' },
   ];
 
   // Custom order work types
@@ -230,9 +230,9 @@ const BookingPage = () => {
     return false; // No more hourly services
   };
 
-  // Helper to check if service is project-based (no m² calculator)
+  // Helper to check if service is project-based (all services are now project-based, no price calculator)
   const isProjectService = (serviceId) => {
-    return ['garden_work', 'debris_hourly', 'land_clearing'].includes(serviceId);
+    return true; // All services are now "price after inspection"
   };
 
   // Get current service unit
@@ -407,9 +407,10 @@ const BookingPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50" data-testid="booking-page">
       <SEOHead
-        title="Nezávazná poptávka zahradnických prací | SeknuTo.cz"
-        description="Vyplňte formulář pro nezávaznou kalkulaci zahradnických prací. Bezplatná obhlídka pozemku v Dvůr Králové a okolí. Odpovídáme do 24 hodin."
+        title="Nezávazná poptávka zahradnických prací | Bezplatná obhlídka | SeknuTo.cz"
+        description="Pošlete nezávaznou poptávku na sekání trávy, likvidaci pozemků nebo údržbu zahrady. Přijedeme na bezplatnou obhlídku a sdělíme přesnou cenu předem. Dvůr Králové a okolí."
         canonical="https://seknuto.cz/rezervace"
+        keywords="poptávka sekání trávy, objednat zahradníka, bezplatná obhlídka zahrady, poptávka likvidace pozemku, zahradník Dvůr Králové"
       />
       {/* Compact Header */}
       <div className="bg-white border-b border-gray-200 py-4 px-4 mt-16">

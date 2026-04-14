@@ -10,7 +10,7 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: 'Domů' },
     { href: '/sluzby', label: 'Služby' },
-    { href: '/cenik', label: 'Ceník' },
+    { href: '/cenik', label: 'Jak to funguje' },
     { href: '/nase-prace', label: 'Naše práce' },
     { href: '/blog', label: 'Blog' },
     { href: '/o-nas', label: 'O nás' },
