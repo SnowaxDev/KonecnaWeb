@@ -434,50 +434,187 @@ def get_customer_email_html(booking: Booking) -> str:
     service_name = SERVICE_NAMES_CZ.get(booking.service, booking.service)
     time_name = TIME_NAMES_CZ.get(booking.preferred_time, booking.preferred_time)
     
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #222222; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #3FA34D, #2d7a38); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">✓ Potvrzení rezervace</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">SeknuTo.cz</p>
-        </div>
-        
-        <div style="background: #f8fff9; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="font-size: 16px;">Dobrý den <strong>{booking.customer_name}</strong>,</p>
-            <p>Děkujeme za rezervaci! Vaše objednávka byla úspěšně přijata.</p>
-            
-            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
-                <h3 style="color: #3FA34D; margin-top: 0;">📋 Detaily rezervace</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Služba:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #eee;">{service_name}</td></tr>
-                    <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Datum:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #eee;">{booking.preferred_date}</td></tr>
-                    <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Čas:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #eee;">{time_name}</td></tr>
-                    <tr><td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Adresa:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #eee;">{booking.property_address}</td></tr>
-                    <tr><td style="padding: 8px 0;"><strong>Odhadovaná cena:</strong></td><td style="padding: 8px 0; color: #3FA34D; font-weight: bold;">{booking.estimated_price} Kč</td></tr>
-                </table>
-            </div>
-            
-            <div style="background: #F0FDF4; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h4 style="color: #166534; margin: 0 0 10px;">📞 Co dál?</h4>
-                <p style="margin: 0; color: #166534;">Brzy vás budeme kontaktovat na tel. <strong>{booking.customer_phone}</strong> pro finální potvrzení termínu.</p>
-            </div>
-            
-            <p style="margin-top: 20px;">Máte dotaz? Napište nám:</p>
-            <p>💬 WhatsApp: <a href="https://wa.me/420730588372" style="color: #3FA34D;">730 588 372</a><br>
-            📧 Email: info@seknuto.cz</p>
-        </div>
-        
-        <div style="background: #222222; padding: 20px; text-align: center; border-radius: 0 0 10px 10px;">
-            <p style="color: white; margin: 0;">S pozdravem,<br><strong>Tým SeknuTo.cz</strong></p>
-            <p style="color: #3FA34D; margin: 10px 0 0;">🌱 Trávník bez starostí!</p>
-        </div>
-    </body>
-    </html>
-    """
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#2E8B3E,#3FA34D);padding:36px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+      <span style="font-size:28px;">✓</span>
+    </div>
+    <h1 style="color:white;margin:0;font-size:24px;font-weight:700;">Rezervace přijata!</h1>
+    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">SeknuTo.cz – profesionální péče o trávník</p>
+  </div>
+  <div style="background:white;padding:32px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:16px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{booking.customer_name}</strong>,</p>
+    <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">vaše objednávka byla úspěšně přijata. Brzy vás budeme kontaktovat pro potvrzení termínu.</p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <h3 style="color:#2E8B3E;margin:0 0 16px;font-size:15px;">Přehled rezervace</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Služba</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{service_name}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Datum</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{booking.preferred_date}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Čas</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{time_name}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Adresa</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{booking.property_address}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;">Odhadovaná cena</td><td style="padding:8px 0;font-weight:700;color:#2E8B3E;font-size:16px;text-align:right;">{booking.estimated_price} Kč</td></tr>
+      </table>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;font-size:14px;color:#166534;"><strong>Co dál?</strong><br>Zavoláme vám na <strong>{booking.customer_phone}</strong> pro finální potvrzení.</p>
+    </div>
+    <p style="font-size:13px;color:#9ca3af;margin:0;">Dotazy? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;">WhatsApp: 730 588 372</a> &nbsp;|&nbsp; <a href="mailto:info@seknuto.cz" style="color:#2E8B3E;">info@seknuto.cz</a></p>
+  </div>
+  <div style="background:#1a2e1a;padding:20px;text-align:center;border-radius:0 0 16px 16px;">
+    <p style="color:white;margin:0 0 4px;font-size:14px;font-weight:600;">Tým SeknuTo.cz</p>
+    <p style="color:#3FA34D;margin:0;font-size:12px;">Trávník bez starostí!</p>
+  </div>
+</div>
+</body></html>"""
+
+
+def get_customer_confirmed_email_html(booking_doc: dict) -> str:
+    """Email zákazníkovi: rezervace potvrzena adminem"""
+    service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
+    time_name = TIME_NAMES_CZ.get(booking_doc.get('preferred_time',''), booking_doc.get('preferred_time',''))
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#0ea5e9,#0284c7);padding:36px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">📅</div>
+    <h1 style="color:white;margin:0;font-size:24px;font-weight:700;">Termín potvrzen!</h1>
+    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Vaše rezervace je oficiálně potvrzena</p>
+  </div>
+  <div style="background:white;padding:32px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:16px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{booking_doc.get('customer_name','')}</strong>,</p>
+    <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">rádi vám potvrzujeme, že váš termín byl schválen. Těšíme se na vás!</p>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <h3 style="color:#1d4ed8;margin:0 0 16px;font-size:15px;">Potvrzené detaily</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Služba</td><td style="padding:8px 0;font-weight:600;text-align:right;">{service_name}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Datum</td><td style="padding:8px 0;font-weight:700;color:#1d4ed8;font-size:16px;text-align:right;">{booking_doc.get('preferred_date','')}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Čas</td><td style="padding:8px 0;font-weight:600;text-align:right;">{time_name}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;">Adresa</td><td style="padding:8px 0;font-weight:600;text-align:right;">{booking_doc.get('property_address','')}</td></tr>
+      </table>
+    </div>
+    <div style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;font-size:14px;color:#92400e;"><strong>Připomínka:</strong> Ujistěte se prosím, že je přístup na pozemek volný. Děkujeme!</p>
+    </div>
+    <p style="font-size:13px;color:#9ca3af;margin:0;">Dotazy? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;">WhatsApp: 730 588 372</a></p>
+  </div>
+  <div style="background:#1a2e1a;padding:20px;text-align:center;border-radius:0 0 16px 16px;">
+    <p style="color:white;margin:0 0 4px;font-size:14px;font-weight:600;">Tým SeknuTo.cz</p>
+    <p style="color:#3FA34D;margin:0;font-size:12px;">Trávník bez starostí!</p>
+  </div>
+</div>
+</body></html>"""
+
+
+def get_customer_completed_email_html(booking_doc: dict) -> str:
+    """Email zákazníkovi: práce dokončena"""
+    service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#2E8B3E,#16a34a);padding:36px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <div style="font-size:44px;margin-bottom:12px;">🌱</div>
+    <h1 style="color:white;margin:0;font-size:24px;font-weight:700;">Práce dokončena!</h1>
+    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Váš trávník vypadá skvěle</p>
+  </div>
+  <div style="background:white;padding:32px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:16px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{booking_doc.get('customer_name','')}</strong>,</p>
+    <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">práce na vašem pozemku byly úspěšně dokončeny. Doufáme, že jste spokojeni s výsledkem!</p>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <p style="margin:0;font-size:15px;color:#166534;"><strong>Hotová služba:</strong> {service_name}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#15803d;">Datum: {booking_doc.get('preferred_date','')}</p>
+    </div>
+    <div style="text-align:center;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:24px;margin-bottom:24px;">
+      <p style="font-size:16px;color:#92400e;font-weight:600;margin:0 0 8px;">Jak jste spokojeni?</p>
+      <p style="font-size:13px;color:#b45309;margin:0 0 16px;">Vaše hodnocení nám velmi pomáhá! Stačí nám napsat zprávu.</p>
+      <a href="https://wa.me/420730588372?text=Hodnocení+SeknuTo.cz:+{booking_doc.get('id','')}" style="display:inline-block;background:#2E8B3E;color:white;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:700;font-size:14px;">
+        Ohodnotit přes WhatsApp
+      </a>
+    </div>
+    <div style="background:#f9fafb;border-radius:10px;padding:16px;text-align:center;margin-bottom:16px;">
+      <p style="margin:0 0 8px;font-size:14px;color:#374151;font-weight:600;">Příští sekání</p>
+      <p style="margin:0;font-size:13px;color:#6b7280;">Trávník sekáme každé 2–3 týdny. Rezervujte předem a zabezpečte si termín!</p>
+      <a href="https://seknuto.cz/rezervace" style="display:inline-block;margin-top:12px;background:#f0fdf4;color:#2E8B3E;border:1px solid #2E8B3E;padding:8px 20px;border-radius:50px;text-decoration:none;font-weight:600;font-size:13px;">
+        Rezervovat znovu
+      </a>
+    </div>
+    <p style="font-size:13px;color:#9ca3af;margin:0;">Dotazy? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;">WhatsApp: 730 588 372</a></p>
+  </div>
+  <div style="background:#1a2e1a;padding:20px;text-align:center;border-radius:0 0 16px 16px;">
+    <p style="color:white;margin:0 0 4px;font-size:14px;font-weight:600;">Tým SeknuTo.cz</p>
+    <p style="color:#3FA34D;margin:0;font-size:12px;">Trávník bez starostí!</p>
+  </div>
+</div>
+</body></html>"""
+
+
+def get_customer_cancelled_email_html(booking_doc: dict) -> str:
+    """Email zákazníkovi: rezervace zrušena"""
+    service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:36px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">❌</div>
+    <h1 style="color:white;margin:0;font-size:24px;font-weight:700;">Rezervace zrušena</h1>
+    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Omlouváme se za komplikace</p>
+  </div>
+  <div style="background:white;padding:32px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:16px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{booking_doc.get('customer_name','')}</strong>,</p>
+    <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">bohužel musíme vaši rezervaci na <strong>{service_name}</strong> zrušit. Omlouváme se za nepříjemnosti.</p>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <p style="margin:0;font-size:14px;color:#991b1b;">Zrušená rezervace: <strong>{booking_doc.get('preferred_date','')}</strong></p>
+    </div>
+    <div style="text-align:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:24px;margin-bottom:24px;">
+      <p style="font-size:15px;color:#166534;font-weight:600;margin:0 0 12px;">Nový termín?</p>
+      <p style="font-size:13px;color:#15803d;margin:0 0 16px;">Rádi si pro vás najdeme náhradní termín!</p>
+      <a href="https://seknuto.cz/rezervace" style="display:inline-block;background:#2E8B3E;color:white;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:700;font-size:14px;">
+        Rezervovat nový termín
+      </a>
+    </div>
+    <p style="font-size:13px;color:#6b7280;margin:0;">Nebo nás kontaktujte přímo: <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;">WhatsApp: 730 588 372</a></p>
+  </div>
+  <div style="background:#1a2e1a;padding:20px;text-align:center;border-radius:0 0 16px 16px;">
+    <p style="color:white;margin:0 0 4px;font-size:14px;font-weight:600;">Tým SeknuTo.cz</p>
+    <p style="color:#3FA34D;margin:0;font-size:12px;">Trávník bez starostí!</p>
+  </div>
+</div>
+</body></html>"""
+
+
+def get_contact_ack_email_html(name: str) -> str:
+    """Auto-reply zákazníkovi po odeslání kontaktního formuláře"""
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#2E8B3E,#3FA34D);padding:36px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">📬</div>
+    <h1 style="color:white;margin:0;font-size:24px;font-weight:700;">Zpráva přijata!</h1>
+    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Děkujeme za kontakt</p>
+  </div>
+  <div style="background:white;padding:32px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:16px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{name}</strong>,</p>
+    <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">přijali jsme vaši zprávu a brzy se vám ozveme – obvykle do <strong>24 hodin</strong>.</p>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <p style="margin:0;font-size:14px;color:#166534;">Potřebujete rychlejší odpověď? Napište nám přes WhatsApp a odpovíme ihned!</p>
+      <a href="https://wa.me/420730588372" style="display:inline-block;margin-top:12px;background:#25D366;color:white;padding:10px 24px;border-radius:50px;text-decoration:none;font-weight:700;font-size:14px;">
+        WhatsApp: 730 588 372
+      </a>
+    </div>
+    <p style="font-size:13px;color:#9ca3af;margin:0;">Nebo rovnou objednejte: <a href="https://seknuto.cz/rezervace" style="color:#2E8B3E;font-weight:600;">seknuto.cz/rezervace</a></p>
+  </div>
+  <div style="background:#1a2e1a;padding:20px;text-align:center;border-radius:0 0 16px 16px;">
+    <p style="color:white;margin:0 0 4px;font-size:14px;font-weight:600;">Tým SeknuTo.cz</p>
+    <p style="color:#3FA34D;margin:0;font-size:12px;">Trávník bez starostí!</p>
+  </div>
+</div>
+</body></html>"""
 
 def get_admin_email_html(booking: Booking) -> str:
     service_name = SERVICE_NAMES_CZ.get(booking.service, booking.service)
@@ -778,25 +915,54 @@ async def submit_contact_form(form: ContactForm):
     await db.contact_messages.insert_one(doc)
     logger.info(f"Contact form submitted by {form.name}")
     
-    # Send email notification if configured
+    # Send admin notification
     if resend and RESEND_API_KEY and ADMIN_EMAIL:
         try:
             params = {
                 "from": SENDER_EMAIL,
                 "to": [ADMIN_EMAIL],
-                "subject": f"📬 Nová zpráva od {form.name} - SeknuTo.cz",
-                "html": f"""
-                <h2>Nová zpráva z kontaktního formuláře</h2>
-                <p><strong>Jméno:</strong> {form.name}</p>
-                <p><strong>Email:</strong> {form.email}</p>
-                <p><strong>Telefon:</strong> {form.phone or 'Neuvedeno'}</p>
-                <p><strong>Zpráva:</strong></p>
-                <p>{form.message}</p>
-                """
+                "subject": f"Nová zpráva od {form.name} - SeknuTo.cz",
+                "html": f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#f97316,#ea580c);padding:28px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <div style="font-size:36px;margin-bottom:8px;">📬</div>
+    <h2 style="color:white;margin:0;font-size:20px;">Nová zpráva z kontaktního formuláře</h2>
+  </div>
+  <div style="background:white;padding:28px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 16px 16px;">
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <tr><td style="padding:10px;background:#f9fafb;font-weight:600;width:120px;">Jméno</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;">{form.name}</td></tr>
+      <tr><td style="padding:10px;background:#f9fafb;font-weight:600;">Email</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;"><a href="mailto:{form.email}" style="color:#2E8B3E;">{form.email}</a></td></tr>
+      <tr><td style="padding:10px;background:#f9fafb;font-weight:600;">Telefon</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;">{form.phone or 'Neuvedeno'}</td></tr>
+    </table>
+    <div style="background:#f9fafb;border-radius:8px;padding:16px;margin-top:16px;">
+      <p style="font-weight:600;margin:0 0 8px;color:#374151;">Zpráva:</p>
+      <p style="margin:0;color:#4b5563;white-space:pre-wrap;">{form.message}</p>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="mailto:{form.email}?subject=Re: Váš dotaz – SeknuTo.cz" style="display:inline-block;background:#2E8B3E;color:white;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:700;font-size:14px;">Odpovědět emailem</a>
+    </div>
+  </div>
+</div>
+</body></html>"""
             }
             await asyncio.to_thread(resend.Emails.send, params)
         except Exception as e:
             logger.error(f"Failed to send contact notification: {str(e)}")
+    
+    # Auto-reply to customer
+    if resend and RESEND_API_KEY:
+        try:
+            await asyncio.to_thread(resend.Emails.send, {
+                "from": SENDER_EMAIL,
+                "to": [form.email],
+                "subject": "Přijali jsme vaši zprávu – SeknuTo.cz",
+                "html": get_contact_ack_email_html(form.name),
+            })
+            logger.info(f"Contact auto-reply sent to {form.email}")
+        except Exception as e:
+            logger.error(f"Contact auto-reply failed (non-critical): {str(e)}")
     
     return {"message": "Děkujeme za zprávu! Brzy se vám ozveme.", "id": doc["id"]}
 
@@ -1195,33 +1361,36 @@ async def admin_delete_gallery_project(project_id: str, request: Request):
 
 @api_router.post("/admin/gallery/upload")
 async def admin_upload_gallery_image(request: Request, file: UploadFile = File(...)):
-    """Upload gallery image – stores in /uploads, returns URL path"""
+    """Upload gallery image – stores as base64 in MongoDB for persistence on Render"""
     await verify_admin(request)
     # Validate file type
     allowed = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Nepodporovaný formát souboru. Použijte JPG, PNG nebo WEBP.")
     
-    # Ensure uploads directory exists
-    uploads_dir = ROOT_DIR / "uploads"
-    uploads_dir.mkdir(exist_ok=True)
-    
-    # Unique filename
-    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
-    filename = f"{uuid.uuid4()}.{ext}"
-    filepath = uploads_dir / filename
-    
-    # Read and save
     content = await file.read()
     if len(content) > 10 * 1024 * 1024:  # 10 MB limit
         raise HTTPException(status_code=413, detail="Soubor je příliš velký (max. 10 MB)")
     
-    with open(filepath, "wb") as f:
-        f.write(content)
+    # Store as base64 data URL – persistent across Render restarts
+    import base64
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+    mime = file.content_type or f"image/{ext}"
+    b64 = base64.b64encode(content).decode("utf-8")
+    data_url = f"data:{mime};base64,{b64}"
     
-    # Return the URL (served as static files via /uploads/ mount)
-    url = f"/uploads/{filename}"
-    return {"url": url, "filename": filename}
+    # Save record to DB for tracking (optional)
+    record = {
+        "id": str(uuid.uuid4()),
+        "filename": file.filename,
+        "mime": mime,
+        "size_bytes": len(content),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.gallery_uploads.insert_one(record)
+    
+    logger.info(f"Gallery image uploaded: {file.filename} ({len(content)//1024}KB) as base64")
+    return {"url": data_url, "filename": file.filename}
 
 # ─── CONTACT MESSAGES ADMIN ──────────────────────────────────────────────────
 
@@ -1425,8 +1594,39 @@ async def admin_update_booking_status(booking_id: str, request: Request):
     if new_status not in ["pending", "confirmed", "completed", "cancelled"]:
         raise HTTPException(status_code=400, detail="Invalid status")
     result = await db.bookings.update_one({"id": booking_id}, {"$set": {"status": new_status}})
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Send status email to customer (non-critical)
+    if resend and RESEND_API_KEY:
+        booking_doc = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+        if booking_doc and booking_doc.get("customer_email"):
+            email_map = {
+                "confirmed": {
+                    "subject": "Termín potvrzen – SeknuTo.cz",
+                    "html_fn": get_customer_confirmed_email_html,
+                },
+                "completed": {
+                    "subject": "Práce dokončena – SeknuTo.cz",
+                    "html_fn": get_customer_completed_email_html,
+                },
+                "cancelled": {
+                    "subject": "Rezervace zrušena – SeknuTo.cz",
+                    "html_fn": get_customer_cancelled_email_html,
+                },
+            }
+            if new_status in email_map:
+                try:
+                    await asyncio.to_thread(resend.Emails.send, {
+                        "from": SENDER_EMAIL,
+                        "to": [booking_doc["customer_email"]],
+                        "subject": email_map[new_status]["subject"],
+                        "html": email_map[new_status]["html_fn"](booking_doc),
+                    })
+                    logger.info(f"Status email '{new_status}' sent to {booking_doc['customer_email']}")
+                except Exception as e:
+                    logger.error(f"Status email failed for booking {booking_id}: {str(e)}")
+    
     return {"success": True}
 
 # ─── ADMIN COUPONS ────────────────────────────────────────────────────────────
