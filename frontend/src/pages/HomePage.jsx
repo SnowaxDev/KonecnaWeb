@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { 
   Leaf, Phone, MessageCircle, CheckCircle, ArrowRight, 
   Scissors, TreeDeciduous, Sprout, Package, Truck, Calendar,
-  Star, Clock, MapPin, Shield
+  Star, Clock, MapPin, Shield, Flame
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -19,31 +19,31 @@ const HomePage = () => {
     {
       icon: Scissors,
       title: 'Sekání trávy',
-      description: 'Profesionální sekání trávníků s možností hnojení. Pravidelná údržba nebo jednorázová služba.',
+      description: 'Profesionální sekání trávníků všech velikostí. Cena závisí na ploše a stavu travního porostu.',
       price: 'od 2,5 Kč/m²',
-      features: ['Sekání bez hnojení: 2,5 Kč/m²', 'Sekání s hnojením: 3,83 Kč/m²', 'Mulčování: +0,5 Kč/m²'],
+      features: ['Sekání bez hnojení: od 2,5 Kč/m²', 'Sekání s hnojením: od 3,90 Kč/m²', 'Přerostlá tráva: od 4,5 Kč/m²'],
     },
     {
       icon: Sprout,
       title: 'Sezónní balíčky',
-      description: 'Kompletní péče o trávník podle ročního období - jarní restart, letní údržba, podzimní příprava.',
+      description: 'Kompletní péče o trávník po celé sezóně. Individuální kalkulace dle rozsahu a stavu zahrady.',
       price: 'od 900 Kč',
-      features: ['Jarní balíček: od 12 Kč/m²', 'Letní balíček: od 3 Kč/m²', 'Podzimní balíček: od 14 Kč/m²'],
+      features: ['Jarní balíček: od 8 Kč/m²', 'Letní balíček: od 3 Kč/m²', 'Podzimní balíček: od 10 Kč/m²'],
     },
     {
-      icon: Package,
-      title: 'Celoroční VIP servis',
-      description: 'Komplexní roční péče včetně vertikutace, hnojení, sekání a zimního úklidu sněhu.',
-      price: 'od 6 900 Kč/rok',
-      features: ['2× vertikutace + 4× hnojení', '10× sekání + mulčování', 'Zimní úklid sněhu'],
+      icon: Flame,
+      title: 'Likvidace a čištění pozemků',
+      description: 'Kompletní vyčištění zarostlých pozemků – křoviny, náletové dřeviny, přerostlá vegetace.',
+      price: 'Projektová cena',
+      features: ['Kácení křovin a náletů', 'Sekání a mulčování vysoké trávy', 'Odvoz a ekologická likvidace'],
     },
   ];
 
   const steps = [
-    { icon: MessageCircle, title: 'Napište nám', description: 'Přes WhatsApp nebo formulář' },
-    { icon: Calendar, title: 'Domluva termínu', description: 'Vybereme vhodný čas' },
-    { icon: Truck, title: 'Přijedeme', description: 'S profesionálním vybavením' },
-    { icon: CheckCircle, title: 'Hotovo!', description: 'Krásná zahrada bez starostí' },
+    { icon: MessageCircle, title: 'Pošlete poptávku', description: 'Formulář, WhatsApp nebo telefon' },
+    { icon: MapPin, title: 'Bezplatná obhlídka', description: 'Přijedeme a připravíme kalkulaci' },
+    { icon: CheckCircle, title: 'Cena předem', description: 'Vždy znáte cenu před zahájením' },
+    { icon: Truck, title: 'Práce hotova', description: 'Rychle, spolehlivě a kvalitně' },
   ];
 
   const stats = [
@@ -55,28 +55,20 @@ const HomePage = () => {
 
   const faqItems = [
     {
-      question: 'Kolik stojí sekání trávy ve Dvoře Králové?',
-      answer: 'Běžné sekání trávy stojí 2,5 Kč za metr čtvereční. Pro zahradu 300 m² zaplatíte 750 Kč. Nabízíme transparentní ceny bez skrytých poplatků. Pro přesnou kalkulaci zavolejte 730 588 372 nebo použijte náš online rezervační formulář.',
+      question: 'Kolik bude stát posekání zahrady ve Dvoře Králové?',
+      answer: 'Cena závisí na ploše, stavu trávy a terénu. Orientačně se sekání pohybuje od 2,5 Kč/m². Pro přesnou kalkulaci nás kontaktujte – přijedeme na bezplatnou obhlídku a sdělíme vám přesnou cenu předem.',
     },
     {
-      question: 'Jak často byste doporučovali sekat trávník?',
-      answer: 'Doporučujeme sekat trávník jednou za 7–10 dní během vegetačního období (duben–říjen). V horkém létě můžete frekvenci snížit na jednou za dva týdny. V SeknuTo.cz nabízíme pravidelnou údržbu i jednorázové sekání.',
+      question: 'Jak funguje kalkulace ceny?',
+      answer: 'Po vašem kontaktu přijedeme na bezplatnou obhlídku pozemku. Na místě sestavíme přesnou kalkulaci. Cenu vždy znáte před zahájením prací – nikdy nezačínáme bez odsouhlasené ceny.',
     },
     {
       question: 'Jaké oblasti pokrýváte vašimi službami?',
       answer: 'Působíme v Dvoře Králové nad Labem a okolí do vzdálenosti 30 km – zahrnuje to Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolní vesnice.',
     },
     {
-      question: 'Jak rychle můžete přijet?',
-      answer: 'Běžně se dokážeme domluvit na termínu do 3–5 dnů. V případě volné kapacity jsme schopni dojet i do 24 hodin. V sezóně (duben–září) doporučujeme rezervovat termín s týdenním předstihem.',
-    },
-    {
-      question: 'Co zahrnuje celoroční VIP servis?',
-      answer: 'VIP balíček za 6 900 Kč/rok zahrnuje: 10× sekání, 4× hnojení, 2× vertikutaci, jarní a podzimní balíček, odvoz bioodpadu a zimní úklid sněhu. Kompletní péče o zahradu po celý rok bez starostí.',
-    },
-    {
-      question: 'Co je zahrnuto v ceně základní služby?',
-      answer: 'V základní ceně je zahrnuto sekání trávníku na požadovanou výšku a úklid posečené trávy. Odvoz odpadu a další služby (hnojení, vertikutace) jsou za příplatek dle ceníku.',
+      question: 'Co je "Likvidace a čištění pozemků"?',
+      answer: 'Služba pro pozemky silně zarostlé křovinami, náletovými dřevinami nebo přerostlou vegetací. Provádíme kompletní vyčištění – kácení, mulčování, odvoz odpadu a finální úklid. Cena závisí na náročnosti.',
     },
   ];
 
@@ -139,11 +131,10 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen" data-testid="home-page">
-      <SEOHead
-        title="Sekání trávy Dvůr Králové | SeknuTo.cz – Od 2,5 Kč/m²"
-        description="Profesionální sekání trávy ve Dvoře Králové nad Labem od 2,5 Kč/m². Vertikutace, hnojení, sezónní balíčky. Rychlá domluva ☎ 730 588 372"
-        canonical="https://seknuto.cz"
-        schema={[SCHEMAS.localBusiness, SCHEMAS.faqPage(faqItems)]}
+      <SEOHead 
+        title="Sekání trávy a zahradnické služby Dvůr Králové | SeknuTo.cz"
+        description="Profesionální sekání trávy a údržba zahrad ve Dvoře Králové nad Labem a okolí. Orientační ceny od 2,5 Kč/m². Bezplatná obhlídka a kalkulace na míru."
+        schema={SCHEMAS.localBusiness}
       />
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-28 pb-16 md:pb-24 overflow-hidden" data-testid="hero-section">
@@ -176,7 +167,7 @@ const HomePage = () => {
               </h1>
               
               <p className="text-base sm:text-lg md:text-xl text-[#374151] mb-8 leading-relaxed max-w-xl font-medium">
-                Sekání, stříhání, úklid – rychle a za férové ceny. 
+                Sekání, údržba zahrad, likvidace zarostlých pozemků – rychle a za férové ceny. 
                 Spoléhejte na mladý, energický tým z Dvora Králové nad Labem.
               </p>
 
@@ -184,7 +175,7 @@ const HomePage = () => {
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-5 mb-8">
                 {[
                   { icon: CheckCircle, text: 'Rychlost a spolehlivost' },
-                  { icon: Shield, text: 'Transparentní ceny' },
+                  { icon: Shield, text: 'Cena vždy předem' },
                   { icon: MapPin, text: 'Místní firma' },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm font-semibold text-[#374151]">
@@ -202,7 +193,7 @@ const HomePage = () => {
                     className="w-full bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-full px-8 h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all"
                     data-testid="hero-cta-rezervace"
                   >
-                    Rezervovat online
+                    Nezávazná poptávka
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
@@ -274,7 +265,7 @@ const HomePage = () => {
               Naše služby
             </h2>
             <p className="text-[#374151] max-w-2xl mx-auto text-base sm:text-lg font-medium">
-              Kompletní zahradnické služby od sekání trávníků po údržbu záhonů. 
+              Kompletní zahradnické služby od sekání trávníků po likvidaci zarostlých pozemků. 
               Profesionální přístup a férovost.
             </p>
           </div>
@@ -313,7 +304,7 @@ const HomePage = () => {
                       variant="outline" 
                       className="w-full border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-lg font-bold"
                     >
-                      Více informací
+                      Nezávazná poptávka
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
@@ -344,7 +335,7 @@ const HomePage = () => {
             </h2>
             <p className="text-[#374151] max-w-2xl mx-auto text-base sm:text-lg font-medium">
               Mladý tým s energií a profesionálním přístupem. 
-              Férové ceny bez skrytých poplatků.
+              Cenu znáte vždy předem, bez skrytých poplatků.
             </p>
           </div>
 
@@ -472,8 +463,8 @@ const HomePage = () => {
             Chcete zahradu jako z katalogu?
           </h2>
           <p className="text-gray-400 mb-8 text-lg">
-            Objednejte se ještě dnes a svěřte péči o trávník profesionálům. 
-            Rychle, spolehlivě a za férové ceny.
+            Pošlete nezávaznou poptávku a my vám připravíme kalkulaci na míru. 
+            Rychle, spolehlivě a s cenou předem.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -483,7 +474,7 @@ const HomePage = () => {
                 className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-10 h-14 text-base font-semibold"
                 data-testid="cta-rezervace"
               >
-                Rezervovat online
+                Získat nezávaznou kalkulaci
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>

@@ -7,7 +7,7 @@ import {
   Scissors, Sprout, Leaf, TreeDeciduous, Package, HelpCircle,
   User, Phone, Mail, MapPin, Loader2, Tag, CheckCircle, XCircle,
   Sun, Snowflake, Flower2, Truck, ChevronDown, ChevronUp, Banknote, Gift,
-  ClipboardList, Building2, Home, Shovel
+  ClipboardList, Building2, Home, Shovel, Flame
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -103,17 +103,17 @@ const BookingPage = () => {
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    // Skip price calculation for custom orders and 'other'
-    if (formData.service === 'custom_order' || formData.service === 'other') return;
+    // Skip price calculation for custom orders, 'other', and project-based services
+    if (formData.service === 'custom_order' || formData.service === 'other' || isProjectService(formData.service)) return;
     calculatePrice();
   }, [formData.service, formData.property_size, formData.condition, formData.additional_services]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-adjust property_size default based on service type
   useEffect(() => {
     if (formData.service) {
-      const isHourly = ['garden_work', 'debris_hourly'].includes(formData.service);
-      if (isHourly) {
-        setFormData(prev => ({ ...prev, property_size: 2 }));
+      if (isProjectService(formData.service)) {
+        // Project services don't need m² input - skip price calculation
+        setFormData(prev => ({ ...prev, property_size: 0, estimated_price: 0 }));
       } else if (formData.property_size < 50) {
         setFormData(prev => ({ ...prev, property_size: 100 }));
       }
@@ -174,22 +174,23 @@ const BookingPage = () => {
     return base;
   };
 
-  // Basic services - with unit type
+  // Basic services – orientační ceny, bez hodinových sazeb
   const basicServices = [
-    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: '2,5 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
-    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: '3,33 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
-    { id: 'overgrown', icon: Leaf, title: 'Hrubé sekání (přerostlá)', price: '3-4 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
-    { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: '300-450 Kč/hod', unit: 'hours' },
-    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: '400 Kč/hod', unit: 'hours', info: 'extra – více práce (nakládka + odvoz)' },
+    { id: 'lawn_mowing', icon: Scissors, title: 'Sekání trávy (bez hnojení)', price: 'od 2,5 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: 'od 3,90 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'overgrown', icon: Leaf, title: 'Přerostlá tráva / hrubé sekání', price: 'od 4,5 Kč/m²', unit: 'm2', info: '✓ Úklid posečené trávy v ceně' },
+    { id: 'land_clearing', icon: Flame, title: 'Likvidace a čištění pozemků', price: 'Projektová cena', unit: 'project', info: 'Zarostlé parcely, křoviny, náletové dřeviny' },
+    { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: 'Dle rozsahu', unit: 'project', info: 'Pletí, výsadba, úpravy terénu – dle domluvy' },
+    { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: 'Dle objemu', unit: 'project', info: 'Nakládka a ekologická likvidace' },
   ];
 
-  // Packages - all per m2
+  // Packages – orientační ceny
   const packages = [
-    { id: 'spring_package', icon: Flower2, title: '🌸 Jarní balíček', price: '8,5-12 Kč/m²', color: 'border-pink-300 bg-pink-50', unit: 'm2' },
-    { id: 'summer_package', icon: Sun, title: '☀️ Letní balíček', price: '3-4 Kč/m²/měsíc', color: 'border-yellow-300 bg-yellow-50', unit: 'm2' },
-    { id: 'autumn_package', icon: Leaf, title: '🍂 Podzimní balíček', price: '10-14 Kč/m²', color: 'border-orange-300 bg-orange-50', unit: 'm2' },
-    { id: 'winter_snow', icon: Snowflake, title: '❄️ Zimní balíček', price: '8-10 Kč/m²', color: 'border-blue-300 bg-blue-50', unit: 'm2' },
-    { id: 'vip_annual', icon: Package, title: '🌀 VIP Celoroční', price: '18-22 Kč/m²/rok', color: 'border-green-400 bg-green-50', popular: true, unit: 'm2' },
+    { id: 'spring_package', icon: Flower2, title: '🌸 Jarní balíček', price: 'od 8 Kč/m²', color: 'border-pink-300 bg-pink-50', unit: 'm2' },
+    { id: 'summer_package', icon: Sun, title: '☀️ Letní balíček', price: 'od 3 Kč/m²', color: 'border-yellow-300 bg-yellow-50', unit: 'm2' },
+    { id: 'autumn_package', icon: Leaf, title: '🍂 Podzimní balíček', price: 'od 10 Kč/m²', color: 'border-orange-300 bg-orange-50', unit: 'm2' },
+    { id: 'winter_snow', icon: Snowflake, title: '❄️ Zimní balíček', price: 'Individuální', color: 'border-blue-300 bg-blue-50', unit: 'm2' },
+    { id: 'vip_annual', icon: Package, title: '🌀 VIP Celoroční', price: 'od 18 Kč/m²/rok', color: 'border-green-400 bg-green-50', popular: true, unit: 'm2' },
   ];
 
   const additionalServices = [
@@ -224,9 +225,14 @@ const BookingPage = () => {
   // Helper to check if service is custom order
   const isCustomOrder = (serviceId) => serviceId === 'custom_order';
 
-  // Helper to check if service is hourly
+  // Helper to check if service is hourly (DEPRECATED - no hourly rates now)
   const isHourlyService = (serviceId) => {
-    return ['garden_work', 'debris_hourly'].includes(serviceId);
+    return false; // No more hourly services
+  };
+
+  // Helper to check if service is project-based (no m² calculator)
+  const isProjectService = (serviceId) => {
+    return ['garden_work', 'debris_hourly', 'land_clearing'].includes(serviceId);
   };
 
   // Get current service unit
@@ -268,6 +274,9 @@ const BookingPage = () => {
             return false;
           }
           return true;
+        }
+        if (isProjectService(formData.service)) {
+          return true; // Project services don't need m² input
         }
         if (formData.property_size <= 0) {
           toast.error('Zadejte velikost plochy');
@@ -398,16 +407,17 @@ const BookingPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50" data-testid="booking-page">
       <SEOHead
-        title="Online rezervace | SeknuTo.cz"
-        description="Rezervujte zahradnické služby online. Vyberte termín, zadejte kontakt a my se ozveme. Sekání trávy, vertikutace, hnojení a další."
+        title="Nezávazná poptávka zahradnických prací | SeknuTo.cz"
+        description="Vyplňte formulář pro nezávaznou kalkulaci zahradnických prací. Bezplatná obhlídka pozemku v Dvůr Králové a okolí. Odpovídáme do 24 hodin."
         canonical="https://seknuto.cz/rezervace"
       />
       {/* Compact Header */}
       <div className="bg-white border-b border-gray-200 py-4 px-4 mt-16">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold text-center text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Rezervace online
+          <h1 className="text-xl font-bold text-center text-gray-900 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Nezávazná poptávka
           </h1>
+          <p className="text-center text-xs text-gray-500 mb-3">Ozveme se do 24 hodin s přesnou kalkulací</p>
           
           {/* Progress Steps - Compact */}
           <div className="flex items-center justify-between">
@@ -485,7 +495,7 @@ const BookingPage = () => {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 text-sm">{service.title}</p>
                           {service.info && (
-                            <p className={`text-xs ${service.id === 'debris_hourly' ? 'text-amber-600' : 'text-green-600'}`}>{service.info}</p>
+                            <p className="text-xs text-green-600">{service.info}</p>
                           )}
                         </div>
                         <span className="text-sm font-bold text-[#3FA34D] whitespace-nowrap">{service.price}</span>
@@ -753,7 +763,7 @@ const BookingPage = () => {
             <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#3FA34D]" />
-                {isHourlyService(formData.service) ? 'Informace o práci' : 'Informace o ploše'}
+                {isProjectService(formData.service) ? 'Informace o zakázce' : 'Informace o ploše'}
               </h2>
               
               <div className="space-y-5">
@@ -762,85 +772,87 @@ const BookingPage = () => {
                   <p className="text-xs text-gray-500">Vybraná služba:</p>
                   <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
                 </div>
-                
-                {/* Property Size OR Hours */}
-                <div>
-                  <Label htmlFor="property_size" className="text-sm font-semibold">
-                    {isHourlyService(formData.service) ? 'Odhadovaný počet hodin *' : 'Velikost plochy (m²) *'}
-                  </Label>
-                  <Input
-                    id="property_size"
-                    type="number"
-                    value={formData.property_size}
-                    onChange={(e) => updateFormData('property_size', parseInt(e.target.value) || 0)}
-                    className="mt-2 h-12 text-lg border-2 focus:border-[#3FA34D]"
-                    min="1"
-                    placeholder={isHourlyService(formData.service) ? 'např. 2' : 'např. 150'}
-                    data-testid="input-property-size"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {isHourlyService(formData.service) 
-                      ? 'Zadejte odhadovaný počet hodin práce (min. 1 hodina)'
-                      : 'Zadejte přibližnou velikost trávníku nebo zahrady v m²'
-                    }
-                  </p>
-                </div>
 
-                {/* Condition - only for lawn services (not hourly, not packages) */}
-                {['lawn_mowing', 'lawn_with_fertilizer', 'overgrown'].includes(formData.service) && (
-                  <div>
-                    <Label className="text-sm font-semibold">Stav trávy</Label>
-                    <Select value={formData.condition} onValueChange={(value) => updateFormData('condition', value)}>
-                      <SelectTrigger className="mt-2 h-12 border-2" data-testid="select-condition">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="normal">Běžný stav</SelectItem>
-                        <SelectItem value="overgrown">Přerostlá (+50%)</SelectItem>
-                        <SelectItem value="very_neglected">Velmi zanedbaná (+100%)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Project-based services - no m² input, just notes */}
+                {isProjectService(formData.service) ? (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-sm font-medium text-amber-800 mb-1">Cena bude stanovena po obhlídce</p>
+                    <p className="text-xs text-amber-600">Přesnou kalkulaci připravíme na místě nebo na základě fotografií. Pokračujte výběrem termínu a kontaktních údajů.</p>
                   </div>
-                )}
-
-                {/* Additional Services - only for non-hourly services */}
-                {!isHourlyService(formData.service) && (
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
-                    <div className="space-y-2">
-                      {additionalServices.map((service) => (
-                        <label
-                          key={service.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                            formData.additional_services.includes(service.id)
-                              ? 'border-[#3FA34D] bg-[#F0FDF4]'
-                              : 'border-gray-100 hover:border-gray-200'
-                          }`}
-                          data-testid={`additional-${service.id}`}
-                        >
-                          <Checkbox
-                            checked={formData.additional_services.includes(service.id)}
-                            onCheckedChange={() => toggleAdditionalService(service.id)}
-                          />
-                          <span className="text-sm font-medium">{service.label}</span>
-                        </label>
-                      ))}
+                ) : (
+                  <>
+                    {/* Property Size */}
+                    <div>
+                      <Label htmlFor="property_size" className="text-sm font-semibold">
+                        Velikost plochy (m²) *
+                      </Label>
+                      <Input
+                        id="property_size"
+                        type="number"
+                        value={formData.property_size}
+                        onChange={(e) => updateFormData('property_size', parseInt(e.target.value) || 0)}
+                        className="mt-2 h-12 text-lg border-2 focus:border-[#3FA34D]"
+                        min="1"
+                        placeholder="např. 150"
+                        data-testid="input-property-size"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Zadejte přibližnou velikost trávníku nebo zahrady v m²
+                      </p>
                     </div>
-                  </div>
-                )}
 
-                {/* Price Preview */}
-                {formData.estimated_price > 0 && (
-                  <div className="p-5 bg-gradient-to-r from-[#3FA34D] to-[#2d7a38] rounded-2xl text-white" data-testid="price-preview">
-                    <p className="text-sm text-white/80">Odhadovaná cena:</p>
-                    <p className="text-3xl font-bold">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
-                    <p className="text-xs text-white/60 mt-1">
-                      {isHourlyService(formData.service) 
-                        ? `${formData.property_size} hod × sazba`
-                        : `${formData.property_size} m² × sazba`
-                      }
-                    </p>
-                  </div>
+                    {/* Condition - only for lawn services */}
+                    {['lawn_mowing', 'lawn_with_fertilizer', 'overgrown'].includes(formData.service) && (
+                      <div>
+                        <Label className="text-sm font-semibold">Stav trávy</Label>
+                        <Select value={formData.condition} onValueChange={(value) => updateFormData('condition', value)}>
+                          <SelectTrigger className="mt-2 h-12 border-2" data-testid="select-condition">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Běžný stav</SelectItem>
+                            <SelectItem value="overgrown">Přerostlá (+50%)</SelectItem>
+                            <SelectItem value="very_neglected">Velmi zanedbaná (+100%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* Additional Services */}
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
+                      <div className="space-y-2">
+                        {additionalServices.map((service) => (
+                          <label
+                            key={service.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                              formData.additional_services.includes(service.id)
+                                ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                                : 'border-gray-100 hover:border-gray-200'
+                            }`}
+                            data-testid={`additional-${service.id}`}
+                          >
+                            <Checkbox
+                              checked={formData.additional_services.includes(service.id)}
+                              onCheckedChange={() => toggleAdditionalService(service.id)}
+                            />
+                            <span className="text-sm font-medium">{service.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Price Preview */}
+                    {formData.estimated_price > 0 && (
+                      <div className="p-5 bg-gradient-to-r from-[#3FA34D] to-[#2d7a38] rounded-2xl text-white" data-testid="price-preview">
+                        <p className="text-sm text-white/80">Orientační cena:</p>
+                        <p className="text-3xl font-bold">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+                        <p className="text-xs text-white/60 mt-1">
+                          {formData.property_size} m² × sazba
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -857,22 +869,22 @@ const BookingPage = () => {
               <div className="space-y-5">
                 {/* Order Summary Card */}
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-2">Vaše objednávka:</p>
+                  <p className="text-xs text-gray-500 mb-2">Vaše poptávka:</p>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
                       <p className="text-sm text-gray-500">
                         {isCustomOrder(formData.service)
                           ? (customOrderTypes.length > 0 ? customOrderTypes.slice(0, 2).map(t => customOrderWorkTypes.find(w => w.id === t)?.label).filter(Boolean).join(', ') + (customOrderTypes.length > 2 ? '...' : '') : 'Zakázkové práce')
-                          : isHourlyService(formData.service)
-                          ? `${formData.property_size} hodin`
+                          : isProjectService(formData.service)
+                          ? 'Cena po obhlídce'
                           : `${formData.property_size} m²`
                         }
                       </p>
                     </div>
                     <div className="text-right">
-                      {isCustomOrder(formData.service) ? (
-                        <p className="text-lg font-bold text-amber-600">Dle dohody</p>
+                      {(isCustomOrder(formData.service) || isProjectService(formData.service)) ? (
+                        <p className="text-lg font-bold text-amber-600">Dle domluvy</p>
                       ) : (
                         <p className="text-xl font-bold text-[#3FA34D]">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
                       )}
@@ -1103,16 +1115,13 @@ const BookingPage = () => {
                 </label>
 
                 {/* Price Summary - standard services only */}
-                {formData.estimated_price > 0 && !isCustomOrder(formData.service) && (
+                {formData.estimated_price > 0 && !isCustomOrder(formData.service) && !isProjectService(formData.service) && (
                   <div className="p-4 bg-gray-900 rounded-xl text-white" data-testid="final-price-summary">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-xs text-gray-400">{getServiceName(formData.service)}</p>
                         <p className="text-xs text-gray-400">
-                          {isHourlyService(formData.service) 
-                            ? `${formData.property_size} hod` 
-                            : `${formData.property_size} m²`
-                          } • {formData.preferred_date?.toLocaleDateString('cs-CZ')}
+                          {`${formData.property_size} m²`} • {formData.preferred_date?.toLocaleDateString('cs-CZ')}
                         </p>
                       </div>
                       <div className="text-right">
@@ -1186,14 +1195,11 @@ const BookingPage = () => {
                     <span className="text-gray-500">Služba:</span>
                     <span className="font-medium">{getServiceName(formData.service)}</span>
                   </div>
-                  {!isCustomOrder(formData.service) && (
+                  {!isCustomOrder(formData.service) && !isProjectService(formData.service) && (
                     <div className="flex justify-between py-1.5 border-b border-gray-200">
-                      <span className="text-gray-500">{isHourlyService(formData.service) ? 'Hodin:' : 'Plocha:'}</span>
+                      <span className="text-gray-500">Plocha:</span>
                       <span className="font-medium">
-                        {isHourlyService(formData.service) 
-                          ? `${formData.property_size} hod`
-                          : `${formData.property_size} m²`
-                        }
+                        {`${formData.property_size} m²`}
                       </span>
                     </div>
                   )}
@@ -1209,15 +1215,15 @@ const BookingPage = () => {
                   )}
                   <div className="flex justify-between py-2 bg-[#F0FDF4] -mx-2 px-2 rounded">
                     <span className="font-medium">Cena:</span>
-                    <span className={`font-bold ${isCustomOrder(formData.service) ? 'text-amber-600' : 'text-[#3FA34D]'}`}>
-                      {isCustomOrder(formData.service) ? 'Dle dohody' : `~${getFinalPrice().toLocaleString('cs-CZ')} Kč`}
+                    <span className={`font-bold ${(isCustomOrder(formData.service) || isProjectService(formData.service)) ? 'text-amber-600' : 'text-[#3FA34D]'}`}>
+                      {(isCustomOrder(formData.service) || isProjectService(formData.service)) ? 'Dle domluvy' : `~${getFinalPrice().toLocaleString('cs-CZ')} Kč`}
                     </span>
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-gray-500 mb-4">
-                {isCustomOrder(formData.service)
+                {(isCustomOrder(formData.service) || isProjectService(formData.service))
                   ? 'Do 24 hodin vás kontaktujeme pro upřesnění detailů a cenovou nabídku.'
                   : 'Brzy vás budeme kontaktovat pro potvrzení termínu.'
                 }
