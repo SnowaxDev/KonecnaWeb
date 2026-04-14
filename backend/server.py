@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
@@ -342,9 +342,10 @@ SERVICE_PRICES = {
     "lawn_with_fertilizer": 3.33,  # Kč/m² - s hnojením
     "overgrown": 3.5,              # Kč/m² - přerostlá tráva (3-4 Kč)
     
-    # Fixní ceny
-    "garden_work": 350,            # Zahradnické práce - 300-450 Kč/hod (průměr)
-    "debris_hourly": 400,          # Odvoz odpadu - 400 Kč/hod
+    # Projektové služby (cena po domluvě)
+    "land_clearing": 0,            # Likvidace a čištění pozemků - projektová cena
+    "garden_work": 0,              # Zahradnické práce - dle rozsahu
+    "debris_hourly": 0,            # Odvoz odpadu - dle objemu
     
     "other": 0
 }
@@ -967,7 +968,7 @@ async def submit_contact_form(form: ContactForm):
     return {"message": "Děkujeme za zprávu! Brzy se vám ozveme.", "id": doc["id"]}
 
 @api_router.post("/subscribe")
-async def subscribe_email(data: EmailSubscription):
+async def subscribe_email(data: EmailSubscription, background_tasks: BackgroundTasks):
     """Subscribe to newsletter and get 5% discount coupon"""
     try:
         # Check if already subscribed
@@ -982,7 +983,8 @@ async def subscribe_email(data: EmailSubscription):
         # Generate unique coupon
         coupon_code = generate_coupon_code()
         
-        doc = {
+        # Save subscriber to DB (critical)
+        subscriber_doc = {
             "id": str(uuid.uuid4()),
             "email": data.email,
             "coupon_code": coupon_code,
@@ -990,9 +992,9 @@ async def subscribe_email(data: EmailSubscription):
             "used": False,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
+        await db.subscribers.insert_one(subscriber_doc)
         
-        await db.subscribers.insert_one(doc)
-        doc.pop("_id", None)
+        # Save coupon to DB (critical)
         await db.coupons.insert_one({
             "code": coupon_code,
             "discount_percent": 5,
@@ -1002,24 +1004,41 @@ async def subscribe_email(data: EmailSubscription):
         })
         logger.info(f"New subscriber: {data.email}, coupon: {coupon_code}")
         
-        # Add contact to Resend (global or audience-specific) – non-critical, never blocks response
+        # Schedule Resend operations in background (non-critical, never blocks response)
         if resend and RESEND_API_KEY:
-            try:
-                contact_params: dict = {
-                    "email": data.email,
-                    "unsubscribed": False,
-                }
-                if RESEND_AUDIENCE_ID:
-                    contact_params["audience_id"] = RESEND_AUDIENCE_ID
-                await asyncio.to_thread(resend.Contacts.create, contact_params)
-                logger.info(f"Contact added to Resend ({'audience: ' + RESEND_AUDIENCE_ID if RESEND_AUDIENCE_ID else 'global'}): {data.email}")
-            except Exception as resend_err:
-                logger.warning(f"Resend contact add failed (non-critical): {str(resend_err)}")
+            background_tasks.add_task(_resend_add_contact_and_send_email, data.email, coupon_code)
         
-        # Send coupon email – non-critical, never blocks response
-        if resend and RESEND_API_KEY:
-            try:
-                email_html = f"""<!DOCTYPE html>
+        return {
+            "message": "Úspěšně přihlášeno! Slevový kupón byl odeslán na váš email.",
+            "coupon_code": coupon_code
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Subscribe endpoint error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Nepodařilo se zpracovat přihlášení. Zkuste to znovu.")
+
+
+def _resend_add_contact_and_send_email(email: str, coupon_code: str):
+    """Background task: add contact to Resend audience and send coupon email."""
+    # 1. Add contact to Resend audience
+    if RESEND_AUDIENCE_ID:
+        try:
+            resend.Contacts.create({
+                "email": email,
+                "unsubscribed": False,
+                "audience_id": RESEND_AUDIENCE_ID,
+            })
+            logger.info(f"Contact added to Resend audience {RESEND_AUDIENCE_ID}: {email}")
+        except Exception as e:
+            logger.warning(f"Resend contact add failed (non-critical): {e}")
+    else:
+        logger.warning(f"RESEND_AUDIENCE_ID not set – skipping Resend contact creation for {email}")
+
+    # 2. Send coupon email
+    try:
+        email_html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #3FA34D, #2d7a38); padding: 40px; text-align: center; border-radius: 16px 16px 0 0;">
@@ -1042,26 +1061,15 @@ async def subscribe_email(data: EmailSubscription):
   </div>
   <p style="text-align: center; color: #9CA3AF; font-size: 12px; margin-top: 20px;">SeknuTo.cz | Trávník bez starostí!</p>
 </body></html>"""
-                await asyncio.to_thread(resend.Emails.send, {
-                    "from": SENDER_EMAIL,
-                    "to": [data.email],
-                    "subject": "Váš slevový kupón 5% - SeknuTo.cz",
-                    "html": email_html
-                })
-                logger.info(f"Coupon email sent to {data.email}")
-            except Exception as email_err:
-                logger.error(f"Coupon email failed (non-critical): {str(email_err)}")
-        
-        return {
-            "message": "Úspěšně přihlášeno! Slevový kupón byl odeslán na váš email.",
-            "coupon_code": coupon_code
-        }
-    
-    except HTTPException:
-        raise
+        resend.Emails.send({
+            "from": SENDER_EMAIL,
+            "to": [email],
+            "subject": "Váš slevový kupón 5% - SeknuTo.cz",
+            "html": email_html
+        })
+        logger.info(f"Coupon email sent to {email}")
     except Exception as e:
-        logger.error(f"Subscribe endpoint error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Nepodařilo se zpracovat přihlášení. Zkuste to znovu.")
+        logger.error(f"Coupon email failed (non-critical): {e}")
 
 @api_router.post("/coupons/validate")
 @limiter.limit("20/minute")
