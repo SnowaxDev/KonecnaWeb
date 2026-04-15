@@ -1081,7 +1081,7 @@ async def validate_coupon(request: Request, data: CouponValidation):
         raise HTTPException(status_code=404, detail="Neplatný slevový kód")
     
     # Check if coupon is used (used=True) or deactivated (active=False)
-    if coupon.get("used") or coupon.get("active") is False:
+    if coupon.get("used") or not coupon.get("active"):
         raise HTTPException(status_code=400, detail="Tento kupón již byl použit")
     
     return {
@@ -1247,7 +1247,7 @@ async def redeem_voucher(code: str, booking_id: str, discount_applied: float = 0
         raise HTTPException(status_code=400, detail="Voucher nelze uplatnit – již byl použit, expiroval nebo je neaktivní")
 
     # After increment, check if now exhausted
-    new_uses_count = voucher.get('uses_count', 0) + 1  # find_one_and_update returns doc BEFORE update when return_document not AFTER
+    # find_one_and_update returns doc BEFORE update when return_document not AFTER
     # Recalculate: uses_count in returned doc is the value after inc (return_document=True means AFTER)
     if voucher.get('uses_count', 0) >= voucher.get('max_uses', 1):
         await db.vouchers.update_one(

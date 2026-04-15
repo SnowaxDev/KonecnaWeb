@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Calendar, Clock, ArrowRight, ArrowLeft, User, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import DOMPurify from 'dompurify';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -211,7 +212,7 @@ export function BlogDetailPage() {
             [&_h3]:font-semibold [&_h3]:text-xl [&_h3]:text-[#2D6A4F] [&_h3]:mt-6 [&_h3]:mb-3
             [&_p]:mb-4 [&_ul]:my-4 [&_ul]:pl-6 [&_li]:mb-2 [&_li]:list-disc
             [&_strong]:text-[#1B4332] [&_a]:text-[#3FA34D] [&_a]:underline"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
           data-testid="blog-content"
         />
 
