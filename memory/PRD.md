@@ -1,7 +1,7 @@
 # SeknuTo.cz – Product Requirements Document
 
 ## Původní zadání
-Webová aplikace pro zahradnickou firmu SeknuTo.cz (Dvůr Králové nad Labem). Slouží jako **akviziční nástroj pro sběr poptávek** – NE e-shop. Zákazník na webu **nevidí žádné ceny** – vše je po bezplatné obhlídce.
+Web pro zahradnickou firmu SeknuTo.cz (Dvůr Králové nad Labem). **Akviziční nástroj pro sběr poptávek** – bez cen. Zákazník na webu nevidí žádné ceny – vše po bezplatné obhlídce.
 
 ## Architektura
 - **Frontend**: React + Shadcn/UI (Vercel)
@@ -9,47 +9,33 @@ Webová aplikace pro zahradnickou firmu SeknuTo.cz (Dvůr Králové nad Labem). 
 - **Emaily**: Resend (vyžaduje ověření domény)
 - **Obrázky galerie**: Base64 v MongoDB
 
-## Cenová strategie (aktuální)
-- **ŽÁDNÉ ceny na webu** – ani orientační, ani "od"
-- Vše je "Cena po obhlídce" / "Po domluvě" / "Individuální kalkulace"
-- Stránka "Ceník" přeměněna na "Jak to funguje" (4 kroky: Poptávka → Obhlídka → Cena → Práce)
-- Zákazník neuvidí žádnou částku v Kč
-
-## SEO zaměření
-- Lokální SEO: Dvůr Králové, Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod
-- Klíčová slova: sekání trávy, likvidace pozemků, čištění zarostlých parcel, údržba zahrad, vertikutace, hnojení, zahradník
-- Bezplatná obhlídka jako hlavní CTA
-
-## Služby na webu
-1. Sekání trávy (s/bez hnojení, přerostlá tráva)
-2. Likvidace a čištění pozemků (křoviny, nálety, vysoká tráva)
-3. Sezónní balíčky (jaro, léto, podzim, zima)
-4. Zahradnické práce (pletí, výsadba, úprava terénu)
-5. Odvoz odpadu
-6. VIP Celoroční servis
-
-## Dokončené úkoly
-- [x] Vercel Analytics a SpeedInsights
-- [x] CSS active state, kalendář vizuál
-- [x] Base64 galerie v MongoDB
-- [x] Admin kontaktní zprávy
-- [x] Newsletter popup + BackgroundTasks pro Resend
-- [x] Transakční emaily (confirmed, completed, cancelled)
-- [x] Revert designu 4 klíčových stránek
-- [x] Kompletní odstranění VŠECH cen z webu (14.4.2026)
-- [x] Přeměna "Ceník" → "Jak to funguje" (14.4.2026)
-- [x] SEO aktualizace na všech stránkách (14.4.2026)
-- [x] Přidání služby "Likvidace a čištění pozemků"
-- [x] Newsletter endpoint refactoring na BackgroundTasks
+## Dokončené úkoly (14.4.2026)
+- [x] Kompletní odstranění VŠECH cen z webu
+- [x] PricingPage → "Jak to funguje" (FAQ, Co ovlivňuje cenu, Sezónní balíčky)
+- [x] Galerie fix – Base64 URL bez prefixu BACKEND_URL
+- [x] Admin custom email zákazníkům (POST /api/admin/bookings/{id}/email + modal)
+- [x] BookingPage – m² pole pro všechny služby (orientační, volitelné)
+- [x] SEO Master Update:
+  - index.html: geotags, JSON-LD, noscript, Montserrat font, odstraněno "Praha"
+  - SEOHead.jsx: array schema, LawnCareService, reviewCount number, blogPost/reviews/localLanding schemas
+  - sitemap.xml: oprava /galerie→/nase-prace, 5 lokálních stránek
+  - robots.txt: Googlebot sekce
+  - BlogPage + GalleryPage: SEOHead
+  - 5 LocalLandingPages: Trutnov, Vrchlabí, Jaroměř, Náchod, Hostinné
+  - Footer: "Oblast působení" sloupec + lokální linky
+  - HomePage: isoDate recenze + Reviews schema
+  - ServicesPage: breadcrumb + service schema
+- [x] Firmy.cz banner
 
 ## Čeká na uživatele
 - [ ] Resend domain verification
-- [ ] RESEND_AUDIENCE_ID v Render env variables
+- [ ] RESEND_AUDIENCE_ID v Render
 - [ ] Google Calendar authorization
+- [ ] Aktualizovat galerie projekty v DB (odstranit "Praha" z lokací)
 
 ## Backlog
 - [ ] Klientský portál s historií rezervací
-- [ ] Refaktoring server.py
+- [ ] Refaktoring server.py do modulární struktury
 
 ## Přihlašovací údaje
-- Admin heslo: `SeknuTo2025!`
+- Admin heslo: SeknuTo2025!
