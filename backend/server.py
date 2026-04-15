@@ -456,7 +456,7 @@ def get_customer_email_html(booking: Booking) -> str:
         <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Datum</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{booking.preferred_date}</td></tr>
         <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Čas</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{time_name}</td></tr>
         <tr><td style="padding:8px 0;color:#6b7280;border-bottom:1px solid #f3f4f6;">Adresa</td><td style="padding:8px 0;font-weight:600;color:#111827;border-bottom:1px solid #f3f4f6;text-align:right;">{booking.property_address}</td></tr>
-        <tr><td style="padding:8px 0;color:#6b7280;">Odhadovaná cena</td><td style="padding:8px 0;font-weight:700;color:#2E8B3E;font-size:16px;text-align:right;">{booking.estimated_price} Kč</td></tr>
+        <tr><td style="padding:8px 0;color:#6b7280;">Cena</td><td style="padding:8px 0;font-weight:700;color:#2E8B3E;font-size:16px;text-align:right;">Po bezplatné obhlídce</td></tr>
       </table>
     </div>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin-bottom:24px;">
@@ -1636,6 +1636,74 @@ async def admin_update_booking_status(booking_id: str, request: Request):
                     logger.error(f"Status email failed for booking {booking_id}: {str(e)}")
     
     return {"success": True}
+
+
+# ─── ADMIN CUSTOM EMAIL TO CUSTOMER ──────────────────────────────────────────
+
+class AdminEmailRequest(BaseModel):
+    booking_id: str
+    subject: str
+    message: str
+
+@api_router.post("/admin/bookings/{booking_id}/email")
+async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, request: Request):
+    """Admin: send custom email to booking customer"""
+    await verify_admin(request)
+    booking_doc = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking_doc:
+        raise HTTPException(status_code=404, detail="Objednávka nenalezena")
+    
+    customer_email = booking_doc.get("customer_email")
+    customer_name = booking_doc.get("customer_name", "")
+    if not customer_email:
+        raise HTTPException(status_code=400, detail="Zákazník nemá email")
+    
+    if not resend or not RESEND_API_KEY:
+        raise HTTPException(status_code=500, detail="Email služba není nakonfigurována")
+    
+    service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
+    # Convert newlines to <br> for HTML
+    message_html = data.message.replace('\n', '<br>')
+    
+    email_html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
+<div style="max-width:580px;margin:0 auto;">
+  <div style="background:linear-gradient(135deg,#2E8B3E,#3FA34D);padding:28px 32px;border-radius:16px 16px 0 0;text-align:center;">
+    <h2 style="color:white;margin:0;font-size:20px;">SeknuTo.cz</h2>
+    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:13px;">Zpráva k vaší objednávce</p>
+  </div>
+  <div style="background:white;padding:28px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:15px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{customer_name}</strong>,</p>
+    <div style="font-size:14px;color:#4b5563;line-height:1.7;margin:16px 0 24px;">{message_html}</div>
+    <div style="background:#f9fafb;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;color:#6b7280;">
+      <strong>Služba:</strong> {service_name}<br>
+      <strong>Datum:</strong> {booking_doc.get('preferred_date','')}<br>
+      <strong>Adresa:</strong> {booking_doc.get('property_address','')}
+    </div>
+    <p style="font-size:13px;color:#9ca3af;margin:0;">
+      Otázky? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;">WhatsApp: 730 588 372</a>
+      &nbsp;|&nbsp; <a href="mailto:info@seknuto.cz" style="color:#2E8B3E;">info@seknuto.cz</a>
+    </p>
+  </div>
+  <div style="background:#1a2e1a;padding:16px;text-align:center;border-radius:0 0 16px 16px;">
+    <p style="color:#3FA34D;margin:0;font-size:12px;">SeknuTo.cz – Trávník bez starostí!</p>
+  </div>
+</div>
+</body></html>"""
+    
+    try:
+        await asyncio.to_thread(resend.Emails.send, {
+            "from": SENDER_EMAIL,
+            "to": [customer_email],
+            "subject": data.subject,
+            "html": email_html,
+        })
+        logger.info(f"Admin custom email sent to {customer_email} for booking {booking_id}")
+        return {"success": True, "message": f"Email odeslán na {customer_email}"}
+    except Exception as e:
+        logger.error(f"Admin custom email failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Nepodařilo se odeslat email: {str(e)}")
 
 # ─── ADMIN COUPONS ────────────────────────────────────────────────────────────
 

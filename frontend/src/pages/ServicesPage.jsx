@@ -6,7 +6,7 @@ import {
   Star, Shield, Clock, Phone, Zap, ChevronDown, ChevronUp, Flame
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import SEOHead from '../components/SEOHead';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
 
 const ServicesPage = () => {
   const [expandedService, setExpandedService] = useState(null);
@@ -186,6 +186,17 @@ const ServicesPage = () => {
         description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, likvidace zarostlých pozemků a parcel, sezónní balíčky, vertikutace, hnojení, odvoz odpadu. Bezplatná obhlídka."
         canonical="https://seknuto.cz/sluzby"
         keywords="zahradnické služby Dvůr Králové, sekání trávy, likvidace pozemků, čištění zarostlých parcel, vertikutace, hnojení trávníku, údržba zahrad Trutnov, sekání trávy Vrchlabí, odvoz odpadu zahrada"
+        schema={[
+          SCHEMAS.breadcrumb([
+            { name: 'Úvod', url: '/' },
+            { name: 'Služby', url: '/sluzby' },
+          ]),
+          SCHEMAS.service({
+            name: 'Sekání trávy',
+            description: 'Profesionální sekání trávníků všech velikostí s možností hnojení a mulčování.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
+        ]}
       />
       {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">

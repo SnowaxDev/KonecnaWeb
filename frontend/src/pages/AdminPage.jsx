@@ -540,6 +540,10 @@ const BookingsTab = ({ token, handle401 }) => {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [emailModal, setEmailModal] = useState(null); // booking object or null
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
   const headers = { 'X-Admin-Token': token };
 
   const load = useCallback(async () => {
@@ -562,6 +566,31 @@ const BookingsTab = ({ token, handle401 }) => {
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
     finally { setUpdatingId(null); }
+  };
+
+  const openEmailModal = (booking) => {
+    setEmailModal(booking);
+    setEmailSubject(`Informace k vaší poptávce – SeknuTo.cz`);
+    setEmailMessage('');
+  };
+
+  const sendCustomEmail = async () => {
+    if (!emailModal || !emailMessage.trim()) {
+      toast.error('Vyplňte zprávu');
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      await axios.post(`${API}/admin/bookings/${emailModal.id}/email`, {
+        booking_id: emailModal.id,
+        subject: emailSubject,
+        message: emailMessage,
+      }, { headers });
+      toast.success(`Email odeslán na ${emailModal.customer_email}`);
+      setEmailModal(null);
+    } catch (err) {
+      if (!handle401(err)) toast.error(err.response?.data?.detail || 'Nepodařilo se odeslat email');
+    } finally { setSendingEmail(false); }
   };
 
   return (
@@ -597,7 +626,7 @@ const BookingsTab = ({ token, handle401 }) => {
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="font-bold text-[#3FA34D] text-sm whitespace-nowrap">
-                      ~{(b.estimated_price || 0).toLocaleString('cs-CZ')} Kč
+                      {b.estimated_price > 0 ? `~${b.estimated_price.toLocaleString('cs-CZ')} Kč` : 'Po obhlídce'}
                     </span>
                     <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${s.color}`}>{s.label}</span>
                     <span className="text-xs text-gray-400 hidden sm:block whitespace-nowrap">
@@ -630,7 +659,7 @@ const BookingsTab = ({ token, handle401 }) => {
                           <span>{b.preferred_date} · {b.preferred_time}</span>
                         </div>
                         <div className="text-gray-600">
-                          <span className="font-medium">Plocha:</span> {b.property_size} {['garden_work','debris_hourly'].includes(b.service) ? 'hod' : 'm²'}
+                          <span className="font-medium">Plocha:</span> {b.property_size > 0 ? `~${b.property_size} m²` : 'Neuvedeno'}
                         </div>
                         {b.notes && (
                           <div className="text-gray-600">
@@ -662,6 +691,14 @@ const BookingsTab = ({ token, handle401 }) => {
                           {STATUS_LABELS[st]?.label || st}
                         </button>
                       ))}
+                      <button
+                        onClick={() => openEmailModal(b)}
+                        className="text-xs px-3 py-1.5 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 font-medium transition-all ml-auto"
+                        data-testid={`email-btn-${b.id}`}
+                      >
+                        <Mail className="w-3 h-3 inline mr-1" />
+                        Poslat email
+                      </button>
                     </div>
                   </div>
                 )}
@@ -670,9 +707,60 @@ const BookingsTab = ({ token, handle401 }) => {
           })}
         </div>
       )}
+
+      {/* Custom Email Modal */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden" data-testid="email-modal">
+            <div className="bg-[#3FA34D] px-6 py-4">
+              <h3 className="text-white font-bold">Poslat email zákazníkovi</h3>
+              <p className="text-white/70 text-xs">{emailModal.customer_name} – {emailModal.customer_email}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Předmět</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={e => setEmailSubject(e.target.value)}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                  data-testid="email-subject-input"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Zpráva</label>
+                <textarea
+                  value={emailMessage}
+                  onChange={e => setEmailMessage(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none resize-none"
+                  placeholder="Napište zprávu zákazníkovi..."
+                  data-testid="email-message-input"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setEmailModal(null)}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={sendCustomEmail}
+                  disabled={sendingEmail || !emailMessage.trim()}
+                  className="px-4 py-2 text-sm bg-[#3FA34D] text-white rounded-lg hover:bg-[#2d7a38] disabled:opacity-50 font-medium"
+                  data-testid="email-send-btn"
+                >
+                  {sendingEmail ? 'Odesílám...' : 'Odeslat email'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}; 
 
 // ─── GALLERY TAB ──────────────────────────────────────────────────────────────
 const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
@@ -715,9 +803,9 @@ const GalleryTab = ({ token, handle401 }) => {
       const res = await axios.post(`${API}/admin/gallery/upload`, formData, {
         headers: { ...headers, 'Content-Type': 'multipart/form-data' },
       });
-      // URL returned is /uploads/xxx.jpg – prefix with backend URL for display
-      const fullUrl = `${BACKEND_URL}${res.data.url}`;
-      setForm(f => ({ ...f, [field]: fullUrl }));
+      // Backend returns base64 data URL directly – no prefix needed
+      const imageUrl = res.data.url;
+      setForm(f => ({ ...f, [field]: imageUrl }));
       toast.success('Fotka nahrána!');
     } catch (err) {
       if (!handle401(err)) toast.error(parseError(err) || 'Nepodařilo se nahrát fotku');

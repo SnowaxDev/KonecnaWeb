@@ -111,10 +111,8 @@ const BookingPage = () => {
   // Auto-adjust property_size default based on service type
   useEffect(() => {
     if (formData.service) {
-      if (isProjectService(formData.service)) {
-        // Project services don't need m² input - skip price calculation
-        setFormData(prev => ({ ...prev, property_size: 0, estimated_price: 0 }));
-      } else if (formData.property_size < 50) {
+      // Set a reasonable default if not yet set
+      if (formData.property_size === 0 || formData.property_size < 50) {
         setFormData(prev => ({ ...prev, property_size: 100 }));
       }
     }
@@ -275,14 +273,7 @@ const BookingPage = () => {
           }
           return true;
         }
-        if (isProjectService(formData.service)) {
-          return true; // Project services don't need m² input
-        }
-        if (formData.property_size <= 0) {
-          toast.error('Zadejte velikost plochy');
-          return false;
-        }
-        return true;
+        return true; // m² is optional info for the inspection
       case 3:
         if (!formData.preferred_date) {
           toast.error('Vyberte termín');
@@ -764,7 +755,7 @@ const BookingPage = () => {
             <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#3FA34D]" />
-                {isProjectService(formData.service) ? 'Informace o zakázce' : 'Informace o ploše'}
+                Informace o pozemku
               </h2>
               
               <div className="space-y-5">
@@ -774,87 +765,72 @@ const BookingPage = () => {
                   <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
                 </div>
 
-                {/* Project-based services - no m² input, just notes */}
-                {isProjectService(formData.service) ? (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                    <p className="text-sm font-medium text-amber-800 mb-1">Cena bude stanovena po obhlídce</p>
-                    <p className="text-xs text-amber-600">Přesnou kalkulaci připravíme na místě nebo na základě fotografií. Pokračujte výběrem termínu a kontaktních údajů.</p>
+                {/* Property Size – always shown for all services */}
+                <div>
+                  <Label htmlFor="property_size" className="text-sm font-semibold">
+                    Přibližná velikost pozemku (m²)
+                  </Label>
+                  <Input
+                    id="property_size"
+                    type="number"
+                    value={formData.property_size || ''}
+                    onChange={(e) => updateFormData('property_size', parseInt(e.target.value) || 0)}
+                    className="mt-2 h-12 text-lg border-2 focus:border-[#3FA34D]"
+                    min="0"
+                    placeholder="např. 150"
+                    data-testid="input-property-size"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Nemusíte znát přesně – stačí odhad. Pomůže nám to připravit se na obhlídku.
+                  </p>
+                </div>
+
+                {/* Condition - for lawn services */}
+                {['lawn_mowing', 'lawn_with_fertilizer', 'overgrown', 'land_clearing'].includes(formData.service) && (
+                  <div>
+                    <Label className="text-sm font-semibold">Stav trávy / pozemku</Label>
+                    <Select value={formData.condition} onValueChange={(value) => updateFormData('condition', value)}>
+                      <SelectTrigger className="mt-2 h-12 border-2" data-testid="select-condition">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Běžný stav (pravidelně udržováno)</SelectItem>
+                        <SelectItem value="overgrown">Přerostlé (delší dobu nesekáno)</SelectItem>
+                        <SelectItem value="very_neglected">Velmi zanedbané (křoviny, nálety)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                ) : (
-                  <>
-                    {/* Property Size */}
-                    <div>
-                      <Label htmlFor="property_size" className="text-sm font-semibold">
-                        Velikost plochy (m²) *
-                      </Label>
-                      <Input
-                        id="property_size"
-                        type="number"
-                        value={formData.property_size}
-                        onChange={(e) => updateFormData('property_size', parseInt(e.target.value) || 0)}
-                        className="mt-2 h-12 text-lg border-2 focus:border-[#3FA34D]"
-                        min="1"
-                        placeholder="např. 150"
-                        data-testid="input-property-size"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Zadejte přibližnou velikost trávníku nebo zahrady v m²
-                      </p>
-                    </div>
-
-                    {/* Condition - only for lawn services */}
-                    {['lawn_mowing', 'lawn_with_fertilizer', 'overgrown'].includes(formData.service) && (
-                      <div>
-                        <Label className="text-sm font-semibold">Stav trávy</Label>
-                        <Select value={formData.condition} onValueChange={(value) => updateFormData('condition', value)}>
-                          <SelectTrigger className="mt-2 h-12 border-2" data-testid="select-condition">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="normal">Běžný stav</SelectItem>
-                            <SelectItem value="overgrown">Přerostlá (+50%)</SelectItem>
-                            <SelectItem value="very_neglected">Velmi zanedbaná (+100%)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {/* Additional Services */}
-                    <div>
-                      <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
-                      <div className="space-y-2">
-                        {additionalServices.map((service) => (
-                          <label
-                            key={service.id}
-                            className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                              formData.additional_services.includes(service.id)
-                                ? 'border-[#3FA34D] bg-[#F0FDF4]'
-                                : 'border-gray-100 hover:border-gray-200'
-                            }`}
-                            data-testid={`additional-${service.id}`}
-                          >
-                            <Checkbox
-                              checked={formData.additional_services.includes(service.id)}
-                              onCheckedChange={() => toggleAdditionalService(service.id)}
-                            />
-                            <span className="text-sm font-medium">{service.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Price Preview */}
-                    {formData.estimated_price > 0 && (
-                      <div className="p-5 bg-gradient-to-r from-[#3FA34D] to-[#2d7a38] rounded-2xl text-white" data-testid="price-preview">
-                        <p className="text-sm text-white/80">Orientační cena:</p>
-                        <p className="text-3xl font-bold">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
-                        <p className="text-xs text-white/60 mt-1">
-                          {formData.property_size} m² × sazba
-                        </p>
-                      </div>
-                    )}
-                  </>
                 )}
+
+                {/* Additional Services */}
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
+                  <div className="space-y-2">
+                    {additionalServices.map((service) => (
+                      <label
+                        key={service.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          formData.additional_services.includes(service.id)
+                            ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                            : 'border-gray-100 hover:border-gray-200'
+                        }`}
+                        data-testid={`additional-${service.id}`}
+                      >
+                        <Checkbox
+                          checked={formData.additional_services.includes(service.id)}
+                          onCheckedChange={() => toggleAdditionalService(service.id)}
+                        />
+                        <span className="text-sm font-medium">{service.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Free inspection info */}
+                <div className="p-4 bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-xl">
+                  <p className="text-sm font-medium text-[#1B4332]">Prohlídka a kalkulace zdarma</p>
+                  <p className="text-xs text-gray-600 mt-1">Přesnou cenu vám sdělíme při bezplatné obhlídce na místě. Žádné překvapení.</p>
+                </div>
               </div>
             </div>
           )}
@@ -877,18 +853,14 @@ const BookingPage = () => {
                       <p className="text-sm text-gray-500">
                         {isCustomOrder(formData.service)
                           ? (customOrderTypes.length > 0 ? customOrderTypes.slice(0, 2).map(t => customOrderWorkTypes.find(w => w.id === t)?.label).filter(Boolean).join(', ') + (customOrderTypes.length > 2 ? '...' : '') : 'Zakázkové práce')
-                          : isProjectService(formData.service)
-                          ? 'Cena po obhlídce'
-                          : `${formData.property_size} m²`
+                          : formData.property_size > 0
+                          ? `~${formData.property_size} m²`
+                          : 'Bezplatná obhlídka'
                         }
                       </p>
                     </div>
                     <div className="text-right">
-                      {(isCustomOrder(formData.service) || isProjectService(formData.service)) ? (
-                        <p className="text-lg font-bold text-amber-600">Dle domluvy</p>
-                      ) : (
-                        <p className="text-xl font-bold text-[#3FA34D]">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
-                      )}
+                      <p className="text-sm font-bold text-[#3FA34D]">Cena po obhlídce</p>
                     </div>
                   </div>
                 </div>
@@ -1115,34 +1087,20 @@ const BookingPage = () => {
                   </span>
                 </label>
 
-                {/* Price Summary - standard services only */}
-                {formData.estimated_price > 0 && !isCustomOrder(formData.service) && !isProjectService(formData.service) && (
-                  <div className="p-4 bg-gray-900 rounded-xl text-white" data-testid="final-price-summary">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs text-gray-400">{getServiceName(formData.service)}</p>
-                        <p className="text-xs text-gray-400">
-                          {`${formData.property_size} m²`} • {formData.preferred_date?.toLocaleDateString('cs-CZ')}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        {(couponDiscount > 0 || formData.voucher_fixed_discount > 0) ? (
-                          <>
-                            <p className="text-xs text-gray-400 line-through">{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
-                            <p className="text-xs text-[#52B788] mb-0.5">
-                              {formData.voucher_fixed_discount > 0
-                                ? `Sleva ${formData.voucher_fixed_discount} Kč`
-                                : `Sleva ${couponDiscount}%`}
-                            </p>
-                            <p className="text-2xl font-bold text-[#3FA34D]">~{getFinalPrice().toLocaleString('cs-CZ')} Kč</p>
-                          </>
-                        ) : (
-                          <p className="text-2xl font-bold">~{formData.estimated_price.toLocaleString('cs-CZ')} Kč</p>
-                        )}
-                      </div>
+                {/* Order Summary */}
+                <div className="p-4 bg-[#F0FDF4] rounded-xl border border-[#3FA34D]/20" data-testid="final-price-summary">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-gray-500">{getServiceName(formData.service)}</p>
+                      <p className="text-xs text-gray-500">
+                        {formData.property_size > 0 ? `~${formData.property_size} m² • ` : ''}{formData.preferred_date?.toLocaleDateString('cs-CZ')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-[#1B4332]">Cena po obhlídce</p>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Custom Order - price info */}
                 {isCustomOrder(formData.service) && (
@@ -1196,11 +1154,11 @@ const BookingPage = () => {
                     <span className="text-gray-500">Služba:</span>
                     <span className="font-medium">{getServiceName(formData.service)}</span>
                   </div>
-                  {!isCustomOrder(formData.service) && !isProjectService(formData.service) && (
+                  {!isCustomOrder(formData.service) && formData.property_size > 0 && (
                     <div className="flex justify-between py-1.5 border-b border-gray-200">
                       <span className="text-gray-500">Plocha:</span>
                       <span className="font-medium">
-                        {`${formData.property_size} m²`}
+                        ~{formData.property_size} m²
                       </span>
                     </div>
                   )}
@@ -1216,18 +1174,13 @@ const BookingPage = () => {
                   )}
                   <div className="flex justify-between py-2 bg-[#F0FDF4] -mx-2 px-2 rounded">
                     <span className="font-medium">Cena:</span>
-                    <span className={`font-bold ${(isCustomOrder(formData.service) || isProjectService(formData.service)) ? 'text-amber-600' : 'text-[#3FA34D]'}`}>
-                      {(isCustomOrder(formData.service) || isProjectService(formData.service)) ? 'Dle domluvy' : `~${getFinalPrice().toLocaleString('cs-CZ')} Kč`}
-                    </span>
+                    <span className="font-bold text-[#3FA34D]">Po bezplatné obhlídce</span>
                   </div>
                 </div>
               </div>
 
               <p className="text-sm text-gray-500 mb-4">
-                {(isCustomOrder(formData.service) || isProjectService(formData.service))
-                  ? 'Do 24 hodin vás kontaktujeme pro upřesnění detailů a cenovou nabídku.'
-                  : 'Brzy vás budeme kontaktovat pro potvrzení termínu.'
-                }
+                Do 24 hodin vás kontaktujeme pro domluvení bezplatné obhlídky a upřesnění detailů.
               </p>
 
               <div className="w-full max-w-sm bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-xl p-3 mb-4 flex items-center gap-3">

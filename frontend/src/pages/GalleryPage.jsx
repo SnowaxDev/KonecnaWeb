@@ -3,6 +3,7 @@ import axios from 'axios';
 import { X, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -204,6 +205,16 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen" data-testid="gallery-page">
+      <SEOHead
+        title="Ukázky naší práce – Sekání trávy Dvůr Králové | SeknuTo.cz"
+        description="Prohlédněte si realizace SeknuTo.cz – sekání přerostlé trávy, jarní balíčky, pravidelná údržba zahrad. Výsledky před a po z Dvůra Králové, Trutnova a okolí."
+        canonical="https://seknuto.cz/nase-prace"
+        keywords="sekání trávy před a po, realizace zahrad Dvůr Králové, ukázky sekání trávy, fotky trávníku, zahradnické práce výsledky"
+        schema={SCHEMAS.breadcrumb([
+          { name: 'Úvod', url: '/' },
+          { name: 'Naše práce', url: '/nase-prace' },
+        ])}
+      />
       {/* Hero */}
       <section className="pt-28 pb-12 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F8FAFC]">
         <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">

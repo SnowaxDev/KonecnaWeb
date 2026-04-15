@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import SEOHead from '../components/SEOHead';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
 
 const PricingPage = () => {
   const steps = [
@@ -56,13 +57,34 @@ const PricingPage = () => {
     { icon: MapPin, title: 'Dvůr Králové + 30 km', desc: 'Pokrýváme Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolí.' },
   ];
 
+  const faqItems = [
+    { question: 'Proč nezveřejňujete ceník?', answer: 'Každá zahrada je jiná. Cena závisí na velikosti, stavu a přístupnosti. Chceme vám dát přesnou cenu – ne orientační číslo, které pak nesedí.' },
+    { question: 'Je prohlídka opravdu zdarma?', answer: 'Ano, 100% zdarma a bez závazku. Přijedeme, podíváme se a nacenujeme. Pokud se nedohodneme, nic neplatíte.' },
+    { question: 'Jak rychle dostanu cenu?', answer: 'Cenu dostanete přímo při prohlídce – na místě, bez čekání.' },
+  ];
+
+  const priceFactors = [
+    'Velikost plochy',
+    'Stav trávy (pravidelně sekáno vs. přerostlé)',
+    'Typ služby (sekání, hnojení, vertikutace, odvoz)',
+    'Frekvence (jednorázově vs. pravidelně)',
+    'Přístupnost pozemku',
+  ];
+
   return (
     <div className="min-h-screen pt-16" data-testid="pricing-page">
       <SEOHead
-        title="Jak funguje kalkulace | Bezplatná obhlídka zahrady | SeknuTo.cz"
-        description="Jak zjistíte cenu za sekání trávy nebo likvidaci pozemku? Pošlete poptávku, přijedeme na bezplatnou obhlídku a sdělíme přesnou cenu předem. Dvůr Králové a okolí."
+        title="Cena sekání trávy – transparentně a bez překvapení | SeknuTo.cz"
+        description="Cenu vždy stanovíme po bezplatné prohlídce vaší zahrady. Žádné skryté poplatky. Sekání trávy, likvidace pozemků, sezónní balíčky. Dvůr Králové a okolí."
         canonical="https://seknuto.cz/cenik"
         keywords="cena sekání trávy, kalkulace zahradník, bezplatná obhlídka zahrady, cena likvidace pozemku, zahradnické služby Dvůr Králové, cena údržba zahrady"
+        schema={[
+          SCHEMAS.breadcrumb([
+            { name: 'Úvod', url: '/' },
+            { name: 'Jak to funguje', url: '/cenik' },
+          ]),
+          SCHEMAS.faqPage(faqItems),
+        ]}
       />
 
       {/* Hero */}
@@ -159,6 +181,69 @@ const PricingPage = () => {
         </div>
       </section>
 
+      {/* What affects price */}
+      <section className="py-12 bg-white">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Co ovlivňuje cenu
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {priceFactors.map((factor, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <CheckCircle className="w-5 h-5 text-[#3FA34D] shrink-0" />
+                <span className="text-sm font-medium text-gray-700">{factor}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Seasonal Packages */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Sezónní balíčky
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { title: 'Jarní balíček', desc: 'Vertikutace + hnojení + první sekání sezóny', color: 'border-pink-200 bg-pink-50' },
+              { title: 'Letní balíček', desc: 'Pravidelné sekání po celé léto + hnojení', color: 'border-yellow-200 bg-yellow-50' },
+              { title: 'Podzimní balíček', desc: 'Vertikutace + podzimní hnojení + úklid listí', color: 'border-orange-200 bg-orange-50' },
+              { title: 'VIP Celoroční servis', desc: 'Kompletní péče po celý rok – nemusíte na nic myslet', color: 'border-green-200 bg-green-50' },
+            ].map((pkg, i) => (
+              <div key={i} className={`p-5 rounded-xl border-2 ${pkg.color}`}>
+                <h3 className="font-bold text-gray-900 mb-1">{pkg.title}</h3>
+                <p className="text-sm text-gray-600 mb-3">{pkg.desc}</p>
+                <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline inline-flex items-center gap-1">
+                  Poptat balíček <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-12 bg-white">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Časté dotazy o cenách
+          </h2>
+          <Accordion type="single" collapsible className="space-y-3">
+            {faqItems.map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="bg-gray-50 rounded-xl border border-gray-100 px-5">
+                <AccordionTrigger className="text-left font-semibold text-gray-900 text-sm py-4">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-600 pb-4">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       {/* Benefits */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4">
@@ -182,10 +267,10 @@ const PricingPage = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                Potřebujete pomoct se zahradou?
+                Chcete vědět, kolik bude stát vaše zahrada?
               </h2>
               <p className="text-gray-400 text-sm">
-                Pošlete nezávaznou poptávku. Přijedeme, prohlédneme a sdělíme přesnou cenu. Zdarma.
+                Objednejte bezplatnou prohlídku. Přijedeme, nacenujeme a domluvíme se. Zdarma a nezávazně.
               </p>
             </div>
             

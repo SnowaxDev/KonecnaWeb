@@ -7,17 +7,12 @@ const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 const DEFAULT_SEO = {
   title: 'Sekání trávy Dvůr Králové | Zahradnické služby | SeknuTo.cz',
-  description: 'Profesionální sekání trávy, likvidace zarostlých pozemků a údržba zahrad ve Dvoře Králové nad Labem a okolí. Bezplatná obhlídka a kalkulace na míru. ☎ 730 588 372',
+  description: 'Profesionální sekání trávy, likvidace zarostlých pozemků a údržba zahrad ve Dvoře Králové nad Labem a okolí. Bezplatná obhlídka a kalkulace na míru. 730 588 372',
   keywords: 'sekání trávy Dvůr Králové, zahradnické služby, likvidace pozemků, čištění zarostlých parcel, údržba zahrad, vertikutace trávníku, hnojení trávníku, sekání trávy Trutnov, sekání trávy Vrchlabí, zahradník Dvůr Králové',
   canonical: SITE_URL,
   image: DEFAULT_IMAGE,
 };
 
-/**
- * SEOHead – per-page meta tagy, Open Graph, Twitter Card, JSON-LD schema
- * Props:
- *   title, description, keywords, canonical, image, schema (JSON-LD object)
- */
 export default function SEOHead({
   title = DEFAULT_SEO.title,
   description = DEFAULT_SEO.description,
@@ -31,7 +26,6 @@ export default function SEOHead({
 
   return (
     <Helmet>
-      {/* ── ZÁKLADNÍ META TAGY ── */}
       <html lang="cs" />
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
@@ -39,47 +33,48 @@ export default function SEOHead({
       <link rel="canonical" href={canonical} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-      {/* ── OPEN GRAPH ── */}
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:locale" content="cs_CZ" />
 
-      {/* ── TWITTER CARD ── */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
-      {/* ── TELEFON (mobile) ── */}
       <meta name="format-detection" content="telephone=yes" />
 
-      {/* ── JSON-LD SCHEMA (per-page) ── */}
       {schema && (
-        <script type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
+        Array.isArray(schema)
+          ? schema.map((s, i) => (
+              <script key={i} type="application/ld+json">
+                {JSON.stringify(s)}
+              </script>
+            ))
+          : <script type="application/ld+json">{JSON.stringify(schema)}</script>
       )}
     </Helmet>
   );
 }
 
-/* ── PŘEDPŘIPRAVENÁ SCHEMA DATA ── */
-
 export const SCHEMAS = {
   localBusiness: {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': ['LocalBusiness', 'LawnCareService'],
     '@id': `${SITE_URL}/#business`,
     name: SITE_NAME,
-    image: `${SITE_URL}/logo.png`,
+    image: `${SITE_URL}/og-image.jpg`,
     description: 'Profesionální sekání trávy, likvidace pozemků a zahradnické služby ve Dvoře Králové nad Labem. Bezplatná obhlídka, cena vždy předem.',
     url: SITE_URL,
     telephone: SITE_PHONE,
-    priceRange: 'Kč Kč',
+    email: 'info@seknuto.cz',
+    priceRange: 'Kč',
     address: {
       '@type': 'PostalAddress',
       addressLocality: 'Dvůr Králové nad Labem',
@@ -102,14 +97,16 @@ export const SCHEMAS = {
       {
         '@type': 'OpeningHoursSpecification',
         dayOfWeek: 'Saturday',
-        opens: '08:00',
-        closes: '14:00',
+        opens: '09:00',
+        closes: '15:00',
       },
     ],
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: '5',
-      reviewCount: '20',
+      ratingValue: '5.0',
+      reviewCount: 24,
+      bestRating: '5',
+      worstRating: '1',
     },
     areaServed: [
       { '@type': 'City', name: 'Dvůr Králové nad Labem' },
@@ -117,6 +114,8 @@ export const SCHEMAS = {
       { '@type': 'City', name: 'Vrchlabí' },
       { '@type': 'City', name: 'Hostinné' },
       { '@type': 'City', name: 'Jaroměř' },
+      { '@type': 'City', name: 'Náchod' },
+      { '@type': 'City', name: 'Hořice' },
     ],
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
@@ -124,35 +123,19 @@ export const SCHEMAS = {
       itemListElement: [
         {
           '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Service',
-            name: 'Sekání trávy',
-            description: 'Profesionální sekání trávníku – cena po bezplatné obhlídce',
-          },
+          itemOffered: { '@type': 'Service', name: 'Sekání trávy', description: 'Profesionální sekání trávníku – cena po bezplatné obhlídce' },
         },
         {
           '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Service',
-            name: 'Likvidace a čištění pozemků',
-            description: 'Kompletní vyčištění zarostlých pozemků a parcel',
-          },
+          itemOffered: { '@type': 'Service', name: 'Likvidace a čištění pozemků', description: 'Kompletní vyčištění zarostlých pozemků a parcel' },
         },
         {
           '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Service',
-            name: 'Vertikutace trávníku',
-            description: 'Provzdušnění trávníku',
-          },
+          itemOffered: { '@type': 'Service', name: 'Vertikutace trávníku', description: 'Provzdušnění trávníku' },
         },
         {
           '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Service',
-            name: 'Celoroční VIP servis',
-            description: 'Kompletní celoroční péče o zahradu',
-          },
+          itemOffered: { '@type': 'Service', name: 'Celoroční VIP servis', description: 'Kompletní celoroční péče o zahradu' },
         },
       ],
     },
@@ -168,10 +151,7 @@ export const SCHEMAS = {
     mainEntity: items.map(({ question, answer }) => ({
       '@type': 'Question',
       name: question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: answer,
-      },
+      acceptedAnswer: { '@type': 'Answer', text: answer },
     })),
   }),
 
@@ -186,7 +166,7 @@ export const SCHEMAS = {
     })),
   }),
 
-  service: ({ name, description, price, priceCurrency = 'CZK', unitText = 'm²', areaServed = 'Dvůr Králové nad Labem' }) => ({
+  service: ({ name, description, areaServed = 'Dvůr Králové nad Labem' }) => ({
     '@context': 'https://schema.org',
     '@type': 'Service',
     serviceType: name,
@@ -203,18 +183,55 @@ export const SCHEMAS = {
       },
     },
     areaServed: { '@type': 'City', name: areaServed },
-    ...(price && {
-      offers: {
-        '@type': 'Offer',
-        price,
-        priceCurrency,
-        priceSpecification: {
-          '@type': 'UnitPriceSpecification',
-          price,
-          priceCurrency,
-          unitText,
-        },
-      },
-    }),
+  }),
+
+  blogPost: ({ title, description, slug, datePublished, dateModified, image }) => ({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description,
+    image: image || `${SITE_URL}/og-image.jpg`,
+    url: `${SITE_URL}/blog/${slug}`,
+    datePublished,
+    dateModified: dateModified || datePublished,
+    author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${slug}` },
+  }),
+
+  reviews: (reviewItems) => reviewItems.map((r) => ({
+    '@context': 'https://schema.org',
+    '@type': 'Review',
+    author: { '@type': 'Person', name: r.name },
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: String(r.rating),
+      bestRating: '5',
+      worstRating: '1',
+    },
+    reviewBody: r.text,
+    datePublished: r.isoDate || '2024-10-01',
+    itemReviewed: { '@type': 'LocalBusiness', name: SITE_NAME },
+  })),
+
+  localLanding: ({ cityName, citySlug }) => ({
+    '@context': 'https://schema.org',
+    '@type': ['LocalBusiness', 'LawnCareService'],
+    name: `${SITE_NAME} – ${cityName}`,
+    url: `${SITE_URL}/sekani-travy-${citySlug}`,
+    telephone: SITE_PHONE,
+    areaServed: { '@type': 'City', name: cityName },
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Dvůr Králové nad Labem',
+      addressRegion: 'Královéhradecký kraj',
+      postalCode: '544 01',
+      addressCountry: 'CZ',
+    },
+    aggregateRating: { '@type': 'AggregateRating', ratingValue: '5.0', reviewCount: 24 },
   }),
 };

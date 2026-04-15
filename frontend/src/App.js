@@ -24,6 +24,7 @@ import VoucherPage from "./pages/VoucherPage";
 import AdminPage from "./pages/AdminPage";
 import GalleryPage from "./pages/GalleryPage";
 import { BlogListPage, BlogDetailPage } from "./pages/BlogPage";
+import LocalLandingPage from "./pages/LocalLandingPage";
 
 // Set axios base timeout
 axios.defaults.timeout = 15000;
@@ -68,6 +69,11 @@ function App() {
                   <Route path="/nase-prace" element={<GalleryPage />} />
                   <Route path="/blog" element={<BlogListPage />} />
                   <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                  <Route path="/sekani-travy-trutnov" element={<LocalLandingPage citySlug="trutnov" />} />
+                  <Route path="/sekani-travy-vrchlabi" element={<LocalLandingPage citySlug="vrchlabi" />} />
+                  <Route path="/sekani-travy-jaromer" element={<LocalLandingPage citySlug="jaromer" />} />
+                  <Route path="/sekani-travy-nachod" element={<LocalLandingPage citySlug="nachod" />} />
+                  <Route path="/sekani-travy-hostinne" element={<LocalLandingPage citySlug="hostinne" />} />
                 </Routes>
               </main>
               <Footer />

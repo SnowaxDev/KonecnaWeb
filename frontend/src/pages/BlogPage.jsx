@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, Clock, ArrowRight, ArrowLeft, User, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import SEOHead, { SCHEMAS } from '../components/SEOHead';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -21,6 +22,16 @@ export function BlogListPage() {
 
   return (
     <div className="min-h-screen" data-testid="blog-list-page">
+      <SEOHead
+        title="Zahradní blog – Tipy a rady pro váš trávník | SeknuTo.cz"
+        description="Rady od profesionálních zahradníků z Dvůra Králové nad Labem. Jak pečovat o trávník, kdy vertikutovat, jak hnojit trávu a jak udržovat zahradu po celý rok."
+        canonical="https://seknuto.cz/blog"
+        keywords="zahradní blog, tipy pro trávník, kdy vertikutovat trávník, jak hnojit trávu, péče o zahradu Dvůr Králové"
+        schema={SCHEMAS.breadcrumb([
+          { name: 'Úvod', url: '/' },
+          { name: 'Blog', url: '/blog' },
+        ])}
+      />
       {/* Hero */}
       <section className="pt-28 pb-12 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F8FAFC]">
         <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
@@ -134,10 +145,32 @@ export function BlogDetailPage() {
 
   return (
     <div className="min-h-screen" data-testid="blog-detail-page">
+      <SEOHead
+        title={post.title}
+        description={post.excerpt || post.content?.replace(/<[^>]+>/g, '').substring(0, 155) || `${post.title} – zahradní tip od SeknuTo.cz`}
+        canonical={`https://seknuto.cz/blog/${post.slug}`}
+        image={post.cover_image || undefined}
+        keywords={`${post.title}, zahradní blog, tipy pro zahradu Dvůr Králové${post.category ? `, ${post.category}` : ''}`}
+        schema={[
+          SCHEMAS.breadcrumb([
+            { name: 'Úvod', url: '/' },
+            { name: 'Blog', url: '/blog' },
+            { name: post.title, url: `/blog/${post.slug}` },
+          ]),
+          SCHEMAS.blogPost({
+            title: post.title,
+            description: post.excerpt || post.content?.replace(/<[^>]+>/g, '').substring(0, 155) || '',
+            slug: post.slug,
+            datePublished: post.published_at,
+            dateModified: post.updated_at || post.published_at,
+            image: post.cover_image,
+          }),
+        ]}
+      />
       {/* Cover */}
       {post.cover_image ? (
         <div className="relative h-64 md:h-80 overflow-hidden mt-16">
-          <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover" />
+          <img src={post.cover_image} alt={`${post.title} – zahradní tipy SeknuTo.cz`} className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1B4332]/80 to-transparent" />
           <div className="absolute bottom-8 left-0 right-0 max-w-3xl mx-auto px-4">
             <span className="text-xs font-semibold text-[#52B788] uppercase tracking-wide">{post.category}</span>

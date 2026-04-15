@@ -77,6 +77,7 @@ const HomePage = () => {
       name: 'Markéta Horáčková',
       location: 'Dvůr Králové n. L.',
       date: 'Říjen 2024',
+      isoDate: '2024-10-15',
       rating: 5,
       text: 'Naprosto spokojená! Kluci přijeli přesně v domluveném čase, zahradu upravili do posledního detailu a po sobě vše uklidili. Cena odpovídá kvalitě. Určitě se vrátím na jarní balíček.',
       initials: 'MH',
@@ -86,6 +87,7 @@ const HomePage = () => {
       name: 'Tomáš Beneš',
       location: 'Trutnov',
       date: 'Září 2024',
+      isoDate: '2024-09-20',
       rating: 5,
       text: 'Objednal jsem sekání přerostlé zahrady po dvou měsících – vypadalo to beznadějně. SeknuTo.cz to zvládli za odpoledne a výsledek byl úžasný. Skvělý přístup, rychlá domluva přes WhatsApp.',
       initials: 'TB',
@@ -95,6 +97,7 @@ const HomePage = () => {
       name: 'Jana Procházková',
       location: 'Jaroměř',
       date: 'Srpen 2024',
+      isoDate: '2024-08-10',
       rating: 5,
       text: 'Využívám jejich VIP celoroční servis a jsem nadšená. Nemusím na nic myslet, přijedou pravidelně a zahrada je vždy v perfektním stavu. Skvělá investice pro každého, kdo to myslí se zahradou vážně.',
       initials: 'JP',
@@ -104,6 +107,7 @@ const HomePage = () => {
       name: 'Pavel Novotný',
       location: 'Náchod',
       date: 'Červen 2024',
+      isoDate: '2024-06-15',
       rating: 5,
       text: 'Rychlá reakce, férová cena a profesionální práce. Rezervace online fungovala bez problémů. Oceňuji, že hned potvrdili termín a přišli přesně. Doporučuji všem sousedům v okolí!',
       initials: 'PN',
@@ -135,7 +139,7 @@ const HomePage = () => {
         title="Sekání trávy a zahradnické služby Dvůr Králové | SeknuTo.cz"
         description="Profesionální sekání trávy, údržba zahrad a likvidace zarostlých pozemků ve Dvoře Králové nad Labem a okolí. Bezplatná obhlídka a kalkulace na míru. Volejte 730 588 372."
         keywords="sekání trávy Dvůr Králové, zahradnické služby, údržba zahrad, likvidace pozemků, čištění parcel, vertikutace trávníku, sekání trávy Trutnov, sekání trávy Vrchlabí, zahradník Dvůr Králové"
-        schema={SCHEMAS.localBusiness}
+        schema={[SCHEMAS.localBusiness, SCHEMAS.faqPage(faqItems), ...SCHEMAS.reviews(reviews)]}
       />
       {/* Hero Section */}
       <section className="relative pt-24 md:pt-28 pb-16 md:pb-24 overflow-hidden" data-testid="hero-section">
