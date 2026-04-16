@@ -1248,6 +1248,10 @@ const BlogTab = ({ token, handle401 }) => {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editPost, setEditPost] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const htmlFileRef = useRef(null);
+  const coverFileRef = useRef(null);
   const [form, setForm] = useState({
     title: '', slug: '', excerpt: '', content: '',
     category: 'Tipy', cover_image: '', author: 'SeknuTo.cz', read_time: 3, published: true
@@ -1313,6 +1317,50 @@ const BlogTab = ({ token, handle401 }) => {
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
 
+  // Handle HTML file upload
+  const handleHtmlUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
+      toast.error('Nahrajte prosím .html soubor');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      let html = ev.target.result;
+      // Extract only <body> content if full HTML document
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if (bodyMatch) html = bodyMatch[1].trim();
+      // Remove <script> tags for safety
+      html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+      setForm(f => ({ ...f, content: html }));
+      toast.success(`Obsah nahrán z ${file.name}`);
+    };
+    reader.readAsText(file, 'utf-8');
+    e.target.value = '';
+  };
+
+  // Handle cover image upload via gallery endpoint
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await axios.post(`${API}/admin/gallery/upload`, fd, {
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+      });
+      setForm(f => ({ ...f, cover_image: res.data.url }));
+      toast.success('Titulní fotka nahrána!');
+    } catch (err) {
+      if (!handle401(err)) toast.error('Nepodařilo se nahrát fotku');
+    } finally {
+      setUploadingCover(false);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Create/Edit form */}
@@ -1358,21 +1406,59 @@ const BlogTab = ({ token, handle401 }) => {
           </div>
           <div>
             <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">URL titulní fotky</Label>
-            <Input value={form.cover_image} onChange={e => setForm(f => ({ ...f, cover_image: e.target.value }))}
-              className="mt-1 h-10" placeholder="https://..." />
+            <div className="flex gap-2 mt-1">
+              <Input value={form.cover_image} onChange={e => setForm(f => ({ ...f, cover_image: e.target.value }))}
+                className="h-10 flex-1" placeholder="https://... nebo nahrajte soubor" />
+              <input type="file" ref={coverFileRef} className="hidden" accept="image/*" onChange={handleCoverUpload} />
+              <Button type="button" variant="outline" className="h-10 px-3 shrink-0" onClick={() => coverFileRef.current?.click()} disabled={uploadingCover}>
+                {uploadingCover ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              </Button>
+            </div>
+            {form.cover_image && (
+              <div className="mt-2 h-20 rounded-lg overflow-hidden border border-gray-200">
+                <img src={form.cover_image} alt="Cover preview" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
           <div>
-            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Obsah (HTML) *</Label>
-            <textarea
-              value={form.content}
-              onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-              rows={10}
-              required
-              className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#3FA34D]/50"
-              placeholder="<h2>Nadpis</h2><p>Text článku...</p>"
-              data-testid="blog-content-input"
-            />
-            <p className="text-xs text-gray-400 mt-1">Podporuje HTML tagy: &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;em&gt;</p>
+            <div className="flex items-center justify-between mb-1">
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Obsah (HTML) *</Label>
+              <div className="flex gap-2">
+                <input type="file" ref={htmlFileRef} className="hidden" accept=".html,.htm" onChange={handleHtmlUpload} />
+                <button type="button" onClick={() => htmlFileRef.current?.click()}
+                  className="flex items-center gap-1.5 text-xs font-medium text-[#3FA34D] hover:text-[#2d7a38] px-2 py-1 rounded-md hover:bg-[#F0FDF4] transition-colors"
+                  data-testid="blog-html-upload-btn"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Nahrát .html
+                </button>
+                <button type="button" onClick={() => setShowPreview(!showPreview)}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md transition-colors ${showPreview ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  {showPreview ? 'Editor' : 'Náhled'}
+                </button>
+              </div>
+            </div>
+            {showPreview ? (
+              <div 
+                className="mt-1 w-full min-h-[240px] max-h-[500px] overflow-auto rounded-md border border-gray-200 px-4 py-3 text-sm prose prose-sm prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-[#3FA34D] bg-white"
+                dangerouslySetInnerHTML={{ __html: form.content || '<p style="color:#999">Prázdný obsah – napište nebo nahrajte HTML...</p>' }}
+              />
+            ) : (
+              <textarea
+                value={form.content}
+                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                rows={10}
+                required
+                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#3FA34D]/50"
+                placeholder="<h2>Nadpis</h2><p>Text článku...</p>"
+                data-testid="blog-content-input"
+              />
+            )}
+            <p className="text-xs text-gray-400 mt-1">
+              Tip: Vytvořte článek v AI nástroji, exportujte jako .html a nahrajte sem.
+            </p>
           </div>
           <div className="flex items-center gap-3 pt-2">
             <label className="flex items-center gap-2 cursor-pointer">
