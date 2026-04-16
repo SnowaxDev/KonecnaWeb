@@ -25,8 +25,22 @@ const EmailPopup = () => {
     if (savedCoupon) return;
     if (popupClosed) return;
     
-    const timer = setTimeout(() => setIsOpen(true), 800);
-    return () => clearTimeout(timer);
+    // Show after 60 seconds
+    const timer = setTimeout(() => setIsOpen(true), 60000);
+
+    // Or show on exit-intent (mouse leaves viewport top)
+    const handleExitIntent = (e) => {
+      if (e.clientY <= 0 && !sessionStorage.getItem('seknuto_popup_closed')) {
+        setIsOpen(true);
+        document.removeEventListener('mouseout', handleExitIntent);
+      }
+    };
+    document.addEventListener('mouseout', handleExitIntent);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mouseout', handleExitIntent);
+    };
   }, []);
 
   const handleClose = () => {
