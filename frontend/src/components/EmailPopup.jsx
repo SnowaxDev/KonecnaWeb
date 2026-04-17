@@ -26,7 +26,7 @@ const EmailPopup = () => {
     if (popupClosed) return;
     
     // Show after 60 seconds
-    const timer = setTimeout(() => setIsOpen(true), 120000);
+    const timer = setTimeout(() => setIsOpen(true), 400000);
 
     // Or show on exit-intent (mouse leaves viewport top)
     const handleExitIntent = (e) => {
