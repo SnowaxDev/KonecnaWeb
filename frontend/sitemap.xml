@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="cs">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#3FA34D" />
+
+        <meta name="description" content="Profesionální sekání trávy ve Dvoře Králové nad Labem a okolí. Vertikutace, hnojení, likvidace pozemků, sezónní balíčky. Bezplatná prohlídka a kalkulace. 730 588 372" />
+        <meta name="keywords" content="sekání trávy Dvůr Králové, zahradník Dvůr Králové nad Labem, zahradnické služby Královéhradecký kraj, sekání trávy Trutnov, sekání trávy Vrchlabí, vertikutace trávníku, hnojení trávy, údržba zahrady, likvidace pozemků" />
+        <meta name="author" content="SeknuTo.cz" />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <!-- canonical is set per-page by react-helmet-async -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="SeknuTo.cz" />
+        <meta property="og:title" content="SeknuTo.cz – Sekání trávy Dvůr Králové | Bezplatná prohlídka" />
+        <meta property="og:description" content="Profesionální sekání trávy a zahradnické služby ve Dvoře Králové nad Labem. Bezplatná prohlídka a kalkulace. 730 588 372" />
+        <meta property="og:url" content="https://seknuto.cz" />
+        <meta property="og:image" content="https://seknuto.cz/og-image.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="cs_CZ" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="SeknuTo.cz – Sekání trávy Dvůr Králové" />
+        <meta name="twitter:description" content="Profesionální sekání trávy a zahradnické služby. Bezplatná prohlídka. 730 588 372" />
+        <meta name="twitter:image" content="https://seknuto.cz/og-image.jpg" />
+
+        <meta name="geo.region" content="CZ-52" />
+        <meta name="geo.placename" content="Dvůr Králové nad Labem" />
+        <meta name="geo.position" content="50.4318;15.8142" />
+        <meta name="ICBM" content="50.4318, 15.8142" />
+        <meta name="format-detection" content="telephone=yes" />
+
+        <title>SeknuTo.cz – Sekání trávy Dvůr Králové nad Labem</title>
+
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/logo192.png" />
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+        <link rel="alternate" hreflang="cs" href="https://seknuto.cz" />
+        <link rel="alternate" hreflang="x-default" href="https://seknuto.cz" />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": ["LocalBusiness", "LawnCareService"],
+          "@id": "https://seknuto.cz/#business",
+          "name": "SeknuTo.cz",
+          "description": "Profesionální sekání trávy a zahradnické služby ve Dvoře Králové nad Labem a okolí.",
+          "url": "https://seknuto.cz",
+          "telephone": "+420730588372",
+          "email": "info@seknuto.cz",
+          "image": "https://seknuto.cz/og-image.jpg",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Dvůr Králové nad Labem",
+            "addressRegion": "Královéhradecký kraj",
+            "postalCode": "544 01",
+            "addressCountry": "CZ"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 50.4318,
+            "longitude": 15.8142
+          },
+          "areaServed": [
+            {"@type": "City", "name": "Dvůr Králové nad Labem"},
+            {"@type": "City", "name": "Trutnov"},
+            {"@type": "City", "name": "Vrchlabí"},
+            {"@type": "City", "name": "Hostinné"},
+            {"@type": "City", "name": "Jaroměř"},
+            {"@type": "City", "name": "Náchod"},
+            {"@type": "City", "name": "Hořice"}
+          ],
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+              "opens": "08:00", "closes": "18:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "Saturday",
+              "opens": "09:00", "closes": "15:00"
+            }
+          ],
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5.0",
+            "reviewCount": 24,
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "sameAs": [
+            "https://www.facebook.com/seknuto.cz",
+            "https://www.instagram.com/seknuto.cz"
+          ]
+        }
+        </script>
+    </head>
+    <body>
+        <noscript>
+            <div style="font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px">
+                <h1>SeknuTo.cz – Sekání trávy Dvůr Králové nad Labem</h1>
+                <p>Profesionální sekání trávy a zahradnické služby ve Dvoře Králové nad Labem a okolí (Trutnov, Vrchlabí, Jaroměř, Náchod). Bezplatná prohlídka a kalkulace zdarma.</p>
+                <h2>Naše služby</h2>
+                <ul>
+                    <li>Sekání trávy – pravidelné i jednorázové</li>
+                    <li>Likvidace a čištění zarostlých pozemků</li>
+                    <li>Střihaní keřů</li></li>
+                    <li>Zahradnicke práce</li>
+                    <li>Vertikutace trávníku</li>
+                    <li>Hnojení trávy</li>
+                    <li>Sezónní balíčky – jarní, letní, podzimní</li>
+                    <li>Celoroční VIP servis</li>
+                </ul>
+                <h2>Kontakt</h2>
+                <p>Telefon: <a href="tel:+420730588372">730 588 372</a></p>
+                <p>Oblast: Dvůr Králové nad Labem a okolí do 30 km</p>
+            </div>
+        </noscript>
+        <div id="root"></div>
+    </body>
+</html>

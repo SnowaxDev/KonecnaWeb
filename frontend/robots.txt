@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ===== Hlavní stránky ===== -->
+
+  <url>
+    <loc>https://seknuto.cz/</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/sluzby</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sluzby"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/cenik</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/cenik"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/rezervace</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/rezervace"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/nase-prace</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/nase-prace"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/blog</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/blog"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/o-nas</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.65</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/o-nas"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/kontakt</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/kontakt"/>
+  </url>
+
+  <!-- ===== Lokální landing pages ===== -->
+
+  <url>
+    <loc>https://seknuto.cz/sekani-travy-trutnov</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sekani-travy-trutnov"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/sekani-travy-vrchlabi</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sekani-travy-vrchlabi"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/sekani-travy-jaromer</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sekani-travy-jaromer"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/sekani-travy-nachod</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sekani-travy-nachod"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/sekani-travy-hostinne</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sekani-travy-hostinne"/>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/sekani-travy-horice</loc>
+    <lastmod>2026-05-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="cs" href="https://seknuto.cz/sekani-travy-horice"/>
+  </url>
+
+</urlset>
