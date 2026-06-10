@@ -24,11 +24,11 @@ const HomePage = () => {
       features: ['Sekání bez hnojení', 'Sekání s hnojením NPK', 'Hrubé sekání přerostlé trávy'],
     },
     {
-      icon: Sprout,
-      title: 'Sezónní balíčky',
-      description: 'Kompletní péče o trávník po celé sezóně – jaro, léto, podzim i zima.',
-      price: 'Individuální kalkulace',
-      features: ['Jarní restart trávníku', 'Letní pravidelná údržba', 'Podzimní příprava na zimu'],
+      icon: TreeDeciduous,
+      title: 'Stříhání keřů a kácení stromů',
+      description: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez a kácení stromů.',
+      price: 'Cena po obhlídce',
+      features: ['Stříhání keřů, tújí a živých plotů', 'Ořez a tvarování stromů', 'Kácení stromů a odvoz větví'],
     },
     {
       icon: Flame,

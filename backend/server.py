@@ -91,6 +91,8 @@ SERVICE_NAMES = {
     'autumn_package': 'Podzimní balíček',
     'winter_snow': 'Zimní balíček',
     'vip_annual': 'VIP Celoroční',
+    'land_clearing': 'Likvidace a čištění pozemků',
+    'tree_shrub_care': 'Stříhání keřů a kácení stromů',
     'garden_work': 'Zahradnické práce',
     'debris_removal': 'Odvoz odpadu',
     'debris_hourly': 'Odvoz odpadu',
@@ -344,6 +346,7 @@ SERVICE_PRICES = {
     
     # Projektové služby (cena po domluvě)
     "land_clearing": 0,            # Likvidace a čištění pozemků - projektová cena
+    "tree_shrub_care": 0,          # Stříhání keřů a kácení stromů - projektová cena
     "garden_work": 0,              # Zahradnické práce - dle rozsahu
     "debris_hourly": 0,            # Odvoz odpadu - dle objemu
     
@@ -417,6 +420,8 @@ SERVICE_NAMES_CZ = {
     "autumn_package": "🍂 Podzimní balíček – Příprava na zimu",
     "winter_snow": "❄️ Zimní balíček – Úklid sněhu",
     "vip_annual": "🌀 Celoroční VIP servis",
+    "land_clearing": "Likvidace a čištění pozemků",
+    "tree_shrub_care": "Stříhání keřů a kácení stromů",
     "garden_work": "Zahradnické práce (ruční)",
     "debris_hourly": "Odvoz odpadu (hodinová sazba)",
     "other": "Jiná služba",

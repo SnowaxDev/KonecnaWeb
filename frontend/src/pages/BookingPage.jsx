@@ -178,6 +178,7 @@ const BookingPage = () => {
     { id: 'lawn_with_fertilizer', icon: Sprout, title: 'Sekání trávy (s hnojením)', price: 'Po obhlídce', unit: 'project', info: '✓ Úklid posečené trávy v ceně' },
     { id: 'overgrown', icon: Leaf, title: 'Přerostlá tráva / hrubé sekání', price: 'Po obhlídce', unit: 'project', info: '✓ Úklid posečené trávy v ceně' },
     { id: 'land_clearing', icon: Flame, title: 'Likvidace a čištění pozemků', price: 'Po obhlídce', unit: 'project', info: 'Zarostlé parcely, křoviny, náletové dřeviny' },
+    { id: 'tree_shrub_care', icon: TreeDeciduous, title: 'Stříhání keřů a kácení stromů', price: 'Po obhlídce', unit: 'project', info: 'Keře, túje, živé ploty, ořez a kácení stromů' },
     { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: 'Po domluvě', unit: 'project', info: 'Pletí, výsadba, úpravy terénu' },
     { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: 'Po domluvě', unit: 'project', info: 'Nakládka a ekologická likvidace' },
   ];

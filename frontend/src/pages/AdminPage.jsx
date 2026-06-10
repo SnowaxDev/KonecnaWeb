@@ -40,6 +40,8 @@ const SERVICE_NAMES = {
   autumn_package: 'Podzimní balíček',
   winter_snow: 'Zimní balíček',
   vip_annual: 'VIP Celoroční',
+  land_clearing: 'Likvidace a čištění pozemků',
+  tree_shrub_care: 'Stříhání keřů a kácení stromů',
   garden_work: 'Zahradnické práce',
   debris_hourly: 'Odvoz odpadu',
   other: 'Jiná služba',
