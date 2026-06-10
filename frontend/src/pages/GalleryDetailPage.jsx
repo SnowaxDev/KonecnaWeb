@@ -11,6 +11,11 @@ import { SAMPLE_PROJECTS, normalizeProject, parseVideo } from '../data/galleryDa
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Štítky a barvy podle typu fotky
+const PHOTO_LABEL = { before: 'PŘED', after: 'PO', extra: 'FOTO' };
+const PHOTO_BADGE = { before: 'bg-red-500', after: 'bg-[#3FA34D]', extra: 'bg-[#1B4332]' };
+const PHOTO_BADGE_SOFT = { before: 'bg-red-500/90', after: 'bg-[#3FA34D]/90', extra: 'bg-[#1B4332]/90' };
+
 // Jednoduchý lightbox na jednotlivé fotky
 const PhotoLightbox = ({ photos, index, onClose, onPrev, onNext }) => {
   useEffect(() => {
@@ -34,7 +39,7 @@ const PhotoLightbox = ({ photos, index, onClose, onPrev, onNext }) => {
         className="max-w-full max-h-[85vh] object-contain rounded-lg"
         onClick={e => e.stopPropagation()}
       />
-      <span className={`absolute top-4 left-4 text-xs font-bold px-3 py-1.5 rounded-full text-white ${photo.type === 'before' ? 'bg-red-500' : 'bg-[#3FA34D]'}`}>
+      <span className={`absolute top-4 left-4 text-xs font-bold px-3 py-1.5 rounded-full text-white ${PHOTO_BADGE[photo.type] || PHOTO_BADGE.extra}`}>
         {photo.label}
       </span>
       <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
@@ -123,18 +128,21 @@ export default function GalleryDetailPage() {
 
   const beforeImages = project.before_images;
   const afterImages = project.after_images;
+  const extraImages = project.extra_images;
 
-  // Dvojice PŘED/PO pro slidery; fotky navíc se zobrazí samostatně
+  // Dvojice PŘED/PO pro slidery; nepárové fotky a fotky navíc se zobrazí samostatně
   const pairCount = Math.min(beforeImages.length, afterImages.length);
   const extraPhotos = [
     ...beforeImages.slice(pairCount).map(url => ({ url, type: 'before' })),
     ...afterImages.slice(pairCount).map(url => ({ url, type: 'after' })),
+    ...extraImages.map(url => ({ url, type: 'extra' })),
   ];
 
-  // Všechny fotky pro lightbox (PŘED pak PO)
+  // Všechny fotky pro lightbox (PŘED, PO, pak další)
   const allPhotos = [
     ...beforeImages.map(url => ({ url, type: 'before', label: 'PŘED' })),
     ...afterImages.map(url => ({ url, type: 'after', label: 'PO' })),
+    ...extraImages.map(url => ({ url, type: 'extra', label: 'FOTO' })),
   ];
 
   const openLightbox = (url) => {
@@ -162,7 +170,7 @@ export default function GalleryDetailPage() {
             title: project.title,
             description: project.description,
             slug: project.slug,
-            images: [...afterImages, ...beforeImages],
+            images: [...afterImages, ...beforeImages, ...extraImages],
             videos: project.videos,
             uploadDate: project.created_at?.slice(0, 10),
           }),
@@ -290,10 +298,10 @@ export default function GalleryDetailPage() {
                     onClick={() => openLightbox(photo.url)}
                     className="relative aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 shadow-sm group"
                   >
-                    <img src={photo.url} alt={photo.type === 'before' ? 'Před' : 'Po'} loading="lazy"
+                    <img src={photo.url} alt={PHOTO_LABEL[photo.type]} loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <span className={`absolute bottom-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${photo.type === 'before' ? 'bg-red-500' : 'bg-[#3FA34D]'}`}>
-                      {photo.type === 'before' ? 'PŘED' : 'PO'}
+                    <span className={`absolute bottom-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${PHOTO_BADGE[photo.type]}`}>
+                      {PHOTO_LABEL[photo.type]}
                     </span>
                   </button>
                 ))}
@@ -317,7 +325,7 @@ export default function GalleryDetailPage() {
                   >
                     <img src={photo.url} alt={photo.label} loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <span className={`absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded text-white ${photo.type === 'before' ? 'bg-red-500/90' : 'bg-[#3FA34D]/90'}`}>
+                    <span className={`absolute bottom-1.5 left-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded text-white ${PHOTO_BADGE_SOFT[photo.type]}`}>
                       {photo.label}
                     </span>
                   </button>

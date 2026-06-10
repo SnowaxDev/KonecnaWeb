@@ -1342,6 +1342,7 @@ class GalleryProjectCreate(BaseModel):
     after_image: str = ""           # legacy: jedna fotka PO (URL)
     before_images: List[str] = []   # více fotek PŘED
     after_images: List[str] = []    # více fotek PO
+    extra_images: List[str] = []    # další fotky (volitelné, mimo před/po)
     services: List[str] = []        # provedené práce (odrážky na detailu)
     area: str = ""                  # výměra, např. "450 m²"
     duration: str = ""              # doba realizace, např. "1 den"
@@ -1365,12 +1366,13 @@ async def list_gallery_projects():
             "photo_count": {"$add": [
                 {"$size": {"$ifNull": ["$before_images", []]}},
                 {"$size": {"$ifNull": ["$after_images", []]}},
+                {"$size": {"$ifNull": ["$extra_images", []]}},
             ]},
             "video_count": {"$size": {"$ifNull": ["$videos", []]}},
             "before_images": {"$slice": [{"$ifNull": ["$before_images", []]}, 1]},
             "after_images": {"$slice": [{"$ifNull": ["$after_images", []]}, 1]},
         }},
-        {"$project": {"_id": 0, "videos": 0}},
+        {"$project": {"_id": 0, "videos": 0, "extra_images": 0}},
     ]
     projects = await db.gallery_projects.aggregate(pipeline).to_list(100)
     return projects
@@ -1405,6 +1407,7 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
         "after_image": after_images[0],
         "before_images": before_images,
         "after_images": after_images,
+        "extra_images": data.extra_images,
         "services": data.services,
         "area": data.area,
         "duration": data.duration,

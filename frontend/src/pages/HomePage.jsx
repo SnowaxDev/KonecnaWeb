@@ -14,6 +14,7 @@ import {
 } from '../components/ui/accordion';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import Reveal from '../components/Reveal';
+import CountUp from '../components/CountUp';
 
 const HomePage = () => {
   const services = [
@@ -284,7 +285,7 @@ const HomePage = () => {
                 data-testid={`service-card-${idx}`}
               >
                 <CardContent className="p-5 sm:p-6 md:p-8">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#2E8B3E] rounded-xl flex items-center justify-center mb-5 shadow-md">
+                  <div className="icon-pop w-12 h-12 sm:w-14 sm:h-14 bg-[#2E8B3E] rounded-xl flex items-center justify-center mb-5 shadow-md">
                     <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-[#111827] mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -336,21 +337,21 @@ const HomePage = () => {
       {/* Why Choose Us */}
       <section className="py-16 md:py-24 bg-[#F8FAFC]" data-testid="why-us-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111827] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Proč si vybrat naše služby?
             </h2>
             <p className="text-[#374151] max-w-2xl mx-auto text-base sm:text-lg font-medium">
-              Mladý tým s energií a profesionálním přístupem. 
+              Mladý tým s energií a profesionálním přístupem.
               Cenu znáte vždy předem, bez skrytých poplatků.
             </p>
-          </div>
+          </Reveal>
 
           {/* How it works */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-16">
             {steps.map((step, idx) => (
-              <div key={idx} className="text-center" data-testid={`step-${idx}`}>
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md border border-gray-100">
+              <Reveal key={idx} delay={idx * 100} className="text-center group" data-testid={`step-${idx}`}>
+                <div className="icon-pop w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md border border-gray-100">
                   <step.icon className="w-7 h-7 text-[#3FA34D]" />
                 </div>
                 <p className="text-sm text-[#9CA3AF] mb-1">{idx + 1}.</p>
@@ -358,23 +359,25 @@ const HomePage = () => {
                   {step.title}
                 </h4>
                 <p className="text-sm text-[#4B5563]">{step.description}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, idx) => (
-              <div 
-                key={idx} 
-                className="bg-white rounded-xl p-6 text-center shadow-sm border border-gray-100"
+              <Reveal
+                key={idx}
+                delay={idx * 90}
+                variant="reveal-scale"
+                className="bg-white rounded-xl p-6 text-center shadow-sm border border-gray-100 lift-hover"
                 data-testid={`stat-${idx}`}
               >
                 <p className="text-3xl md:text-4xl font-bold text-[#3FA34D] mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  {stat.value}
+                  <CountUp value={stat.value} />
                 </p>
                 <p className="text-sm text-[#4B5563]">{stat.label}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -383,7 +386,7 @@ const HomePage = () => {
       {/* Reviews Section */}
       <section className="py-16 md:py-24 bg-[#F0FDF4]" data-testid="reviews-section">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <span className="inline-block text-xs font-semibold tracking-widest text-[#3FA34D] uppercase mb-3 bg-[#3FA34D]/10 px-4 py-1.5 rounded-full">
               Hodnocení zákazníků
             </span>
@@ -396,13 +399,14 @@ const HomePage = () => {
               ))}
             </div>
             <p className="text-[#4B5563] text-sm">Průměrné hodnocení 5.0 ze 5 — přes 20 recenzí</p>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {reviews.map((review, idx) => (
-              <div
+              <Reveal
                 key={idx}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                delay={(idx % 3) * 110}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow lift-hover"
                 data-testid={`review-card-${idx}`}
               >
                 <div className="flex items-center gap-1 mb-4">
@@ -425,7 +429,7 @@ const HomePage = () => {
                     <p className="text-xs text-gray-400">{review.location} · {review.date}</p>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -434,15 +438,16 @@ const HomePage = () => {
       {/* FAQ Section */}
       <section className="py-16 md:py-24 bg-white" data-testid="faq-section">
         <div className="max-w-3xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Často kladené otázky
             </h2>
             <p className="text-[#4B5563]">
               Odpovědi na nejčastější otázky o našich službách a praktické rady pro vaši zahradu.
             </p>
-          </div>
+          </Reveal>
 
+          <Reveal>
           <Accordion type="single" collapsible className="space-y-4">
             {faqItems.map((item, idx) => (
               <AccordionItem 
@@ -460,6 +465,7 @@ const HomePage = () => {
               </AccordionItem>
             ))}
           </Accordion>
+          </Reveal>
         </div>
       </section>
 

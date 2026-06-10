@@ -771,11 +771,11 @@ const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů 
 const EMPTY_GALLERY_FORM = {
   title: '', category: 'Sekání', location: '', date: '',
   description: '', area: '', duration: '', services: '', videos: '',
-  before_images: [], after_images: [], published: true,
+  before_images: [], after_images: [], extra_images: [], published: true,
 };
 
 // Pole pro více fotek – nahrání souborů (i více najednou), přidání přes URL, mazání a náhledy
-const MultiImageField = ({ label, badge, badgeColor, images, uploading, onUploadFiles, onAddUrl, onRemove, testId }) => {
+const MultiImageField = ({ label, badge, badgeColor, images, uploading, onUploadFiles, onAddUrl, onRemove, testId, required = false, hint }) => {
   const [url, setUrl] = useState('');
   const fileRef = useRef(null);
 
@@ -789,7 +789,7 @@ const MultiImageField = ({ label, badge, badgeColor, images, uploading, onUpload
   return (
     <div className="space-y-2">
       <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-        {label} * <span className="normal-case font-normal text-gray-400">({images.length} {images.length === 1 ? 'fotka' : 'fotek'})</span>
+        {label}{required && ' *'} <span className="normal-case font-normal text-gray-400">({images.length} {images.length === 1 ? 'fotka' : 'fotek'})</span>
       </Label>
 
       {/* Náhledy nahraných fotek */}
@@ -849,7 +849,7 @@ const MultiImageField = ({ label, badge, badgeColor, images, uploading, onUpload
           }
         </Button>
       </div>
-      <p className="text-[11px] text-gray-400">První fotka je úvodní – zobrazí se v náhledu na webu. Můžete vybrat více souborů najednou.</p>
+      <p className="text-[11px] text-gray-400">{hint || 'Můžete vybrat více souborů najednou.'}</p>
     </div>
   );
 };
@@ -861,6 +861,7 @@ const GalleryTab = ({ token, handle401 }) => {
   const [editProject, setEditProject] = useState(null);
   const [uploadingBefore, setUploadingBefore] = useState(false);
   const [uploadingAfter, setUploadingAfter] = useState(false);
+  const [uploadingExtra, setUploadingExtra] = useState(false);
   const [form, setForm] = useState(EMPTY_GALLERY_FORM);
   const headers = { 'X-Admin-Token': token };
 
@@ -876,10 +877,10 @@ const GalleryTab = ({ token, handle401 }) => {
   useEffect(() => { load(); }, [load]);
 
   // Upload více souborů najednou → backend /admin/gallery/upload
+  const setUploadingFor = { before_images: setUploadingBefore, after_images: setUploadingAfter, extra_images: setUploadingExtra };
   const uploadFiles = async (files, field) => {
     if (files.length === 0) return;
-    const isB = field === 'before_images';
-    if (isB) setUploadingBefore(true); else setUploadingAfter(true);
+    setUploadingFor[field](true);
     let uploaded = 0;
     try {
       for (const file of files) {
@@ -898,7 +899,7 @@ const GalleryTab = ({ token, handle401 }) => {
       if (!handle401(err)) toast.error(parseError(err) || 'Nepodařilo se nahrát fotku');
       if (uploaded > 0) toast.info(`Nahráno ${uploaded} z ${files.length} fotek`);
     } finally {
-      if (isB) setUploadingBefore(false); else setUploadingAfter(false);
+      setUploadingFor[field](false);
     }
   };
 
@@ -951,6 +952,7 @@ const GalleryTab = ({ token, handle401 }) => {
       videos: (p.videos || []).join('\n'),
       before_images: (p.before_images?.length > 0) ? p.before_images : [p.before_image].filter(Boolean),
       after_images: (p.after_images?.length > 0) ? p.after_images : [p.after_image].filter(Boolean),
+      extra_images: p.extra_images || [],
       published: p.published,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1045,6 +1047,8 @@ const GalleryTab = ({ token, handle401 }) => {
             onAddUrl={url => addImageUrl('before_images', url)}
             onRemove={i => removeImage('before_images', i)}
             testId="before"
+            required
+            hint="První fotka je úvodní – zobrazí se v náhledu na webu. Můžete vybrat více souborů najednou."
           />
 
           {/* After images with multi-upload */}
@@ -1058,6 +1062,22 @@ const GalleryTab = ({ token, handle401 }) => {
             onAddUrl={url => addImageUrl('after_images', url)}
             onRemove={i => removeImage('after_images', i)}
             testId="after"
+            required
+            hint="První fotka je úvodní – zobrazí se v náhledu na webu. Můžete vybrat více souborů najednou."
+          />
+
+          {/* Extra images (optional) */}
+          <MultiImageField
+            label="Další fotky (nepovinné)"
+            badge="FOTO"
+            badgeColor="bg-[#1B4332]/90"
+            images={form.extra_images}
+            uploading={uploadingExtra}
+            onUploadFiles={files => uploadFiles(files, 'extra_images')}
+            onAddUrl={url => addImageUrl('extra_images', url)}
+            onRemove={i => removeImage('extra_images', i)}
+            testId="extra"
+            hint="Fotky navíc mimo porovnání před/po – na detailu projektu se zobrazí v sekci Další fotky."
           />
 
           <div className="flex items-center gap-3 pt-2">

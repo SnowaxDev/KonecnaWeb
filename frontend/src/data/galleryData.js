@@ -53,18 +53,20 @@ export const TAG_COLORS = {
 export const normalizeProject = (p) => {
   const before_images = (p.before_images && p.before_images.length > 0) ? p.before_images : [p.before_image || p.before].filter(Boolean);
   const after_images = (p.after_images && p.after_images.length > 0) ? p.after_images : [p.after_image || p.after].filter(Boolean);
+  const extra_images = p.extra_images || [];
   return {
     ...p,
     slug: p.slug || p.id,
     tagColor: p.tagColor || TAG_COLORS[p.tag] || TAG_COLORS[p.category] || 'bg-gray-100 text-gray-700',
     before_images,
     after_images,
+    extra_images,
     services: p.services || [],
     area: p.area || '',
     duration: p.duration || '',
     videos: p.videos || [],
     // Seznamový endpoint posílá jen první fotky + počty; u plných dat se počty dopočítají
-    photo_count: p.photo_count || (before_images.length + after_images.length),
+    photo_count: p.photo_count || (before_images.length + after_images.length + extra_images.length),
     video_count: p.video_count ?? (p.videos || []).length,
   };
 };
