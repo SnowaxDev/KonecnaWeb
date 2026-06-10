@@ -1,172 +1,58 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ArrowRight, Images } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import BeforeAfterSlider from '../components/BeforeAfterSlider';
+import { SAMPLE_PROJECTS, normalizeProject } from '../data/galleryData';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Fallback sample projects (shown when DB is empty)
-const SAMPLE_PROJECTS = [
-  {
-    id: 'sample-1', title: 'Přerostlá louka → luxusní trávník', category: 'Hrubé sekání',
-    location: 'Dvůr Králové n. L.', date: 'Září 2024',
-    description: 'Zahrada nebyla sekána celé léto. Po hrubém sekání vznikl čistý základ pro pravidelnou údržbu.',
-    before_image: 'https://images.unsplash.com/photo-1723291056776-aec9c390b1d8?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after_image: 'https://images.unsplash.com/photo-1594498653385-d5172c532c00?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Hrubé sekání', tagColor: 'bg-orange-100 text-orange-800',
-  },
-  {
-    id: 'sample-2', title: 'Jarní restart zahrady', category: 'Jarní balíček',
-    location: 'Trutnov', date: 'Duben 2024',
-    description: 'Jarní balíček zahrnoval vertikutaci, hnojení a první sekání sezóny.',
-    before_image: 'https://images.unsplash.com/photo-1738669375238-749c847502cb?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after_image: 'https://images.unsplash.com/photo-1661133732576-6140941d5421?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Jarní balíček', tagColor: 'bg-pink-100 text-pink-800',
-  },
-  {
-    id: 'sample-3', title: 'Pravidelná letní údržba', category: 'Letní balíček',
-    location: 'Jaroměř', date: 'Červenec 2024',
-    description: 'Letní balíček s pravidelným sekáním každé 2 týdny.',
-    before_image: 'https://images.unsplash.com/photo-1768055418561-93437e061b32?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after_image: 'https://images.unsplash.com/photo-1759750909584-b96825e93de8?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Letní balíček', tagColor: 'bg-yellow-100 text-yellow-800',
-  },
-  {
-    id: 'sample-4', title: 'Podzimní příprava na zimu', category: 'Podzimní balíček',
-    location: 'Náchod', date: 'Říjen 2024',
-    description: 'Podzimní balíček: úklid listí, poslední sekání, přihnojení na zimu.',
-    before_image: 'https://images.unsplash.com/photo-1726484204083-7c9c1daf31b7?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    after_image: 'https://images.unsplash.com/photo-1743627621279-e34a2efac6ac?crop=entropy&cs=srgb&fm=jpg&w=800&q=80',
-    tag: 'Podzimní balíček', tagColor: 'bg-amber-100 text-amber-800',
-  },
-];
-
-const TAG_COLORS = {
-  'Hrubé sekání': 'bg-orange-100 text-orange-800',
-  'Jarní balíček': 'bg-pink-100 text-pink-800',
-  'Letní balíček': 'bg-yellow-100 text-yellow-800',
-  'Podzimní balíček': 'bg-amber-100 text-amber-800',
-  'Sekání': 'bg-green-100 text-green-800',
-  'Zahradní práce': 'bg-teal-100 text-teal-800',
-};
-
-const normalizeProject = (p) => ({
-  ...p,
-  tagColor: p.tagColor || TAG_COLORS[p.tag] || TAG_COLORS[p.category] || 'bg-gray-100 text-gray-700',
-});
-
-const CATEGORIES = ['Vše', 'Hrubé sekání', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček'];
-
-// Before/After slider component
-const BeforeAfterCard = ({ project, onOpen }) => {
-  const [hover, setHover] = useState(false);
+// Karta projektu s interaktivním PŘED/PO sliderem, proklik na detail
+const BeforeAfterCard = ({ project }) => {
+  const photoCount = (project.before_images?.length || 0) + (project.after_images?.length || 0);
 
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer group"
-      onClick={() => onOpen(project)}
+      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
       data-testid={`gallery-card-${project.id}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
-        {/* Before image */}
-        <img
-          src={project.before_image || project.before}
-          alt={`Před – ${project.title}`}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${hover ? 'opacity-0' : 'opacity-100'}`}
+      <div className="relative aspect-[4/3]">
+        <BeforeAfterSlider
+          before={project.before_images[0]}
+          after={project.after_images[0]}
+          alt={project.title}
+          className="absolute inset-0"
         />
-        {/* After image */}
-        <img
-          src={project.after_image || project.after}
-          alt={`Po – ${project.title}`}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${hover ? 'opacity-100' : 'opacity-0'}`}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-        />
-
-        {/* Before/After label */}
-        <div className="absolute inset-0 flex items-end p-3 gap-2"
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-        >
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full transition-all ${hover ? 'bg-[#3FA34D] text-white' : 'bg-red-500 text-white'}`}>
-            {hover ? 'PO' : 'PŘED'}
-          </span>
-          <span className="text-xs text-white/80 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-            Najeďte myší pro zobrazení výsledku
-          </span>
-        </div>
 
         {/* Tag */}
-        <span className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full ${project.tagColor}`}>
+        <span className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full pointer-events-none ${project.tagColor}`}>
           {project.tag}
         </span>
+
+        {/* Počet fotek */}
+        {photoCount > 2 && (
+          <span className="absolute top-3 left-3 flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-black/50 text-white backdrop-blur-sm pointer-events-none">
+            <Images className="w-3.5 h-3.5" /> {photoCount} fotek
+          </span>
+        )}
       </div>
 
-      <div className="p-4">
-        <h3 className="font-bold text-gray-900 mb-1 text-sm group-hover:text-[#3FA34D] transition-colors" style={{ fontFamily: 'Poppins, sans-serif' }}>
-          {project.title}
-        </h3>
-        <p className="text-xs text-gray-500">{project.location} · {project.date}</p>
-      </div>
-    </div>
-  );
-};
-
-// Lightbox modal
-const Lightbox = ({ project, onClose, onPrev, onNext }) => {
-  const [showAfter, setShowAfter] = useState(false);
-
-  if (!project) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl"
-        onClick={e => e.stopPropagation()}
-        data-testid="lightbox-modal"
-      >
-        <div className="relative aspect-video bg-gray-900">
-          <img
-            src={showAfter ? (project.after_image || project.after) : (project.before_image || project.before)}
-            alt={showAfter ? 'Po' : 'Před'}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            <button
-              onClick={() => setShowAfter(false)}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${!showAfter ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/40'}`}
-            >
-              PŘED
-            </button>
-            <button
-              onClick={() => setShowAfter(true)}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${showAfter ? 'bg-[#3FA34D] text-white' : 'bg-white/20 text-white hover:bg-white/40'}`}
-            >
-              PO
-            </button>
+      <Link to={`/nase-prace/${project.slug}`} className="block p-4 hover:bg-gray-50 transition-colors">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-bold text-gray-900 mb-1 text-sm group-hover:text-[#3FA34D] transition-colors truncate" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {project.title}
+            </h3>
+            <p className="text-xs text-gray-500">{project.location} · {project.date}</p>
           </div>
-          <button onClick={onClose} className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full hover:bg-black/70">
-            <X className="w-5 h-5" />
-          </button>
-          <button onClick={onPrev} className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button onClick={onNext} className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70">
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-[#3FA34D]">
+            Detail <ArrowRight className="w-3.5 h-3.5" />
+          </span>
         </div>
-        <div className="p-6">
-          <div className="flex items-start justify-between gap-4 mb-3">
-            <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>{project.title}</h2>
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${project.tagColor}`}>{project.tag}</span>
-          </div>
-          <p className="text-gray-600 text-sm mb-2">{project.description}</p>
-          <p className="text-xs text-gray-400">{project.location} · {project.date}</p>
-        </div>
-      </div>
+      </Link>
     </div>
   );
 };
@@ -175,12 +61,11 @@ export default function GalleryPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('Vše');
-  const [lightboxProject, setLightboxProject] = useState(null);
 
   useEffect(() => {
     axios.get(`${API}/gallery/projects`)
-      .then(r => setProjects(r.data.length > 0 ? r.data.map(normalizeProject) : SAMPLE_PROJECTS))
-      .catch(() => setProjects(SAMPLE_PROJECTS))
+      .then(r => setProjects((r.data.length > 0 ? r.data : SAMPLE_PROJECTS).map(normalizeProject)))
+      .catch(() => setProjects(SAMPLE_PROJECTS.map(normalizeProject)))
       .finally(() => setLoading(false));
   }, []);
 
@@ -191,23 +76,11 @@ export default function GalleryPage() {
     ? projects
     : projects.filter(p => (p.category === activeCategory) || (p.tag === activeCategory));
 
-  const currentIdx = lightboxProject ? filtered.findIndex(p => p.id === lightboxProject.id) : -1;
-
-  const handlePrev = () => {
-    const prev = filtered[(currentIdx - 1 + filtered.length) % filtered.length];
-    setLightboxProject(prev);
-  };
-
-  const handleNext = () => {
-    const next = filtered[(currentIdx + 1) % filtered.length];
-    setLightboxProject(next);
-  };
-
   return (
     <div className="min-h-screen" data-testid="gallery-page">
       <SEOHead
         title="Ukázky naší práce – Sekání trávy Dvůr Králové | SeknuTo.cz"
-        description="Prohlédněte si realizace SeknuTo.cz – sekání přerostlé trávy, jarní balíčky, pravidelná údržba zahrad. Výsledky před a po z Dvůra Králové, Trutnova a okolí."
+        description="Prohlédněte si realizace SeknuTo.cz – sekání přerostlé trávy, stříhání keřů, jarní balíčky, pravidelná údržba zahrad. Výsledky před a po z Dvůra Králové, Trutnova a okolí."
         canonical="https://seknuto.cz/nase-prace"
         keywords="sekání trávy před a po, realizace zahrad Dvůr Králové, ukázky sekání trávy, fotky trávníku, zahradnické práce výsledky"
         schema={SCHEMAS.breadcrumb([
@@ -225,7 +98,7 @@ export default function GalleryPage() {
             Ukázky realizací
           </h1>
           <p className="text-[#4B5563] text-lg max-w-2xl mx-auto">
-            Prohlédněte si, jak proměňujeme zahrady a trávníky. Každý projekt je dokladem naší pečlivé práce.
+            Prohlédněte si, jak proměňujeme zahrady a trávníky. Přejeďte čárou po fotce a porovnejte stav před a po – kliknutím na projekt zobrazíte všechny fotky.
           </p>
         </div>
       </section>
@@ -263,11 +136,7 @@ export default function GalleryPage() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {filtered.map(project => (
-                  <BeforeAfterCard
-                    key={project.id}
-                    project={project}
-                    onOpen={setLightboxProject}
-                  />
+                  <BeforeAfterCard key={project.id} project={project} />
                 ))}
               </div>
               {filtered.length === 0 && (
@@ -295,16 +164,6 @@ export default function GalleryPage() {
           </Link>
         </div>
       </section>
-
-      {/* Lightbox */}
-      {lightboxProject && (
-        <Lightbox
-          project={lightboxProject}
-          onClose={() => setLightboxProject(null)}
-          onPrev={handlePrev}
-          onNext={handleNext}
-        />
-      )}
     </div>
   );
 }

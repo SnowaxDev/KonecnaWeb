@@ -23,6 +23,7 @@ import ContactPage from "./pages/ContactPage";
 import VoucherPage from "./pages/VoucherPage";
 import AdminPage from "./pages/AdminPage";
 import GalleryPage from "./pages/GalleryPage";
+import GalleryDetailPage from "./pages/GalleryDetailPage";
 import { BlogListPage, BlogDetailPage } from "./pages/BlogPage";
 import LocalLandingPage from "./pages/LocalLandingPage";
 
@@ -67,6 +68,7 @@ function App() {
                   <Route path="/kontakt" element={<ContactPage />} />
                   <Route path="/poukaz/:code" element={<VoucherPage />} />
                   <Route path="/nase-prace" element={<GalleryPage />} />
+                  <Route path="/nase-prace/:slug" element={<GalleryDetailPage />} />
                   <Route path="/blog" element={<BlogListPage />} />
                   <Route path="/blog/:slug" element={<BlogDetailPage />} />
                   <Route path="/sekani-travy-trutnov" element={<LocalLandingPage citySlug="trutnov" />} />

@@ -765,23 +765,101 @@ const BookingsTab = ({ token, handle401 }) => {
 }; 
 
 // ─── GALLERY TAB ──────────────────────────────────────────────────────────────
-const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
+const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů a stromů', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
+
+const EMPTY_GALLERY_FORM = {
+  title: '', category: 'Sekání', location: '', date: '',
+  description: '', before_images: [], after_images: [], published: true,
+};
+
+// Pole pro více fotek – nahrání souborů (i více najednou), přidání přes URL, mazání a náhledy
+const MultiImageField = ({ label, badge, badgeColor, images, uploading, onUploadFiles, onAddUrl, onRemove, testId }) => {
+  const [url, setUrl] = useState('');
+  const fileRef = useRef(null);
+
+  const addUrl = () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    onAddUrl(trimmed);
+    setUrl('');
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        {label} * <span className="normal-case font-normal text-gray-400">({images.length} {images.length === 1 ? 'fotka' : 'fotek'})</span>
+      </Label>
+
+      {/* Náhledy nahraných fotek */}
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {images.map((img, i) => (
+            <div key={i} className="relative w-24 h-18 aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 group">
+              <img src={img} alt={`${badge} ${i + 1}`} className="w-full h-full object-cover" />
+              <span className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold text-white ${badgeColor}`}>
+                {badge}{i === 0 ? ' · úvodní' : ` ${i + 1}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                title="Odebrat fotku"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Input
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addUrl(); } }}
+          className="h-10 flex-1 text-sm"
+          placeholder="https://... nebo nahrajte soubory →"
+          data-testid={`gallery-${testId}-input`}
+        />
+        <Button type="button" variant="outline" size="sm" className="h-10 shrink-0" onClick={addUrl} disabled={!url.trim()}>
+          <Plus className="w-4 h-4" />
+        </Button>
+        <input
+          type="file"
+          ref={fileRef}
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          multiple
+          className="hidden"
+          onChange={e => { onUploadFiles(Array.from(e.target.files || [])); e.target.value = ''; }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-10 shrink-0 border-[#3FA34D] text-[#3FA34D] hover:bg-[#F0FDF4]"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          data-testid={`upload-${testId}-btn`}
+        >
+          {uploading
+            ? <RefreshCw className="w-4 h-4 animate-spin" />
+            : <><Upload className="w-4 h-4 mr-1" /> Nahrát</>
+          }
+        </Button>
+      </div>
+      <p className="text-[11px] text-gray-400">První fotka je úvodní – zobrazí se v náhledu na webu. Můžete vybrat více souborů najednou.</p>
+    </div>
+  );
+};
 
 const GalleryTab = ({ token, handle401 }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editProject, setEditProject] = useState(null);
-  const [previewBefore, setPreviewBefore] = useState(false);
-  const [previewAfter, setPreviewAfter] = useState(false);
   const [uploadingBefore, setUploadingBefore] = useState(false);
   const [uploadingAfter, setUploadingAfter] = useState(false);
-  const beforeFileRef = useRef(null);
-  const afterFileRef = useRef(null);
-  const [form, setForm] = useState({
-    title: '', category: 'Sekání', location: '', date: '',
-    description: '', before_image: '', after_image: '', published: true,
-  });
+  const [form, setForm] = useState(EMPTY_GALLERY_FORM);
   const headers = { 'X-Admin-Token': token };
 
   const load = useCallback(async () => {
@@ -795,51 +873,64 @@ const GalleryTab = ({ token, handle401 }) => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Upload image file → backend /admin/gallery/upload
-  const uploadFile = async (file, field) => {
-    const isB = field === 'before_image';
+  // Upload více souborů najednou → backend /admin/gallery/upload
+  const uploadFiles = async (files, field) => {
+    if (files.length === 0) return;
+    const isB = field === 'before_images';
     if (isB) setUploadingBefore(true); else setUploadingAfter(true);
+    let uploaded = 0;
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await axios.post(`${API}/admin/gallery/upload`, formData, {
-        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
-      });
-      // Backend returns base64 data URL directly – no prefix needed
-      const imageUrl = res.data.url;
-      setForm(f => ({ ...f, [field]: imageUrl }));
-      toast.success('Fotka nahrána!');
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await axios.post(`${API}/admin/gallery/upload`, formData, {
+          headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+        });
+        // Backend returns base64 data URL directly – no prefix needed
+        const imageUrl = res.data.url;
+        setForm(f => ({ ...f, [field]: [...f[field], imageUrl] }));
+        uploaded += 1;
+      }
+      toast.success(uploaded === 1 ? 'Fotka nahrána!' : `Nahráno ${uploaded} fotek!`);
     } catch (err) {
       if (!handle401(err)) toast.error(parseError(err) || 'Nepodařilo se nahrát fotku');
+      if (uploaded > 0) toast.info(`Nahráno ${uploaded} z ${files.length} fotek`);
     } finally {
       if (isB) setUploadingBefore(false); else setUploadingAfter(false);
     }
   };
 
-  const handleFileChange = (e, field) => {
-    const file = e.target.files[0];
-    if (file) uploadFile(file, field);
+  const addImageUrl = (field, url) => {
+    setForm(f => ({ ...f, [field]: [...f[field], url] }));
+  };
+
+  const removeImage = (field, index) => {
+    setForm(f => ({ ...f, [field]: f[field].filter((_, i) => i !== index) }));
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!form.before_image || !form.after_image) {
-      toast.error('Nahrajte nebo zadejte URL pro fotku PŘED i PO');
+    if (form.before_images.length === 0 || form.after_images.length === 0) {
+      toast.error('Nahrajte alespoň jednu fotku PŘED a jednu PO');
       return;
     }
     setCreating(true);
+    // První fotka z každého seznamu slouží jako úvodní (zpětná kompatibilita)
+    const payload = {
+      ...form,
+      before_image: form.before_images[0],
+      after_image: form.after_images[0],
+    };
     try {
       if (editProject) {
-        await axios.patch(`${API}/admin/gallery/projects/${editProject.id}`, form, { headers });
+        await axios.patch(`${API}/admin/gallery/projects/${editProject.id}`, payload, { headers });
         toast.success('Projekt aktualizován!');
         setEditProject(null);
       } else {
-        await axios.post(`${API}/admin/gallery/projects`, form, { headers });
+        await axios.post(`${API}/admin/gallery/projects`, payload, { headers });
         toast.success('Projekt přidán!');
       }
-      setForm({ title: '', category: 'Sekání', location: '', date: '', description: '', before_image: '', after_image: '', published: true });
-      setPreviewBefore(false);
-      setPreviewAfter(false);
+      setForm(EMPTY_GALLERY_FORM);
       load();
     } catch (err) {
       if (!handle401(err)) toast.error(parseError(err));
@@ -851,10 +942,10 @@ const GalleryTab = ({ token, handle401 }) => {
     setForm({
       title: p.title, category: p.category || 'Sekání', location: p.location || '',
       date: p.date || '', description: p.description || '',
-      before_image: p.before_image || '', after_image: p.after_image || '', published: p.published,
+      before_images: (p.before_images?.length > 0) ? p.before_images : [p.before_image].filter(Boolean),
+      after_images: (p.after_images?.length > 0) ? p.after_images : [p.after_image].filter(Boolean),
+      published: p.published,
     });
-    setPreviewBefore(false);
-    setPreviewAfter(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -866,67 +957,6 @@ const GalleryTab = ({ token, handle401 }) => {
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
   };
-
-  // Reusable image input with upload button
-  const ImageInputField = ({ label, field, uploading, fileRef, required }) => (
-    <div className="space-y-2">
-      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-        {label} {required && '*'}
-      </Label>
-      <div className="flex gap-2">
-        <Input
-          value={form[field]}
-          onChange={e => { setForm(f => ({ ...f, [field]: e.target.value })); }}
-          className="h-10 flex-1 text-sm"
-          placeholder="https://... nebo nahrajte soubor →"
-          data-testid={`gallery-${field === 'before_image' ? 'before' : 'after'}-input`}
-        />
-        {/* Hidden file input */}
-        <input
-          type="file"
-          ref={fileRef}
-          accept="image/jpeg,image/jpg,image/png,image/webp"
-          className="hidden"
-          onChange={e => handleFileChange(e, field)}
-        />
-        {/* Upload button */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-10 shrink-0 border-[#3FA34D] text-[#3FA34D] hover:bg-[#F0FDF4]"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          data-testid={`upload-${field === 'before_image' ? 'before' : 'after'}-btn`}
-        >
-          {uploading
-            ? <RefreshCw className="w-4 h-4 animate-spin" />
-            : <><Upload className="w-4 h-4 mr-1" /> Nahrát</>
-          }
-        </Button>
-        {/* Preview toggle */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-10 shrink-0"
-          onClick={() => field === 'before_image' ? setPreviewBefore(v => !v) : setPreviewAfter(v => !v)}
-          disabled={!form[field]}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
-      </div>
-      {/* Image preview */}
-      {((field === 'before_image' && previewBefore) || (field === 'after_image' && previewAfter)) && form[field] && (
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
-          <img src={form[field]} alt={label} className="w-full h-full object-cover" onError={() => toast.error('Fotka nenačtena – zkontrolujte URL')} />
-          <span className={`absolute top-2 left-2 text-white text-xs font-bold px-2 py-0.5 rounded ${field === 'before_image' ? 'bg-red-500' : 'bg-[#3FA34D]'}`}>
-            {field === 'before_image' ? 'PŘED' : 'PO'}
-          </span>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -970,22 +1000,30 @@ const GalleryTab = ({ token, handle401 }) => {
               className="mt-1 h-10" placeholder="Krátký popis co bylo uděláno" />
           </div>
 
-          {/* Before image with upload */}
-          <ImageInputField
-            label="Fotka PŘED"
-            field="before_image"
+          {/* Before images with multi-upload */}
+          <MultiImageField
+            label="Fotky PŘED"
+            badge="PŘED"
+            badgeColor="bg-red-500/90"
+            images={form.before_images}
             uploading={uploadingBefore}
-            fileRef={beforeFileRef}
-            required
+            onUploadFiles={files => uploadFiles(files, 'before_images')}
+            onAddUrl={url => addImageUrl('before_images', url)}
+            onRemove={i => removeImage('before_images', i)}
+            testId="before"
           />
 
-          {/* After image with upload */}
-          <ImageInputField
-            label="Fotka PO"
-            field="after_image"
+          {/* After images with multi-upload */}
+          <MultiImageField
+            label="Fotky PO"
+            badge="PO"
+            badgeColor="bg-[#3FA34D]/90"
+            images={form.after_images}
             uploading={uploadingAfter}
-            fileRef={afterFileRef}
-            required
+            onUploadFiles={files => uploadFiles(files, 'after_images')}
+            onAddUrl={url => addImageUrl('after_images', url)}
+            onRemove={i => removeImage('after_images', i)}
+            testId="after"
           />
 
           <div className="flex items-center gap-3 pt-2">
@@ -997,7 +1035,7 @@ const GalleryTab = ({ token, handle401 }) => {
             </label>
             {editProject && (
               <Button type="button" variant="outline" size="sm"
-                onClick={() => { setEditProject(null); setForm({ title: '', category: 'Sekání', location: '', date: '', description: '', before_image: '', after_image: '', published: true }); setPreviewBefore(false); setPreviewAfter(false); }}>
+                onClick={() => { setEditProject(null); setForm(EMPTY_GALLERY_FORM); }}>
                 <X className="w-4 h-4 mr-1" /> Zrušit
               </Button>
             )}
@@ -1032,12 +1070,16 @@ const GalleryTab = ({ token, handle401 }) => {
                 {/* Before/After thumbnails */}
                 <div className="flex gap-1 shrink-0">
                   <div className="relative w-16 h-12 rounded overflow-hidden border border-gray-200">
-                    <img src={p.before_image} alt="PŘED" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-red-500/80 text-white">PŘED</span>
+                    <img src={p.before_images?.[0] || p.before_image} alt="PŘED" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-red-500/80 text-white">
+                      PŘED{(p.before_images?.length || 1) > 1 ? ` +${p.before_images.length - 1}` : ''}
+                    </span>
                   </div>
                   <div className="relative w-16 h-12 rounded overflow-hidden border border-gray-200">
-                    <img src={p.after_image} alt="PO" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-[#3FA34D]/80 text-white">PO</span>
+                    <img src={p.after_images?.[0] || p.after_image} alt="PO" className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0 left-0 right-0 text-center text-[8px] font-bold bg-[#3FA34D]/80 text-white">
+                      PO{(p.after_images?.length || 1) > 1 ? ` +${p.after_images.length - 1}` : ''}
+                    </span>
                   </div>
                 </div>
 

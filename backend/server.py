@@ -1310,14 +1310,38 @@ async def delete_voucher(code: str, request: Request):
 
 # ─── GALLERY ENDPOINTS ───────────────────────────────────────────────────────
 
+def slugify(text: str) -> str:
+    """Czech-friendly URL slug: 'Střih tújové stěny' → 'strih-tujove-steny'"""
+    import unicodedata
+    import re
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[^a-zA-Z0-9]+", "-", text).strip("-").lower()
+    return text or "projekt"
+
+async def unique_gallery_slug(title: str, exclude_id: Optional[str] = None) -> str:
+    base = slugify(title)
+    slug = base
+    suffix = 2
+    while True:
+        query = {"slug": slug}
+        if exclude_id:
+            query["id"] = {"$ne": exclude_id}
+        existing = await db.gallery_projects.find_one(query)
+        if not existing:
+            return slug
+        slug = f"{base}-{suffix}"
+        suffix += 1
+
 class GalleryProjectCreate(BaseModel):
     title: str
     category: str = "Sekání"
     location: str = ""
     date: str = ""
     description: str = ""
-    before_image: str  # URL
-    after_image: str   # URL
+    before_image: str = ""          # legacy: jedna fotka PŘED (URL)
+    after_image: str = ""           # legacy: jedna fotka PO (URL)
+    before_images: List[str] = []   # více fotek PŘED
+    after_images: List[str] = []    # více fotek PO
     tag: Optional[str] = None
     published: bool = True
 
@@ -1327,18 +1351,36 @@ async def list_gallery_projects():
     projects = await db.gallery_projects.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return projects
 
+@api_router.get("/gallery/projects/{slug_or_id}")
+async def get_gallery_project(slug_or_id: str):
+    """Public: gallery project detail by slug or id"""
+    project = await db.gallery_projects.find_one(
+        {"published": True, "$or": [{"slug": slug_or_id}, {"id": slug_or_id}]},
+        {"_id": 0},
+    )
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
+
 @api_router.post("/admin/gallery/projects")
 async def admin_create_gallery_project(data: GalleryProjectCreate, request: Request):
     await verify_admin(request)
+    before_images = data.before_images or ([data.before_image] if data.before_image else [])
+    after_images = data.after_images or ([data.after_image] if data.after_image else [])
+    if not before_images or not after_images:
+        raise HTTPException(status_code=400, detail="Projekt musí mít alespoň jednu fotku PŘED a jednu PO")
     project = {
         "id": str(uuid.uuid4()),
+        "slug": await unique_gallery_slug(data.title),
         "title": data.title,
         "category": data.category,
         "location": data.location,
         "date": data.date,
         "description": data.description,
-        "before_image": data.before_image,
-        "after_image": data.after_image,
+        "before_image": before_images[0],
+        "after_image": after_images[0],
+        "before_images": before_images,
+        "after_images": after_images,
         "tag": data.tag or data.category,
         "published": data.published,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1358,9 +1400,19 @@ async def admin_update_gallery_project(project_id: str, request: Request):
     await verify_admin(request)
     body = await request.json()
     body.pop("id", None)
+    body.pop("slug", None)
+    # Sync legacy single-image fields with the photo lists
+    if body.get("before_images"):
+        body["before_image"] = body["before_images"][0]
+    if body.get("after_images"):
+        body["after_image"] = body["after_images"][0]
+    if body.get("title"):
+        existing = await db.gallery_projects.find_one({"id": project_id}, {"_id": 0, "slug": 1, "title": 1})
+        if existing and (existing.get("title") != body["title"] or not existing.get("slug")):
+            body["slug"] = await unique_gallery_slug(body["title"], exclude_id=project_id)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.gallery_projects.update_one({"id": project_id}, {"$set": body})
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     return {"success": True}
 
