@@ -390,3 +390,53 @@ a:hover {
         padding-right: 16px;
     }
 }
+
+/* ============================================
+   SCROLL REVEAL – základ animovaného stylu
+   Použití přes komponentu <Reveal>
+   ============================================ */
+
+.reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+        opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+}
+
+/* Varianty nástupu */
+.reveal.reveal-scale { transform: scale(0.94) translateY(12px); }
+.reveal.reveal-left  { transform: translateX(-28px); }
+.reveal.reveal-right { transform: translateX(28px); }
+
+.reveal.reveal-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* Jemné plynutí pro hover karty (doplněk ke .card-hover) */
+.lift-hover {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+.lift-hover:hover {
+    transform: translateY(-6px);
+}
+
+/* Přístupnost – bez animací pro uživatele s omezeným pohybem */
+@media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .reveal.reveal-scale,
+    .reveal.reveal-left,
+    .reveal.reveal-right {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+    .lift-hover,
+    .lift-hover:hover {
+        transform: none;
+        transition: none;
+    }
+}

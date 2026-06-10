@@ -5,7 +5,8 @@ import { ArrowLeft, ArrowRight, X, ChevronLeft, ChevronRight, MapPin, Calendar, 
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
-import { SAMPLE_PROJECTS, normalizeProject } from '../data/galleryData';
+import Reveal from '../components/Reveal';
+import { SAMPLE_PROJECTS, normalizeProject, parseVideo } from '../data/galleryData';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -141,17 +142,31 @@ export default function GalleryDetailPage() {
     if (idx >= 0) setLightboxIndex(idx);
   };
 
+  // Pro og:image a schema jen veřejné http URL (nahrané fotky jsou base64)
+  const ogImage = [...afterImages, ...beforeImages].find(u => typeof u === 'string' && u.startsWith('http'));
+
   return (
     <div className="min-h-screen" data-testid="gallery-detail-page">
       <SEOHead
         title={`${project.title} | Naše práce | SeknuTo.cz`}
         description={project.description || `Realizace ${project.title} – fotky před a po. ${project.location}.`}
         canonical={`https://seknuto.cz/nase-prace/${project.slug}`}
-        schema={SCHEMAS.breadcrumb([
-          { name: 'Úvod', url: '/' },
-          { name: 'Naše práce', url: '/nase-prace' },
-          { name: project.title, url: `/nase-prace/${project.slug}` },
-        ])}
+        image={ogImage}
+        schema={[
+          SCHEMAS.breadcrumb([
+            { name: 'Úvod', url: '/' },
+            { name: 'Naše práce', url: '/nase-prace' },
+            { name: project.title, url: `/nase-prace/${project.slug}` },
+          ]),
+          SCHEMAS.galleryProject({
+            title: project.title,
+            description: project.description,
+            slug: project.slug,
+            images: [...afterImages, ...beforeImages],
+            videos: project.videos,
+            uploadDate: project.created_at?.slice(0, 10),
+          }),
+        ]}
       />
 
       {/* Hero */}
@@ -196,7 +211,7 @@ export default function GalleryDetailPage() {
       {/* Hlavní porovnání */}
       <section className="py-10 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 md:px-8 space-y-10">
-          <div>
+          <Reveal variant="reveal-scale">
             <div className="rounded-2xl overflow-hidden shadow-md border border-gray-100">
               <BeforeAfterSlider
                 before={beforeImages[0]}
@@ -208,11 +223,41 @@ export default function GalleryDetailPage() {
             <p className="text-center text-sm text-gray-400 mt-3">
               Přejeďte čárou po fotce a porovnejte stav před a po
             </p>
-          </div>
+          </Reveal>
+
+          {/* Videa a prohlídky */}
+          {project.videos.length > 0 && (
+            <Reveal>
+              <h2 className="text-xl font-bold text-[#1B4332] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                Video z realizace
+              </h2>
+              <div className={`grid grid-cols-1 gap-6 ${project.videos.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+                {project.videos.map((url, i) => {
+                  const video = parseVideo(url);
+                  return (
+                    <div key={i} className="rounded-2xl overflow-hidden shadow-md border border-gray-100 bg-black aspect-video">
+                      {video.type === 'file' ? (
+                        <video src={video.src} controls preload="metadata" className="w-full h-full" />
+                      ) : (
+                        <iframe
+                          src={video.src}
+                          title={`Video ${i + 1} – ${project.title}`}
+                          className="w-full h-full"
+                          loading="lazy"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Reveal>
+          )}
 
           {/* Další dvojice před/po */}
           {pairCount > 1 && (
-            <div>
+            <Reveal>
               <h2 className="text-xl font-bold text-[#1B4332] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Další porovnání
               </h2>
@@ -228,12 +273,12 @@ export default function GalleryDetailPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Reveal>
           )}
 
           {/* Fotky navíc (bez dvojice) */}
           {extraPhotos.length > 0 && (
-            <div>
+            <Reveal>
               <h2 className="text-xl font-bold text-[#1B4332] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Další fotky
               </h2>
@@ -253,12 +298,12 @@ export default function GalleryDetailPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </Reveal>
           )}
 
           {/* Všechny fotky */}
           {allPhotos.length > 2 && (
-            <div>
+            <Reveal>
               <h2 className="text-xl font-bold text-[#1B4332] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Všechny fotky ({allPhotos.length})
               </h2>
@@ -278,7 +323,7 @@ export default function GalleryDetailPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </Reveal>
           )}
         </div>
       </section>

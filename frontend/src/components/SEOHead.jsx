@@ -203,6 +203,31 @@ export const SCHEMAS = {
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${slug}` },
   }),
 
+  // Detail realizace v galerii – fotky + případná videa (jen veřejné http URL, ne base64)
+  galleryProject: ({ title, description, slug, images = [], videos = [], uploadDate }) => {
+    const httpImages = images.filter((u) => typeof u === 'string' && u.startsWith('http'));
+    const httpVideos = videos.filter((u) => typeof u === 'string' && u.startsWith('http'));
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ImageGallery',
+      name: title,
+      description: description || title,
+      url: `${SITE_URL}/nase-prace/${slug}`,
+      ...(httpImages.length > 0 && { image: httpImages }),
+      ...(httpVideos.length > 0 && {
+        video: httpVideos.map((v) => ({
+          '@type': 'VideoObject',
+          name: title,
+          description: description || title,
+          contentUrl: v,
+          thumbnailUrl: httpImages[0] || DEFAULT_IMAGE,
+          uploadDate: uploadDate || new Date().toISOString().slice(0, 10),
+        })),
+      }),
+      publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    };
+  },
+
   reviews: (reviewItems) => reviewItems.map((r) => ({
     '@context': 'https://schema.org',
     '@type': 'Review',

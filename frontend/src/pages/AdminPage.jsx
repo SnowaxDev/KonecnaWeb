@@ -770,7 +770,7 @@ const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů 
 
 const EMPTY_GALLERY_FORM = {
   title: '', category: 'Sekání', location: '', date: '',
-  description: '', area: '', duration: '', services: '',
+  description: '', area: '', duration: '', services: '', videos: '',
   before_images: [], after_images: [], published: true,
 };
 
@@ -921,6 +921,7 @@ const GalleryTab = ({ token, handle401 }) => {
     const payload = {
       ...form,
       services: form.services.split('\n').map(s => s.trim()).filter(Boolean),
+      videos: form.videos.split('\n').map(s => s.trim()).filter(Boolean),
       before_image: form.before_images[0],
       after_image: form.after_images[0],
     };
@@ -947,6 +948,7 @@ const GalleryTab = ({ token, handle401 }) => {
       date: p.date || '', description: p.description || '',
       area: p.area || '', duration: p.duration || '',
       services: (p.services || []).join('\n'),
+      videos: (p.videos || []).join('\n'),
       before_images: (p.before_images?.length > 0) ? p.before_images : [p.before_image].filter(Boolean),
       after_images: (p.after_images?.length > 0) ? p.after_images : [p.after_image].filter(Boolean),
       published: p.published,
@@ -1023,6 +1025,13 @@ const GalleryTab = ({ token, handle401 }) => {
             <Textarea value={form.services} onChange={e => setForm(f => ({ ...f, services: e.target.value }))}
               className="mt-1 min-h-[80px]" placeholder={'Jedna položka na řádek, např.:\nStříhání tújí\nOdvoz bioodpadu\nFinální úklid'} />
             <p className="text-[11px] text-gray-400 mt-1">Každý řádek se na detailu projektu zobrazí jako odrážka s fajfkou.</p>
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Videa / prohlídky</Label>
+            <Textarea value={form.videos} onChange={e => setForm(f => ({ ...f, videos: e.target.value }))}
+              className="mt-1 min-h-[60px]" placeholder={'Odkazy na videa, jeden na řádek:\nhttps://www.youtube.com/watch?v=...\nhttps://vimeo.com/...'} />
+            <p className="text-[11px] text-gray-400 mt-1">Podporuje YouTube, Vimeo i přímé odkazy na .mp4 – přehrávač se zobrazí na detailu projektu.</p>
           </div>
 
           {/* Before images with multi-upload */}
@@ -1115,7 +1124,10 @@ const GalleryTab = ({ token, handle401 }) => {
                       {p.published ? 'Zobrazeno' : 'Skryto'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400">{p.category} · {p.location} · {p.date}</p>
+                  <p className="text-xs text-gray-400">
+                    {p.category} · {p.location} · {p.date}
+                    {p.videos?.length > 0 && ` · ${p.videos.length}× video`}
+                  </p>
                 </div>
 
                 <div className="flex gap-2 shrink-0">

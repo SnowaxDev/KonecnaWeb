@@ -13,6 +13,7 @@ import {
   AccordionTrigger,
 } from '../components/ui/accordion';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 
 const HomePage = () => {
   const services = [
@@ -277,9 +278,9 @@ const HomePage = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {services.map((service, idx) => (
-              <Card 
-                key={idx} 
-                className="card-hover bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-[#2E8B3E]/30"
+              <Reveal key={idx} delay={idx * 110} variant="reveal-scale">
+              <Card
+                className="card-hover bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-[#2E8B3E]/30 h-full"
                 data-testid={`service-card-${idx}`}
               >
                 <CardContent className="p-5 sm:p-6 md:p-8">
@@ -315,6 +316,7 @@ const HomePage = () => {
                   </Link>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
 

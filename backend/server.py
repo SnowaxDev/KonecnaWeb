@@ -1345,13 +1345,34 @@ class GalleryProjectCreate(BaseModel):
     services: List[str] = []        # provedené práce (odrážky na detailu)
     area: str = ""                  # výměra, např. "450 m²"
     duration: str = ""              # doba realizace, např. "1 den"
+    videos: List[str] = []          # videa/prohlídky – YouTube/Vimeo/mp4 URL
     tag: Optional[str] = None
     published: bool = True
 
 @api_router.get("/gallery/projects")
 async def list_gallery_projects():
-    """Public: list published gallery projects"""
-    projects = await db.gallery_projects.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    """Public: list published gallery projects.
+
+    Vrací jen první fotku PŘED/PO + počty – fotky jsou base64 a plný
+    výpis všech projektů by měl megabajty (pomalé načítání galerie).
+    Kompletní fotky a videa vrací detail endpoint.
+    """
+    pipeline = [
+        {"$match": {"published": True}},
+        {"$sort": {"created_at": -1}},
+        {"$limit": 100},
+        {"$set": {
+            "photo_count": {"$add": [
+                {"$size": {"$ifNull": ["$before_images", []]}},
+                {"$size": {"$ifNull": ["$after_images", []]}},
+            ]},
+            "video_count": {"$size": {"$ifNull": ["$videos", []]}},
+            "before_images": {"$slice": [{"$ifNull": ["$before_images", []]}, 1]},
+            "after_images": {"$slice": [{"$ifNull": ["$after_images", []]}, 1]},
+        }},
+        {"$project": {"_id": 0, "videos": 0}},
+    ]
+    projects = await db.gallery_projects.aggregate(pipeline).to_list(100)
     return projects
 
 @api_router.get("/gallery/projects/{slug_or_id}")
@@ -1387,6 +1408,7 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
         "services": data.services,
         "area": data.area,
         "duration": data.duration,
+        "videos": data.videos,
         "tag": data.tag or data.category,
         "published": data.published,
         "created_at": datetime.now(timezone.utc).isoformat(),

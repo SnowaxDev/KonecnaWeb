@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ArrowRight, Images } from 'lucide-react';
+import { ArrowRight, Images, PlayCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
+import Reveal from '../components/Reveal';
 import { SAMPLE_PROJECTS, normalizeProject } from '../data/galleryData';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -12,11 +13,12 @@ const API = `${BACKEND_URL}/api`;
 
 // Karta projektu s interaktivním PŘED/PO sliderem, proklik na detail
 const BeforeAfterCard = ({ project }) => {
-  const photoCount = (project.before_images?.length || 0) + (project.after_images?.length || 0);
+  const photoCount = project.photo_count || 0;
+  const videoCount = project.video_count || 0;
 
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
+      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group lift-hover"
       data-testid={`gallery-card-${project.id}`}
     >
       <div className="relative">
@@ -32,12 +34,19 @@ const BeforeAfterCard = ({ project }) => {
           {project.tag}
         </span>
 
-        {/* Počet fotek */}
-        {photoCount > 2 && (
-          <span className="absolute top-3 left-3 flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-black/50 text-white backdrop-blur-sm pointer-events-none">
-            <Images className="w-3.5 h-3.5" /> {photoCount} fotek
-          </span>
-        )}
+        {/* Počet fotek a videí */}
+        <div className="absolute top-3 left-3 flex gap-1.5 pointer-events-none">
+          {photoCount > 2 && (
+            <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-black/50 text-white backdrop-blur-sm">
+              <Images className="w-3.5 h-3.5" /> {photoCount}
+            </span>
+          )}
+          {videoCount > 0 && (
+            <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-[#3FA34D]/90 text-white backdrop-blur-sm">
+              <PlayCircle className="w-3.5 h-3.5" /> video
+            </span>
+          )}
+        </div>
       </div>
 
       <Link to={`/nase-prace/${project.slug}`} className="block p-4 hover:bg-gray-50 transition-colors">
@@ -93,7 +102,7 @@ export default function GalleryPage() {
       />
       {/* Hero */}
       <section className="pt-28 pb-12 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F8FAFC]">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
+        <Reveal className="max-w-6xl mx-auto px-4 md:px-8 text-center">
           <span className="inline-block text-xs font-semibold tracking-widest text-[#3FA34D] uppercase mb-4 bg-[#3FA34D]/10 px-4 py-1.5 rounded-full">
             Naše práce
           </span>
@@ -101,9 +110,9 @@ export default function GalleryPage() {
             Ukázky realizací
           </h1>
           <p className="text-[#4B5563] text-lg max-w-2xl mx-auto">
-            Prohlédněte si, jak proměňujeme zahrady a trávníky. Přejeďte čárou po fotce a porovnejte stav před a po – kliknutím na projekt zobrazíte všechny fotky.
+            Prohlédněte si, jak proměňujeme zahrady a trávníky. Přejeďte čárou po fotce a porovnejte stav před a po – kliknutím na projekt zobrazíte všechny fotky i videa.
           </p>
-        </div>
+        </Reveal>
       </section>
 
       {/* Filter */}
@@ -138,8 +147,10 @@ export default function GalleryPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {filtered.map(project => (
-                  <BeforeAfterCard key={project.id} project={project} />
+                {filtered.map((project, idx) => (
+                  <Reveal key={project.id} delay={(idx % 2) * 90} variant="reveal-scale">
+                    <BeforeAfterCard project={project} />
+                  </Reveal>
                 ))}
               </div>
               {filtered.length === 0 && (
