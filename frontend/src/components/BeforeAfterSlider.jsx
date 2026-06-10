@@ -34,7 +34,7 @@ const BeforeAfterSlider = ({ before, after, alt = '', className = '', showLabels
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden select-none touch-none cursor-ew-resize ${className}`}
+      className={`relative w-full overflow-hidden select-none touch-none cursor-ew-resize ${className}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

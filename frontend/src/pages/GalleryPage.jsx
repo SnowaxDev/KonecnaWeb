@@ -19,12 +19,12 @@ const BeforeAfterCard = ({ project }) => {
       className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
       data-testid={`gallery-card-${project.id}`}
     >
-      <div className="relative aspect-[4/3]">
+      <div className="relative">
         <BeforeAfterSlider
           before={project.before_images[0]}
           after={project.after_images[0]}
           alt={project.title}
-          className="absolute inset-0"
+          className="aspect-[4/3]"
         />
 
         {/* Tag */}
@@ -64,7 +64,10 @@ export default function GalleryPage() {
 
   useEffect(() => {
     axios.get(`${API}/gallery/projects`)
-      .then(r => setProjects((r.data.length > 0 ? r.data : SAMPLE_PROJECTS).map(normalizeProject)))
+      .then(r => {
+        const data = Array.isArray(r.data) ? r.data : [];
+        setProjects((data.length > 0 ? data : SAMPLE_PROJECTS).map(normalizeProject));
+      })
       .catch(() => setProjects(SAMPLE_PROJECTS.map(normalizeProject)))
       .finally(() => setLoading(false));
   }, []);

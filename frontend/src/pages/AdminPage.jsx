@@ -26,6 +26,7 @@ const parseError = (err) => {
 const isUnauthorized = (err) => err?.response?.status === 401;
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -769,7 +770,8 @@ const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů 
 
 const EMPTY_GALLERY_FORM = {
   title: '', category: 'Sekání', location: '', date: '',
-  description: '', before_images: [], after_images: [], published: true,
+  description: '', area: '', duration: '', services: '',
+  before_images: [], after_images: [], published: true,
 };
 
 // Pole pro více fotek – nahrání souborů (i více najednou), přidání přes URL, mazání a náhledy
@@ -918,6 +920,7 @@ const GalleryTab = ({ token, handle401 }) => {
     // První fotka z každého seznamu slouží jako úvodní (zpětná kompatibilita)
     const payload = {
       ...form,
+      services: form.services.split('\n').map(s => s.trim()).filter(Boolean),
       before_image: form.before_images[0],
       after_image: form.after_images[0],
     };
@@ -942,6 +945,8 @@ const GalleryTab = ({ token, handle401 }) => {
     setForm({
       title: p.title, category: p.category || 'Sekání', location: p.location || '',
       date: p.date || '', description: p.description || '',
+      area: p.area || '', duration: p.duration || '',
+      services: (p.services || []).join('\n'),
       before_images: (p.before_images?.length > 0) ? p.before_images : [p.before_image].filter(Boolean),
       after_images: (p.after_images?.length > 0) ? p.after_images : [p.after_image].filter(Boolean),
       published: p.published,
@@ -994,10 +999,30 @@ const GalleryTab = ({ token, handle401 }) => {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Výměra</Label>
+              <Input value={form.area} onChange={e => setForm(f => ({ ...f, area: e.target.value }))}
+                className="mt-1 h-10" placeholder="450 m²" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Doba realizace</Label>
+              <Input value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))}
+                className="mt-1 h-10" placeholder="1 den" />
+            </div>
+          </div>
+
           <div>
             <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Popis projektu</Label>
-            <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="mt-1 h-10" placeholder="Krátký popis co bylo uděláno" />
+            <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              className="mt-1 min-h-[80px]" placeholder="Popis co bylo uděláno – zobrazí se na detailu projektu" />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Provedené práce</Label>
+            <Textarea value={form.services} onChange={e => setForm(f => ({ ...f, services: e.target.value }))}
+              className="mt-1 min-h-[80px]" placeholder={'Jedna položka na řádek, např.:\nStříhání tújí\nOdvoz bioodpadu\nFinální úklid'} />
+            <p className="text-[11px] text-gray-400 mt-1">Každý řádek se na detailu projektu zobrazí jako odrážka s fajfkou.</p>
           </div>
 
           {/* Before images with multi-upload */}

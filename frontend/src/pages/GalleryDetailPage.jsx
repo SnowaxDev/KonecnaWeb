@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, ArrowRight, X, ChevronLeft, ChevronRight, MapPin, Calendar } from 'lucide-react';
+import { ArrowLeft, ArrowRight, X, ChevronLeft, ChevronRight, MapPin, Calendar, Ruler, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
@@ -64,17 +64,38 @@ export default function GalleryDetailPage() {
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    setNotFound(false);
-    setProject(null);
-    axios.get(`${API}/gallery/projects/${slug}`)
-      .then(r => setProject(normalizeProject(r.data)))
-      .catch(() => {
-        const sample = SAMPLE_PROJECTS.find(p => p.slug === slug || p.id === slug);
-        if (sample) setProject(normalizeProject(sample));
-        else setNotFound(true);
-      })
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setNotFound(false);
+      setProject(null);
+      try {
+        // 1) Detail endpoint (slug nebo id)
+        const r = await axios.get(`${API}/gallery/projects/${slug}`);
+        if (!r.data || typeof r.data !== 'object' || Array.isArray(r.data) || !r.data.title) throw new Error('invalid response');
+        if (!cancelled) setProject(normalizeProject(r.data));
+      } catch {
+        try {
+          // 2) Fallback: najdi projekt v seznamu (funguje i se starším backendem)
+          const r = await axios.get(`${API}/gallery/projects`);
+          if (!Array.isArray(r.data)) throw new Error('invalid response');
+          const found = r.data.find(p => p.slug === slug || p.id === slug);
+          if (!found) throw new Error('not found');
+          if (!cancelled) setProject(normalizeProject(found));
+        } catch {
+          // 3) Fallback: ukázkové projekty
+          const sample = SAMPLE_PROJECTS.find(p => p.slug === slug || p.id === slug);
+          if (!cancelled) {
+            if (sample) setProject(normalizeProject(sample));
+            else setNotFound(true);
+          }
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, [slug]);
 
   if (loading) {
@@ -147,12 +168,27 @@ export default function GalleryDetailPage() {
             {project.date && (
               <span className="flex items-center gap-1 text-sm text-gray-500"><Calendar className="w-4 h-4" /> {project.date}</span>
             )}
+            {project.area && (
+              <span className="flex items-center gap-1 text-sm text-gray-500"><Ruler className="w-4 h-4" /> {project.area}</span>
+            )}
+            {project.duration && (
+              <span className="flex items-center gap-1 text-sm text-gray-500"><Clock className="w-4 h-4" /> {project.duration}</span>
+            )}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             {project.title}
           </h1>
           {project.description && (
             <p className="text-[#4B5563] text-lg max-w-3xl">{project.description}</p>
+          )}
+          {project.services.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {project.services.map((s, i) => (
+                <span key={i} className="flex items-center gap-1.5 text-sm bg-white border border-gray-200 rounded-full px-3 py-1.5 text-gray-700 shadow-sm">
+                  <CheckCircle2 className="w-4 h-4 text-[#3FA34D]" /> {s}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -161,12 +197,12 @@ export default function GalleryDetailPage() {
       <section className="py-10 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 md:px-8 space-y-10">
           <div>
-            <div className="rounded-2xl overflow-hidden shadow-md border border-gray-100 relative aspect-[16/10]">
+            <div className="rounded-2xl overflow-hidden shadow-md border border-gray-100">
               <BeforeAfterSlider
                 before={beforeImages[0]}
                 after={afterImages[0]}
                 alt={project.title}
-                className="absolute inset-0"
+                className="aspect-[16/10]"
               />
             </div>
             <p className="text-center text-sm text-gray-400 mt-3">
@@ -182,12 +218,12 @@ export default function GalleryDetailPage() {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {Array.from({ length: pairCount - 1 }, (_, i) => i + 1).map(i => (
-                  <div key={i} className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 relative aspect-[4/3]">
+                  <div key={i} className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                     <BeforeAfterSlider
                       before={beforeImages[i]}
                       after={afterImages[i]}
                       alt={`${project.title} – porovnání ${i + 1}`}
-                      className="absolute inset-0"
+                      className="aspect-[4/3]"
                     />
                   </div>
                 ))}

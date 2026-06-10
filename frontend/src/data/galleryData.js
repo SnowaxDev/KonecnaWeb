@@ -56,4 +56,7 @@ export const normalizeProject = (p) => ({
   tagColor: p.tagColor || TAG_COLORS[p.tag] || TAG_COLORS[p.category] || 'bg-gray-100 text-gray-700',
   before_images: (p.before_images && p.before_images.length > 0) ? p.before_images : [p.before_image || p.before].filter(Boolean),
   after_images: (p.after_images && p.after_images.length > 0) ? p.after_images : [p.after_image || p.after].filter(Boolean),
+  services: p.services || [],
+  area: p.area || '',
+  duration: p.duration || '',
 });

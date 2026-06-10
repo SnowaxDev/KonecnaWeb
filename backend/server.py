@@ -1342,6 +1342,9 @@ class GalleryProjectCreate(BaseModel):
     after_image: str = ""           # legacy: jedna fotka PO (URL)
     before_images: List[str] = []   # více fotek PŘED
     after_images: List[str] = []    # více fotek PO
+    services: List[str] = []        # provedené práce (odrážky na detailu)
+    area: str = ""                  # výměra, např. "450 m²"
+    duration: str = ""              # doba realizace, např. "1 den"
     tag: Optional[str] = None
     published: bool = True
 
@@ -1381,6 +1384,9 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
         "after_image": after_images[0],
         "before_images": before_images,
         "after_images": after_images,
+        "services": data.services,
+        "area": data.area,
+        "duration": data.duration,
         "tag": data.tag or data.category,
         "published": data.published,
         "created_at": datetime.now(timezone.utc).isoformat(),
