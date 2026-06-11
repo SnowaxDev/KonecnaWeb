@@ -1,5 +1,6 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { HelmetProvider } from "react-helmet-async";
 import { Analytics } from "@vercel/analytics/react";
@@ -13,19 +14,21 @@ import WhatsAppButton from "./components/WhatsAppButton";
 import EmailPopup from "./components/EmailPopup";
 import GoogleAnalytics from "./components/GoogleAnalytics";
 
-// Pages
+// Homepage se načítá hned (první dojem); ostatní stránky lazy –
+// návštěvník nestahuje admin, rezervaci ani blog, dokud na ně nejde
 import HomePage from "./pages/HomePage";
-import ServicesPage from "./pages/ServicesPage";
-import PricingPage from "./pages/PricingPage";
-import BookingPage from "./pages/BookingPage";
-import AboutPage from "./pages/AboutPage";
-import ContactPage from "./pages/ContactPage";
-import VoucherPage from "./pages/VoucherPage";
-import AdminPage from "./pages/AdminPage";
-import GalleryPage from "./pages/GalleryPage";
-import GalleryDetailPage from "./pages/GalleryDetailPage";
-import { BlogListPage, BlogDetailPage } from "./pages/BlogPage";
-import LocalLandingPage from "./pages/LocalLandingPage";
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const BookingPage = lazy(() => import("./pages/BookingPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const VoucherPage = lazy(() => import("./pages/VoucherPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+const GalleryDetailPage = lazy(() => import("./pages/GalleryDetailPage"));
+const BlogListPage = lazy(() => import("./pages/BlogPage").then(m => ({ default: m.BlogListPage })));
+const BlogDetailPage = lazy(() => import("./pages/BlogPage").then(m => ({ default: m.BlogDetailPage })));
+const LocalLandingPage = lazy(() => import("./pages/LocalLandingPage"));
 
 // Set axios base timeout
 axios.defaults.timeout = 15000;
@@ -42,6 +45,31 @@ axios.interceptors.response.use(
   }
 );
 
+// Po změně routy odscrollovat nahoru
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
+// Plynulý nástup obsahu při přechodu mezi stránkami
+const PageFade = ({ children }) => {
+  const { pathname } = useLocation();
+  return (
+    <div key={pathname} className="page-enter">
+      {children}
+    </div>
+  );
+};
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-[#3FA34D] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
 function App() {
   return (
     <HelmetProvider>
@@ -50,6 +78,8 @@ function App() {
         <GoogleAnalytics />
         <Analytics />
         <SpeedInsights />
+        <ScrollToTop />
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Admin - no header/footer */}
           <Route path="/admin" element={<AdminPage />} />
@@ -59,6 +89,7 @@ function App() {
             <>
               <Header />
               <main>
+                <PageFade>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/sluzby" element={<ServicesPage />} />
@@ -77,6 +108,7 @@ function App() {
                   <Route path="/sekani-travy-nachod" element={<LocalLandingPage citySlug="nachod" />} />
                   <Route path="/sekani-travy-hostinne" element={<LocalLandingPage citySlug="hostinne" />} />
                 </Routes>
+                </PageFade>
               </main>
               <Footer />
               <WhatsAppButton />
@@ -84,6 +116,7 @@ function App() {
             </>
           } />
         </Routes>
+        </Suspense>
         <Toaster position="top-center" richColors />
       </BrowserRouter>
     </div>

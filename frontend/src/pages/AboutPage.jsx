@@ -3,6 +3,7 @@ import { Users, Heart, MapPin, Leaf, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import SEOHead from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 
 const AboutPage = () => {
   const values = [
@@ -40,7 +41,7 @@ const AboutPage = () => {
       <section className="py-12 md:py-20 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
+            <Reveal variant="reveal-left">
               <h1 className="text-4xl md:text-5xl font-bold text-[#222222] mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 O nás
               </h1>
@@ -61,9 +62,9 @@ const AboutPage = () => {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-            </div>
-            <div className="relative">
-              <img 
+            </Reveal>
+            <Reveal variant="reveal-right" delay={150} className="relative">
+              <img
                 src="https://images.pexels.com/photos/6728919/pexels-photo-6728919.jpeg?auto=compress&cs=tinysrgb&w=800" 
                 alt="Tým SeknuTo.cz při práci"
                 className="rounded-2xl shadow-2xl w-full object-cover h-[400px]"
@@ -72,7 +73,7 @@ const AboutPage = () => {
                 <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>2025</p>
                 <p className="text-sm text-[#4B5563]">Založeno</p>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -80,10 +81,12 @@ const AboutPage = () => {
       {/* Our Story */}
       <section className="py-12 md:py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl font-bold text-[#222222] text-center mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Náš příběh
-          </h2>
-          <div className="prose prose-lg max-w-none text-[#4B5563]">
+          <Reveal>
+            <h2 className="text-3xl font-bold text-[#222222] text-center mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Náš příběh
+            </h2>
+          </Reveal>
+          <Reveal delay={100} className="prose prose-lg max-w-none text-[#4B5563]">
             <p className="mb-4">
               Všechno to začalo jednoduše – pomáhali jsme sousedům s údržbou zahrad a zjistili jsme, 
               že nás to baví. Práce venku, fyzická aktivita a hlavně radost zákazníků, když vidí 
@@ -97,22 +100,24 @@ const AboutPage = () => {
               Dnes obsluhujeme desítky spokojených zákazníků v Dvoře Králové a okolí. A pořád nás to baví 
               stejně jako na začátku. Možná i víc.
             </p>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Values */}
       <section className="py-12 md:py-20 bg-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl font-bold text-[#222222] text-center mb-12" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Naše hodnoty
-          </h2>
-          
+          <Reveal>
+            <h2 className="text-3xl font-bold text-[#222222] text-center mb-12" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Naše hodnoty
+            </h2>
+          </Reveal>
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, idx) => (
-              <Card 
-                key={idx}
-                className="card-hover rounded-2xl border-gray-100"
+              <Reveal key={idx} delay={(idx % 4) * 100} variant="reveal-scale">
+              <Card
+                className="card-hover rounded-2xl border-gray-100 h-full"
                 data-testid={`value-${idx}`}
               >
                 <CardContent className="p-6 text-center">
@@ -127,6 +132,7 @@ const AboutPage = () => {
                   </p>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -135,15 +141,17 @@ const AboutPage = () => {
       {/* Team */}
       <section className="py-12 md:py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-3xl font-bold text-[#222222] mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Mladý tým s energií
-          </h2>
-          <p className="text-lg text-[#4B5563] mb-8">
-            Jsme mladý, dynamický tým, který má chuť do práce. Nebojíme se žádné výzvy a každou 
-            zahradu bereme jako nový projekt, do kterého dáváme maximum.
-          </p>
-          
-          <div className="bg-[#F0FDF4] rounded-2xl p-8">
+          <Reveal>
+            <h2 className="text-3xl font-bold text-[#222222] mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Mladý tým s energií
+            </h2>
+            <p className="text-lg text-[#4B5563] mb-8">
+              Jsme mladý, dynamický tým, který má chuť do práce. Nebojíme se žádné výzvy a každou
+              zahradu bereme jako nový projekt, do kterého dáváme maximum.
+            </p>
+          </Reveal>
+
+          <Reveal variant="reveal-scale" delay={120} className="bg-[#F0FDF4] rounded-2xl p-8">
             <div className="grid grid-cols-3 gap-6 text-center">
               <div>
                 <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>50+</p>
@@ -158,13 +166,14 @@ const AboutPage = () => {
                 <p className="text-sm text-[#4B5563]">Nasazení</p>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* CTA */}
       <section className="py-12 md:py-20 bg-[#222222]">
         <div className="max-w-3xl mx-auto px-4 md:px-8 text-center">
+          <Reveal>
           <h2 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Pojďme spolupracovat
           </h2>
@@ -190,6 +199,7 @@ const AboutPage = () => {
               </Button>
             </Link>
           </div>
+          </Reveal>
         </div>
       </section>
     </div>

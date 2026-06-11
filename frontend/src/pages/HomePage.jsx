@@ -157,7 +157,7 @@ const HomePage = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left Content */}
-            <div className="text-left">
+            <Reveal variant="reveal-left" className="text-left">
               <div className="inline-flex items-center gap-2 bg-white border-2 border-[#2E8B3E]/20 rounded-full px-4 py-2 mb-6 shadow-sm">
                 <Star className="w-4 h-4 text-[#2E8B3E]" fill="#2E8B3E" />
                 <span className="text-sm font-semibold text-[#374151]">
@@ -216,13 +216,13 @@ const HomePage = () => {
                   </Button>
                 </a>
               </div>
-            </div>
+            </Reveal>
 
             {/* Right - Stats Card */}
-            <div className="relative mt-8 lg:mt-0">
-              <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border-2 border-gray-100">
+            <Reveal variant="reveal-right" delay={180} className="relative mt-8 lg:mt-0">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border-2 border-gray-100 lift-hover">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#2E8B3E] rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="icon-pop w-14 h-14 sm:w-16 sm:h-16 bg-[#2E8B3E] rounded-2xl flex items-center justify-center shadow-lg">
                     <Leaf className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                   </div>
                   <div>
@@ -259,7 +259,7 @@ const HomePage = () => {
                   </Link>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -267,15 +267,15 @@ const HomePage = () => {
       {/* Services Section */}
       <section className="py-16 md:py-24 bg-white" data-testid="services-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111827] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Naše služby
             </h2>
             <p className="text-[#374151] max-w-2xl mx-auto text-base sm:text-lg font-medium">
-              Kompletní zahradnické služby od sekání trávníků po likvidaci zarostlých pozemků. 
+              Kompletní zahradnické služby od sekání trávníků po likvidaci zarostlých pozemků.
               Profesionální přístup a férovost.
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {services.map((service, idx) => (
@@ -478,10 +478,12 @@ const HomePage = () => {
             rel="noopener noreferrer"
             data-testid="firmy-cz-link"
           >
-            <img 
-              width="249" 
-              src="https://www.firmy.cz/img/widgets/firmy-ohodnotte-nas-tmave.svg" 
-              alt="SeknuTo.cz na Firmy.cz" 
+            <img
+              width="249"
+              height="68"
+              loading="lazy"
+              src="https://www.firmy.cz/img/widgets/firmy-ohodnotte-nas-tmave.svg"
+              alt="SeknuTo.cz na Firmy.cz"
               className="inline-block hover:opacity-80 transition-opacity"
             />
           </a>

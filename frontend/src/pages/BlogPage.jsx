@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Calendar, Clock, ArrowRight, ArrowLeft, User, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 import DOMPurify from 'dompurify';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -16,7 +17,7 @@ export function BlogListPage() {
 
   useEffect(() => {
     axios.get(`${API}/blog/posts`)
-      .then(r => setPosts(r.data))
+      .then(r => setPosts(Array.isArray(r.data) ? r.data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -35,7 +36,7 @@ export function BlogListPage() {
       />
       {/* Hero */}
       <section className="pt-28 pb-12 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F8FAFC]">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 text-center">
+        <Reveal className="max-w-6xl mx-auto px-4 md:px-8 text-center">
           <span className="inline-block text-xs font-semibold tracking-widest text-[#3FA34D] uppercase mb-4 bg-[#3FA34D]/10 px-4 py-1.5 rounded-full">
             Zahradní blog
           </span>
@@ -45,7 +46,7 @@ export function BlogListPage() {
           <p className="text-[#4B5563] text-lg max-w-2xl mx-auto">
             Rady od profesionálů – jak pečovat o trávník, zahradu a zeleň po celý rok.
           </p>
-        </div>
+        </Reveal>
       </section>
 
       {/* Posts grid */}
@@ -62,11 +63,11 @@ export function BlogListPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map(post => (
+              {posts.map((post, idx) => (
+                <Reveal key={post.id} delay={(idx % 3) * 100} variant="reveal-scale" className="h-full">
                 <Link
-                  key={post.id}
                   to={`/blog/${post.slug}`}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
+                  className="block h-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group"
                   data-testid={`blog-post-${post.id}`}
                 >
                   {post.cover_image && (
@@ -108,6 +109,7 @@ export function BlogListPage() {
                     </span>
                   </div>
                 </Link>
+                </Reveal>
               ))}
             </div>
           )}
@@ -169,6 +171,7 @@ export function BlogDetailPage() {
         ]}
       />
       {/* Cover */}
+      <Reveal>
       {post.cover_image ? (
         <div className="relative h-64 md:h-80 overflow-hidden mt-16">
           <img src={post.cover_image} alt={`${post.title} – zahradní tipy SeknuTo.cz`} className="w-full h-full object-cover" loading="lazy" />
@@ -190,6 +193,7 @@ export function BlogDetailPage() {
           </div>
         </div>
       )}
+      </Reveal>
 
       {/* Content */}
       <article className="max-w-3xl mx-auto px-4 py-10">

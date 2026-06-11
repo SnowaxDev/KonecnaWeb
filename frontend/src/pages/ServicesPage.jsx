@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 
 const ServicesPage = () => {
   const [expandedService, setExpandedService] = useState(null);
@@ -201,17 +202,19 @@ const ServicesPage = () => {
       {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
-            <Sprout className="w-4 h-4 text-[#3FA34D]" />
-            <span className="text-sm font-medium text-[#3FA34D]">Profesionální zahradnické služby</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Naše služby
-          </h1>
-          <p className="text-gray-600 max-w-xl mx-auto mb-6">
-            Od jednorázového sekání po celoroční péči. Všechny ceny jsou orientační – přesnou kalkulaci připravíme po obhlídce.
-          </p>
-          
+          <Reveal>
+            <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
+              <Sprout className="w-4 h-4 text-[#3FA34D]" />
+              <span className="text-sm font-medium text-[#3FA34D]">Profesionální zahradnické služby</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Naše služby
+            </h1>
+            <p className="text-gray-600 max-w-xl mx-auto mb-6">
+              Od jednorázového sekání po celoroční péči. Všechny ceny jsou orientační – přesnou kalkulaci připravíme po obhlídce.
+            </p>
+          </Reveal>
+
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
@@ -233,7 +236,7 @@ const ServicesPage = () => {
       {/* Basic Services */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-8">
+          <Reveal className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
               <Scissors className="w-5 h-5 text-white" />
             </div>
@@ -243,13 +246,13 @@ const ServicesPage = () => {
               </h2>
               <p className="text-sm text-gray-500">Jednorázové služby dle potřeby</p>
             </div>
-          </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-3 gap-5">
-            {basicServices.map((service) => (
-              <div 
-                key={service.id}
-                className={`rounded-2xl border-2 ${service.color} p-5 hover:shadow-lg transition-all cursor-pointer`}
+            {basicServices.map((service, idx) => (
+              <Reveal key={service.id} delay={(idx % 3) * 100} variant="reveal-scale">
+              <div
+                className={`rounded-2xl border-2 ${service.color} p-5 hover:shadow-lg transition-all cursor-pointer h-full`}
                 onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
                 data-testid={`service-${service.id}`}
               >
@@ -303,6 +306,7 @@ const ServicesPage = () => {
                   </div>
                 )}
               </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -311,7 +315,7 @@ const ServicesPage = () => {
       {/* Seasonal Packages */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
+          <Reveal className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#3FA34D] rounded-xl flex items-center justify-center">
                 <Sprout className="w-5 h-5 text-white" />
@@ -327,13 +331,13 @@ const ServicesPage = () => {
               <Zap className="w-3 h-3" />
               VÝHODNÉ BALÍČKY
             </span>
-          </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {seasonalPackages.map((pkg) => (
-              <div 
-                key={pkg.id}
-                className={`relative bg-gradient-to-br ${pkg.color} rounded-2xl border-2 ${pkg.borderColor} p-5 hover:shadow-lg transition-all`}
+            {seasonalPackages.map((pkg, idx) => (
+              <Reveal key={pkg.id} delay={(idx % 4) * 100} variant="reveal-scale">
+              <div
+                className={`relative bg-gradient-to-br ${pkg.color} rounded-2xl border-2 ${pkg.borderColor} p-5 hover:shadow-lg transition-all h-full`}
                 data-testid={`package-${pkg.id}`}
               >
                 {pkg.popular && (
@@ -375,6 +379,7 @@ const ServicesPage = () => {
                   </Link>
                 </div>
               </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -383,6 +388,7 @@ const ServicesPage = () => {
       {/* VIP Package */}
       <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4">
+          <Reveal variant="reveal-scale">
           <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 rounded-3xl border-2 border-amber-200 p-6 md:p-8 relative overflow-hidden">
             {/* Decorative */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -437,16 +443,20 @@ const ServicesPage = () => {
               </div>
             </div>
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Quick Compare Table */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-xl font-bold text-center text-gray-900 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Rychlé srovnání
-          </h2>
-          
+          <Reveal>
+            <h2 className="text-xl font-bold text-center text-gray-900 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Rychlé srovnání
+            </h2>
+          </Reveal>
+
+          <Reveal variant="reveal-scale">
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
@@ -488,13 +498,14 @@ const ServicesPage = () => {
               </tbody>
             </table>
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* CTA */}
       <section className="py-12 bg-[#222]">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <Reveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Nevíte, co vybrat?
@@ -518,7 +529,7 @@ const ServicesPage = () => {
                 </Button>
               </a>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
     </div>

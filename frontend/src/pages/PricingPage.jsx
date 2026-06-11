@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
+import Reveal from '../components/Reveal';
 
 const PricingPage = () => {
   const steps = [
@@ -90,18 +91,20 @@ const PricingPage = () => {
       {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
-            <Zap className="w-4 h-4 text-[#3FA34D]" />
-            <span className="text-sm font-medium text-[#3FA34D]">Bezplatná obhlídka • Cena vždy předem</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Jak zjistíte cenu?
-          </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto mb-6">
-            Každá zahrada je jiná. Proto nabízíme <strong>bezplatnou obhlídku</strong> na místě, 
-            kde vám sdělíme přesnou cenu ještě před zahájením prací.
-          </p>
-          
+          <Reveal>
+            <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
+              <Zap className="w-4 h-4 text-[#3FA34D]" />
+              <span className="text-sm font-medium text-[#3FA34D]">Bezplatná obhlídka • Cena vždy předem</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Jak zjistíte cenu?
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-6">
+              Každá zahrada je jiná. Proto nabízíme <strong>bezplatnou obhlídku</strong> na místě,
+              kde vám sdělíme přesnou cenu ještě před zahájením prací.
+            </p>
+          </Reveal>
+
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -122,13 +125,15 @@ const PricingPage = () => {
       {/* How it works - 4 steps */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-10" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            4 jednoduché kroky
-          </h2>
-          
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-10" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              4 jednoduché kroky
+            </h2>
+          </Reveal>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((step) => (
-              <div key={step.num} className="text-center" data-testid={`step-${step.num}`}>
+            {steps.map((step, idx) => (
+              <Reveal key={step.num} delay={(idx % 4) * 100} variant="reveal-scale" className="text-center" data-testid={`step-${step.num}`}>
                 <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
                   <step.icon className="w-7 h-7 text-white" />
                 </div>
@@ -137,7 +142,7 @@ const PricingPage = () => {
                   {step.title}
                 </h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
@@ -155,16 +160,19 @@ const PricingPage = () => {
       {/* What we offer */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Co vše pro vás uděláme
-          </h2>
-          <p className="text-center text-gray-500 mb-10 max-w-xl mx-auto">
-            Kompletní zahradnické služby od jednorázového sekání po celoroční péči. Cenu vždy stanovíme individuálně po obhlídce.
-          </p>
-          
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Co vše pro vás uděláme
+            </h2>
+            <p className="text-center text-gray-500 mb-10 max-w-xl mx-auto">
+              Kompletní zahradnické služby od jednorázového sekání po celoroční péči. Cenu vždy stanovíme individuálně po obhlídce.
+            </p>
+          </Reveal>
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {services.map((service, idx) => (
-              <Card key={idx} className="rounded-2xl border-2 border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-lg">
+              <Reveal key={idx} delay={(idx % 3) * 100} variant="reveal-scale">
+              <Card className="rounded-2xl border-2 border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-lg h-full">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-[#F0FDF4] rounded-xl flex items-center justify-center mb-4">
                     <service.icon className="w-6 h-6 text-[#3FA34D]" />
@@ -176,6 +184,7 @@ const PricingPage = () => {
                   </Link>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -184,15 +193,17 @@ const PricingPage = () => {
       {/* What affects price */}
       <section className="py-12 bg-white">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Co ovlivňuje cenu
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Co ovlivňuje cenu
+            </h2>
+          </Reveal>
           <div className="grid sm:grid-cols-2 gap-3">
             {priceFactors.map((factor, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <Reveal key={i} delay={(i % 2) * 100} variant="reveal-scale" className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <CheckCircle className="w-5 h-5 text-[#3FA34D] shrink-0" />
                 <span className="text-sm font-medium text-gray-700">{factor}</span>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -201,9 +212,11 @@ const PricingPage = () => {
       {/* Seasonal Packages */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Sezónní balíčky
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Sezónní balíčky
+            </h2>
+          </Reveal>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               { title: 'Jarní balíček', desc: 'Vertikutace + hnojení + první sekání sezóny', color: 'border-pink-200 bg-pink-50' },
@@ -211,13 +224,13 @@ const PricingPage = () => {
               { title: 'Podzimní balíček', desc: 'Vertikutace + podzimní hnojení + úklid listí', color: 'border-orange-200 bg-orange-50' },
               { title: 'VIP Celoroční servis', desc: 'Kompletní péče po celý rok – nemusíte na nic myslet', color: 'border-green-200 bg-green-50' },
             ].map((pkg, i) => (
-              <div key={i} className={`p-5 rounded-xl border-2 ${pkg.color}`}>
+              <Reveal key={i} delay={(i % 2) * 100} variant="reveal-scale" className={`p-5 rounded-xl border-2 ${pkg.color}`}>
                 <h3 className="font-bold text-gray-900 mb-1">{pkg.title}</h3>
                 <p className="text-sm text-gray-600 mb-3">{pkg.desc}</p>
                 <Link to="/rezervace" className="text-[#3FA34D] text-sm font-medium hover:underline inline-flex items-center gap-1">
                   Poptat balíček <ArrowRight className="w-3 h-3" />
                 </Link>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -226,9 +239,12 @@ const PricingPage = () => {
       {/* FAQ */}
       <section className="py-12 bg-white">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Časté dotazy o cenách
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Časté dotazy o cenách
+            </h2>
+          </Reveal>
+          <Reveal>
           <Accordion type="single" collapsible className="space-y-3">
             {faqItems.map((item, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="bg-gray-50 rounded-xl border border-gray-100 px-5">
@@ -241,6 +257,7 @@ const PricingPage = () => {
               </AccordionItem>
             ))}
           </Accordion>
+          </Reveal>
         </div>
       </section>
 
@@ -249,13 +266,13 @@ const PricingPage = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((item, idx) => (
-              <div key={idx} className="text-center p-6 bg-[#F8FAFC] rounded-2xl border border-gray-100">
+              <Reveal key={idx} delay={(idx % 4) * 100} variant="reveal-scale" className="text-center p-6 bg-[#F8FAFC] rounded-2xl border border-gray-100">
                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100">
                   <item.icon className="w-6 h-6 text-[#3FA34D]" />
                 </div>
                 <h4 className="font-bold text-gray-900 mb-1">{item.title}</h4>
                 <p className="text-xs text-gray-500">{item.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -264,7 +281,7 @@ const PricingPage = () => {
       {/* CTA */}
       <section className="py-12 bg-[#222]">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <Reveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Chcete vědět, kolik bude stát vaše zahrada?
@@ -288,7 +305,7 @@ const PricingPage = () => {
                 </Button>
               </a>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
     </div>
