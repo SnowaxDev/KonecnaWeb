@@ -932,7 +932,15 @@ const GalleryTab = ({ token, handle401 }) => {
         toast.success('Projekt aktualizován!');
         setEditProject(null);
       } else {
-        await axios.post(`${API}/admin/gallery/projects`, payload, { headers });
+        const res = await axios.post(`${API}/admin/gallery/projects`, payload, { headers });
+        // Starší nasazený backend při POST ukládá jen základní pole – PATCH
+        // uloží všechna (více fotek, další fotky, videa), na novém je to no-op
+        const createdId = res.data?.id;
+        if (createdId) {
+          try {
+            await axios.patch(`${API}/admin/gallery/projects/${createdId}`, payload, { headers });
+          } catch { /* starší backend vrací 404 při nezměněném dokumentu – nevadí */ }
+        }
         toast.success('Projekt přidán!');
       }
       setForm(EMPTY_GALLERY_FORM);
