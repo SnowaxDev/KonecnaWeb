@@ -77,6 +77,10 @@ const HomePage = () => {
       answer: 'Realizujeme zahrady na klíč – od návrhu přes terénní úpravy a založení trávníku (ze semene i z travního koberce) až po výsadbu stromů, keřů a záhonů. Vytvoříme novou zahradu i proměníme stávající.',
     },
     {
+      question: 'Pokládáte travní koberec i zakládáte trávník ze semene?',
+      answer: 'Ano. Nabízíme pokládku travního koberce (rolovaného trávníku) s okamžitě zeleným výsledkem i levnější zakládání trávníku ze semene. Připravíme podloží, položíme nebo zaséjeme a poradíme s péčí a zálivkou. Travní koberec pokládáme do 24 hodin od sloupnutí.',
+    },
+    {
       question: 'Jaké oblasti pokrýváte vašimi službami?',
       answer: 'Působíme v Dvoře Králové nad Labem a okolí do vzdálenosti 30 km – zahrnuje to Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolní vesnice.',
     },

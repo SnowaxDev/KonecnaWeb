@@ -110,6 +110,7 @@ function App() {
                   <Route path="/sekani-travy-hostinne" element={<LocalLandingPage citySlug="hostinne" />} />
                   <Route path="/strihani-keru-kaceni-stromu" element={<ServiceLandingPage serviceSlug="strihani-keru-kaceni-stromu" />} />
                   <Route path="/realizace-zahrad" element={<ServiceLandingPage serviceSlug="realizace-zahrad" />} />
+                  <Route path="/pokladani-travniku" element={<ServiceLandingPage serviceSlug="pokladani-travniku" />} />
                 </Routes>
                 </PageFade>
               </main>

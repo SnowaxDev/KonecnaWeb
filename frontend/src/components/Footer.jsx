@@ -130,6 +130,7 @@ const Footer = () => {
               {[
                 { href: '/strihani-keru-kaceni-stromu', label: 'Stříhání keřů a kácení stromů' },
                 { href: '/realizace-zahrad', label: 'Realizace zahrad' },
+                { href: '/pokladani-travniku', label: 'Pokládání trávníku' },
                 { href: '/sekani-travy-trutnov',  label: 'Sekání trávy Trutnov' },
                 { href: '/sekani-travy-vrchlabi', label: 'Sekání trávy Vrchlabí' },
                 { href: '/sekani-travy-jaromer',  label: 'Sekání trávy Jaroměř' },

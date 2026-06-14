@@ -180,6 +180,7 @@ const BookingPage = () => {
     { id: 'land_clearing', icon: Flame, title: 'Likvidace a čištění pozemků', price: 'Po obhlídce', unit: 'project', info: 'Zarostlé parcely, křoviny, náletové dřeviny' },
     { id: 'tree_shrub_care', icon: TreeDeciduous, title: 'Stříhání keřů a kácení stromů', price: 'Po obhlídce', unit: 'project', info: 'Keře, túje, živé ploty, ořez a kácení stromů' },
     { id: 'garden_realization', icon: Sprout, title: 'Realizace zahrad', price: 'Po obhlídce', unit: 'project', info: 'Návrh, založení trávníku, výsadba, terénní úpravy' },
+    { id: 'turf_laying', icon: Sprout, title: 'Pokládání trávníku', price: 'Po obhlídce', unit: 'project', info: 'Travní koberec i setí, příprava podloží' },
     { id: 'garden_work', icon: TreeDeciduous, title: 'Zahradnické práce', price: 'Po domluvě', unit: 'project', info: 'Pletí, výsadba, úpravy terénu' },
     { id: 'debris_hourly', icon: Truck, title: 'Odvoz odpadu', price: 'Po domluvě', unit: 'project', info: 'Nakládka a ekologická likvidace' },
   ];

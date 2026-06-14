@@ -139,6 +139,10 @@ export const SCHEMAS = {
         },
         {
           '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Pokládání trávníku', description: 'Pokládka travního koberce i zakládání trávníku ze semene včetně přípravy podloží' },
+        },
+        {
+          '@type': 'Offer',
           itemOffered: { '@type': 'Service', name: 'Likvidace a čištění pozemků', description: 'Kompletní vyčištění zarostlých pozemků a parcel' },
         },
         {

@@ -94,6 +94,7 @@ SERVICE_NAMES = {
     'land_clearing': 'Likvidace a čištění pozemků',
     'tree_shrub_care': 'Stříhání keřů a kácení stromů',
     'garden_realization': 'Realizace zahrad',
+    'turf_laying': 'Pokládání trávníku',
     'garden_work': 'Zahradnické práce',
     'debris_removal': 'Odvoz odpadu',
     'debris_hourly': 'Odvoz odpadu',
@@ -349,6 +350,7 @@ SERVICE_PRICES = {
     "land_clearing": 0,            # Likvidace a čištění pozemků - projektová cena
     "tree_shrub_care": 0,          # Stříhání keřů a kácení stromů - projektová cena
     "garden_realization": 0,       # Realizace zahrad - individuální projekt
+    "turf_laying": 0,              # Pokládání trávníku - dle plochy a podloží
     "garden_work": 0,              # Zahradnické práce - dle rozsahu
     "debris_hourly": 0,            # Odvoz odpadu - dle objemu
     
@@ -425,6 +427,7 @@ SERVICE_NAMES_CZ = {
     "land_clearing": "Likvidace a čištění pozemků",
     "tree_shrub_care": "Stříhání keřů a kácení stromů",
     "garden_realization": "Realizace zahrad (návrh a založení)",
+    "turf_laying": "Pokládání trávníku (travní koberec / setí)",
     "garden_work": "Zahradnické práce (ruční)",
     "debris_hourly": "Odvoz odpadu (hodinová sazba)",
     "other": "Jiná služba",

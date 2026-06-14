@@ -92,6 +92,26 @@ const ServicesPage = () => {
       iconColor: 'text-lime-700',
     },
     {
+      id: 'turf_laying',
+      icon: Sprout,
+      title: 'Pokládání trávníku',
+      subtitle: 'Travní koberec i setý trávník',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Pokládka travního koberce i zakládání trávníku ze semene – od přípravy podloží po okamžitě zelenou zahradu.',
+      features: [
+        { label: 'Příprava a srovnání podloží', price: '✓' },
+        { label: 'Pokládka travního koberce', price: '✓' },
+        { label: 'Založení trávníku ze semene', price: '✓' },
+        { label: 'Zaválcování a první zálivka', price: '✓' },
+        { label: 'Poradenství o péči a závlaze', price: '✓' },
+      ],
+      time: 'Dle plochy',
+      color: 'bg-green-50 border-green-200',
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-700',
+    },
+    {
       id: 'garden_work',
       icon: TreeDeciduous,
       title: 'Zahradnické práce',
@@ -223,10 +243,10 @@ const ServicesPage = () => {
   return (
     <div className="min-h-screen pt-16" data-testid="services-page">
       <SEOHead
-        title="Zahradnické služby Dvůr Králové | Sekání trávy, stříhání keřů, kácení stromů, realizace zahrad | SeknuTo.cz"
-        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, stříhání keřů a živých plotů, kácení a ořez stromů, realizace zahrad, likvidace zarostlých pozemků, sezónní balíčky. Bezplatná obhlídka."
+        title="Zahradnické služby Dvůr Králové | Sekání trávy, pokládání trávníku, stříhání keřů, kácení stromů, realizace zahrad | SeknuTo.cz"
+        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, pokládání trávníku a travní koberec, stříhání keřů a živých plotů, kácení a ořez stromů, realizace zahrad, likvidace pozemků, sezónní balíčky. Bezplatná obhlídka."
         canonical="https://seknuto.cz/sluzby"
-        keywords="zahradnické služby Dvůr Králové, sekání trávy, stříhání keřů, stříhání živých plotů, tvarování tújí, kácení stromů Dvůr Králové, ořez stromů, rizikové kácení, realizace zahrad, návrh zahrady, zakládání trávníků, likvidace pozemků, vertikutace, hnojení trávníku, údržba zahrad Trutnov"
+        keywords="zahradnické služby Dvůr Králové, sekání trávy, pokládání trávníku, pokládka travního koberce, travní koberec cena, založení trávníku, stříhání keřů, stříhání živých plotů, tvarování tújí, kácení stromů Dvůr Králové, ořez stromů, rizikové kácení, realizace zahrad, návrh zahrady, likvidace pozemků, vertikutace, údržba zahrad Trutnov"
         schema={[
           SCHEMAS.breadcrumb([
             { name: 'Úvod', url: '/' },
@@ -245,6 +265,11 @@ const ServicesPage = () => {
           SCHEMAS.service({
             name: 'Realizace zahrad',
             description: 'Realizace zahrad na klíč – návrh, terénní úpravy, zakládání trávníků ze semene i travního koberce a výsadba zeleně.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
+          SCHEMAS.service({
+            name: 'Pokládání trávníku',
+            description: 'Pokládka travního koberce i zakládání trávníku ze semene včetně přípravy podloží a poradenství o péči.',
             areaServed: 'Dvůr Králové nad Labem',
           }),
         ]}
@@ -541,6 +566,13 @@ const ServicesPage = () => {
                 <tr className="border-t border-gray-100 hover:bg-gray-50 bg-lime-50/50">
                   <td className="py-3 px-4 font-medium">🌱 Realizace zahrad</td>
                   <td className="py-3 px-4 text-center text-gray-500">Návrh, trávníky, výsadba</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-green-50/50">
+                  <td className="py-3 px-4 font-medium">🌿 Pokládání trávníku</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Travní koberec i setí</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
                   </td>
