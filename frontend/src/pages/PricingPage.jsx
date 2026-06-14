@@ -44,6 +44,8 @@ const PricingPage = () => {
 
   const services = [
     { icon: Scissors, title: 'Sekání trávy', desc: 'Pravidelné i jednorázové sekání trávníků všech velikostí, s hnojením i bez.' },
+    { icon: TreeDeciduous, title: 'Stříhání keřů a kácení stromů', desc: 'Stříhání keřů, tújí a živých plotů, ořez a kácení stromů včetně odvozu větví.' },
+    { icon: Sprout, title: 'Realizace zahrad', desc: 'Návrh zahrady, zakládání trávníků, výsadba zeleně a terénní úpravy na klíč.' },
     { icon: Flame, title: 'Likvidace pozemků', desc: 'Kompletní vyčištění zarostlých parcel, zahrad a pozemků – křoviny, nálety, vysoká tráva.' },
     { icon: Sprout, title: 'Sezónní balíčky', desc: 'Jarní restart, letní údržba, podzimní příprava na zimu, zimní úklid sněhu.' },
     { icon: TreeDeciduous, title: 'Zahradnické práce', desc: 'Pletí, výsadba, údržba záhonů, úprava terénu, odstranění kořenů.' },
@@ -76,9 +78,9 @@ const PricingPage = () => {
     <div className="min-h-screen pt-16" data-testid="pricing-page">
       <SEOHead
         title="Cena sekání trávy – transparentně a bez překvapení | SeknuTo.cz"
-        description="Cenu vždy stanovíme po bezplatné prohlídce vaší zahrady. Žádné skryté poplatky. Sekání trávy, likvidace pozemků, sezónní balíčky. Dvůr Králové a okolí."
+        description="Cenu vždy stanovíme po bezplatné prohlídce vaší zahrady. Žádné skryté poplatky. Sekání trávy, stříhání keřů, kácení stromů, realizace zahrad, likvidace pozemků. Dvůr Králové a okolí."
         canonical="https://seknuto.cz/cenik"
-        keywords="cena sekání trávy, kalkulace zahradník, bezplatná obhlídka zahrady, cena likvidace pozemku, zahradnické služby Dvůr Králové, cena údržba zahrady"
+        keywords="cena sekání trávy, cena stříhání keřů, cena kácení stromu, cena realizace zahrady, kalkulace zahradník, bezplatná obhlídka zahrady, cena likvidace pozemku, zahradnické služby Dvůr Králové"
         schema={[
           SCHEMAS.breadcrumb([
             { name: 'Úvod', url: '/' },

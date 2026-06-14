@@ -52,6 +52,46 @@ const ServicesPage = () => {
       iconColor: 'text-orange-600',
     },
     {
+      id: 'tree_shrub_care',
+      icon: TreeDeciduous,
+      title: 'Stříhání keřů a kácení stromů',
+      subtitle: 'Keře, túje, živé ploty, stromy',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez a profesionální kácení stromů včetně rizikového kácení a úklidu.',
+      features: [
+        { label: 'Stříhání živých plotů a tújí', price: '✓' },
+        { label: 'Tvarování okrasných keřů', price: '✓' },
+        { label: 'Ořez a prořez stromů', price: '✓' },
+        { label: 'Kácení stromů (i rizikové)', price: '✓' },
+        { label: 'Štěpkování a odvoz větví', price: '✓' },
+      ],
+      time: 'Dle rozsahu',
+      color: 'bg-teal-50 border-teal-200',
+      iconBg: 'bg-teal-100',
+      iconColor: 'text-teal-600',
+    },
+    {
+      id: 'garden_realization',
+      icon: Sprout,
+      title: 'Realizace zahrad',
+      subtitle: 'Návrh a založení nové zahrady',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Kompletní realizace zahrad na klíč – od návrhu přes terénní úpravy a založení trávníku až po výsadbu zeleně.',
+      features: [
+        { label: 'Návrh zahrady na míru', price: '✓' },
+        { label: 'Zakládání trávníků (semeno i koberec)', price: '✓' },
+        { label: 'Výsadba stromů, keřů a záhonů', price: '✓' },
+        { label: 'Terénní a sadové úpravy', price: '✓' },
+        { label: 'Příprava závlahy a obrub', price: '✓' },
+      ],
+      time: 'Dle projektu',
+      color: 'bg-lime-50 border-lime-200',
+      iconBg: 'bg-lime-100',
+      iconColor: 'text-lime-700',
+    },
+    {
       id: 'garden_work',
       icon: TreeDeciduous,
       title: 'Zahradnické práce',
@@ -183,10 +223,10 @@ const ServicesPage = () => {
   return (
     <div className="min-h-screen pt-16" data-testid="services-page">
       <SEOHead
-        title="Zahradnické služby Dvůr Králové | Sekání trávy, likvidace pozemků, údržba zahrad | SeknuTo.cz"
-        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, likvidace zarostlých pozemků a parcel, sezónní balíčky, vertikutace, hnojení, odvoz odpadu. Bezplatná obhlídka."
+        title="Zahradnické služby Dvůr Králové | Sekání trávy, stříhání keřů, kácení stromů, realizace zahrad | SeknuTo.cz"
+        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, stříhání keřů a živých plotů, kácení a ořez stromů, realizace zahrad, likvidace zarostlých pozemků, sezónní balíčky. Bezplatná obhlídka."
         canonical="https://seknuto.cz/sluzby"
-        keywords="zahradnické služby Dvůr Králové, sekání trávy, likvidace pozemků, čištění zarostlých parcel, vertikutace, hnojení trávníku, údržba zahrad Trutnov, sekání trávy Vrchlabí, odvoz odpadu zahrada"
+        keywords="zahradnické služby Dvůr Králové, sekání trávy, stříhání keřů, stříhání živých plotů, tvarování tújí, kácení stromů Dvůr Králové, ořez stromů, rizikové kácení, realizace zahrad, návrh zahrady, zakládání trávníků, likvidace pozemků, vertikutace, hnojení trávníku, údržba zahrad Trutnov"
         schema={[
           SCHEMAS.breadcrumb([
             { name: 'Úvod', url: '/' },
@@ -195,6 +235,16 @@ const ServicesPage = () => {
           SCHEMAS.service({
             name: 'Sekání trávy',
             description: 'Profesionální sekání trávníků všech velikostí s možností hnojení a mulčování.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
+          SCHEMAS.service({
+            name: 'Stříhání keřů a kácení stromů',
+            description: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez a kácení stromů včetně rizikového kácení a odvozu větví.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
+          SCHEMAS.service({
+            name: 'Realizace zahrad',
+            description: 'Realizace zahrad na klíč – návrh, terénní úpravy, zakládání trávníků ze semene i travního koberce a výsadba zeleně.',
             areaServed: 'Dvůr Králové nad Labem',
           }),
         ]}
@@ -477,6 +527,20 @@ const ServicesPage = () => {
                 <tr className="border-t border-gray-100 hover:bg-gray-50 bg-orange-50/50">
                   <td className="py-3 px-4 font-medium">🔥 Likvidace pozemků</td>
                   <td className="py-3 px-4 text-center text-gray-500">Křoviny, nálety, vysoká tráva</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-teal-50/50">
+                  <td className="py-3 px-4 font-medium">🌳 Stříhání keřů a kácení</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Keře, túje, živé ploty, stromy</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-lime-50/50">
+                  <td className="py-3 px-4 font-medium">🌱 Realizace zahrad</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Návrh, trávníky, výsadba</td>
                   <td className="py-3 px-4 text-right">
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
                   </td>

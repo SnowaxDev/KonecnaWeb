@@ -128,6 +128,8 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2 text-sm">
               {[
+                { href: '/strihani-keru-kaceni-stromu', label: 'Stříhání keřů a kácení stromů' },
+                { href: '/realizace-zahrad', label: 'Realizace zahrad' },
                 { href: '/sekani-travy-trutnov',  label: 'Sekání trávy Trutnov' },
                 { href: '/sekani-travy-vrchlabi', label: 'Sekání trávy Vrchlabí' },
                 { href: '/sekani-travy-jaromer',  label: 'Sekání trávy Jaroměř' },

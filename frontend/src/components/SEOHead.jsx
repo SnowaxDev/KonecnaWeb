@@ -127,6 +127,18 @@ export const SCHEMAS = {
         },
         {
           '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Stříhání keřů a živých plotů', description: 'Stříhání a tvarování keřů, tújí a živých plotů' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Kácení a ořez stromů', description: 'Ořez, prořez a kácení stromů včetně rizikového kácení a odvozu větví' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Realizace zahrad', description: 'Realizace zahrad na klíč – návrh, zakládání trávníků a výsadba zeleně' },
+        },
+        {
+          '@type': 'Offer',
           itemOffered: { '@type': 'Service', name: 'Likvidace a čištění pozemků', description: 'Kompletní vyčištění zarostlých pozemků a parcel' },
         },
         {

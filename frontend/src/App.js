@@ -29,6 +29,7 @@ const GalleryDetailPage = lazy(() => import("./pages/GalleryDetailPage"));
 const BlogListPage = lazy(() => import("./pages/BlogPage").then(m => ({ default: m.BlogListPage })));
 const BlogDetailPage = lazy(() => import("./pages/BlogPage").then(m => ({ default: m.BlogDetailPage })));
 const LocalLandingPage = lazy(() => import("./pages/LocalLandingPage"));
+const ServiceLandingPage = lazy(() => import("./pages/ServiceLandingPage"));
 
 // Set axios base timeout
 axios.defaults.timeout = 15000;
@@ -107,6 +108,8 @@ function App() {
                   <Route path="/sekani-travy-jaromer" element={<LocalLandingPage citySlug="jaromer" />} />
                   <Route path="/sekani-travy-nachod" element={<LocalLandingPage citySlug="nachod" />} />
                   <Route path="/sekani-travy-hostinne" element={<LocalLandingPage citySlug="hostinne" />} />
+                  <Route path="/strihani-keru-kaceni-stromu" element={<ServiceLandingPage serviceSlug="strihani-keru-kaceni-stromu" />} />
+                  <Route path="/realizace-zahrad" element={<ServiceLandingPage serviceSlug="realizace-zahrad" />} />
                 </Routes>
                 </PageFade>
               </main>

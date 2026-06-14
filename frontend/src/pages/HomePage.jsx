@@ -62,7 +62,19 @@ const HomePage = () => {
     },
     {
       question: 'Co všechno děláte? Jaké služby nabízíte?',
-      answer: 'Nabízíme sekání trávy, vertikutaci, hnojení, sezónní balíčky (jaro, léto, podzim, zima), zahradnické práce, likvidaci a čištění zarostlých pozemků a parcel, odvoz odpadu a celoroční VIP péči.',
+      answer: 'Nabízíme sekání trávy, stříhání keřů, živých plotů a tújí, ořez a kácení stromů, realizace zahrad (návrh a založení trávníku), vertikutaci, hnojení, sezónní balíčky (jaro, léto, podzim, zima), likvidaci zarostlých pozemků, odvoz odpadu a celoroční VIP péči.',
+    },
+    {
+      question: 'Stříháte keře, živé ploty a túje?',
+      answer: 'Ano. Stříháme a tvarujeme okrasné keře, túje i živé ploty všech výšek – pravidelně i jednorázově. Součástí je úklid a odvoz nebo štěpkování větví.',
+    },
+    {
+      question: 'Provádíte kácení a ořez stromů?',
+      answer: 'Provádíme ořez, prořez i kompletní kácení stromů včetně rizikového kácení po částech u domů a vedení. Větve nastěpkujeme nebo odvezeme a po práci uklidíme.',
+    },
+    {
+      question: 'Co znamená "realizace zahrad"?',
+      answer: 'Realizujeme zahrady na klíč – od návrhu přes terénní úpravy a založení trávníku (ze semene i z travního koberce) až po výsadbu stromů, keřů a záhonů. Vytvoříme novou zahradu i proměníme stávající.',
     },
     {
       question: 'Jaké oblasti pokrýváte vašimi službami?',

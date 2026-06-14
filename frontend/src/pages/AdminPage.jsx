@@ -43,6 +43,7 @@ const SERVICE_NAMES = {
   vip_annual: 'VIP Celoroční',
   land_clearing: 'Likvidace a čištění pozemků',
   tree_shrub_care: 'Stříhání keřů a kácení stromů',
+  garden_realization: 'Realizace zahrad',
   garden_work: 'Zahradnické práce',
   debris_hourly: 'Odvoz odpadu',
   other: 'Jiná služba',
@@ -766,7 +767,7 @@ const BookingsTab = ({ token, handle401 }) => {
 }; 
 
 // ─── GALLERY TAB ──────────────────────────────────────────────────────────────
-const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů a stromů', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
+const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů a stromů', 'Kácení stromů', 'Realizace zahrad', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
 
 const EMPTY_GALLERY_FORM = {
   title: '', category: 'Sekání', location: '', date: '',

@@ -47,6 +47,8 @@ export const TAG_COLORS = {
   'Sekání': 'bg-green-100 text-green-800',
   'Zahradní práce': 'bg-teal-100 text-teal-800',
   'Stříhání keřů a stromů': 'bg-emerald-100 text-emerald-800',
+  'Kácení stromů': 'bg-teal-100 text-teal-800',
+  'Realizace zahrad': 'bg-lime-100 text-lime-800',
 };
 
 // Doplní tagColor, slug a pole fotek (starší projekty mají jen before_image/after_image)
