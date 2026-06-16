@@ -50,7 +50,7 @@ const SERVICE_DATA = {
     hero: 'Pokládka travního koberce i zakládání trávníku ze semene ve Dvoře Králové nad Labem a okolí do 30 km. Připravíme podloží, položíme rolovaný trávník a předáme vám okamžitě zelenou zahradu – s úklidem a poradenstvím o péči.',
     metaTitle: 'Pokládání trávníku a travní koberec Dvůr Králové | SeknuTo.cz',
     metaDescription: 'Pokládka travního koberce a zakládání trávníku ze semene ve Dvoře Králové a okolí. Příprava podloží, rolovaný trávník, okamžitě zelená zahrada. Bezplatná obhlídka. 730 588 372',
-    keywords: 'pokládání trávníku, pokládka travního koberce, travní koberec cena, založení trávníku, rolovaný trávník, anglický trávník, založení trávníku ze semene, příprava podloží pod trávník, travní koberec Dvůr Králové, travní koberec Trutnov',
+    keywords: 'pokládání trávníku, pokládka travního koberce, travní koberec cena, travní koberec cena za m2, založení trávníku, rolovaný trávník, anglický trávník, založení trávníku ze semene, výsev trávníku, příprava podloží pod trávník, nový trávník Dvůr Králové, travní koberec Dvůr Králové, pokládka trávníku Trutnov, pokládka trávníku Vrchlabí, zahradník Dvůr Králové',
     serviceName: 'Pokládání trávníku',
     serviceDesc: 'Pokládka travního koberce i zakládání trávníku ze semene – příprava podloží, rotavace, pokládka rolovaného trávníku, zaválcování a poradenství o závlaze a péči.',
     services: [
@@ -84,7 +84,7 @@ const SERVICE_DATA = {
     hero: 'Kompletní realizace zahrad na klíč ve Dvoře Králové nad Labem a okolí – od návrhu přes terénní úpravy a založení trávníku až po výsadbu zeleně. Nová zahrada od základu i proměna té stávající.',
     metaTitle: 'Realizace zahrad Dvůr Králové | Návrh a založení | SeknuTo.cz',
     metaDescription: 'Realizace zahrad na klíč ve Dvoře Králové a okolí – návrh zahrady, zakládání trávníků ze semene i travního koberce, výsadba zeleně a terénní úpravy. Bezplatná obhlídka. 730 588 372',
-    keywords: 'realizace zahrad Dvůr Králové, návrh zahrady, zakládání trávníků, pokládka travního koberce, založení trávníku ze semene, výsadba zeleně, terénní úpravy zahrada, nová zahrada na klíč',
+    keywords: 'realizace zahrad Dvůr Králové, realizace zahrady cena, návrh zahrady, zahradní architekt Dvůr Králové, zakládání trávníků, pokládka travního koberce, založení trávníku ze semene, výsadba zeleně, terénní úpravy zahrada, automatická závlaha, nová zahrada na klíč, realizace zahrad Trutnov, realizace zahrad Vrchlabí',
     serviceName: 'Realizace zahrad',
     serviceDesc: 'Realizace zahrad na klíč – návrh, terénní úpravy, zakládání trávníků ze semene i travního koberce a výsadba zeleně.',
     services: [

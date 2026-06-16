@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Leaf, Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -9,9 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4" data-testid="footer-logo">
-              <div className="w-10 h-10 bg-[#3FA34D] rounded-full flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo.png" alt="SeknuTo.cz – zahradnické služby" width="40" height="40" className="w-10 h-10" />
               <span className="font-bold text-xl" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 SeknuTo<span className="text-[#3FA34D]">.cz</span>
               </span>
