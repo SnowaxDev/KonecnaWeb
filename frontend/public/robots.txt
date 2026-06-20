@@ -1,19 +1,65 @@
+# robots.txt – SeknuTo.cz
+# Web je otevřený vyhledávačům i AI asistentům (ChatGPT, Perplexity, Google AI Overviews…)
+# Cíl: maximální dohledatelnost a citovatelnost.
+
 User-agent: *
 Allow: /
-
 Disallow: /admin
 Disallow: /admin/
 Disallow: /api/
 Disallow: /poukaz/
 
-Sitemap: https://seknuto.cz/sitemap.xml
-
-Crawl-delay: 1
-
+# --- Vyhledávače ---
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 0
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: SeznamBot
+Allow: /
 
 User-agent: bingbot
 Allow: /
-Crawl-delay: 1
+
+# --- AI asistenti / odpovědní enginy (povolujeme pro citace a viditelnost) ---
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+Sitemap: https://seknuto.cz/sitemap.xml
