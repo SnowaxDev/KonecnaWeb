@@ -110,12 +110,14 @@ export const SCHEMAS = {
     },
     areaServed: [
       { '@type': 'City', name: 'Dvůr Králové nad Labem' },
+      { '@type': 'City', name: 'Hradec Králové' },
       { '@type': 'City', name: 'Trutnov' },
       { '@type': 'City', name: 'Vrchlabí' },
       { '@type': 'City', name: 'Hostinné' },
       { '@type': 'City', name: 'Jaroměř' },
       { '@type': 'City', name: 'Náchod' },
       { '@type': 'City', name: 'Hořice' },
+      { '@type': 'City', name: 'Jičín' },
     ],
     hasOfferCatalog: {
       '@type': 'OfferCatalog',

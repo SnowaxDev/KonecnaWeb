@@ -10,6 +10,7 @@ import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import Reveal from '../components/Reveal';
 
 const CITY_DATA = {
+  'hradec-kralove': { name: 'Hradec Králové', distanceKm: 25 },
   trutnov:  { name: 'Trutnov',  distanceKm: 20 },
   vrchlabi: { name: 'Vrchlabí', distanceKm: 25 },
   jaromer:  { name: 'Jaroměř',  distanceKm: 22 },
@@ -59,7 +60,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
 
   const benefits = [
     `Místní firma – jezdíme pravidelně do ${name}`,
-    'Bez příplatku za dojezd v rámci 30 km',
+    'Bez příplatku za dojezd v rámci 50 km',
     'Cena jasná před zahájením prací',
     'Rychlá odpověď do 24 hodin',
     'Profesionální vybavení a zkušený tým',

@@ -158,7 +158,7 @@ const AboutPage = () => {
                 <p className="text-sm text-[#4B5563]">Spokojených zákazníků</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>30 km</p>
+                <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>50 km</p>
                 <p className="text-sm text-[#4B5563]">Dosah služeb</p>
               </div>
               <div>

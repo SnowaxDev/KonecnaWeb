@@ -82,7 +82,7 @@ const HomePage = () => {
     },
     {
       question: 'Jaké oblasti pokrýváte vašimi službami?',
-      answer: 'Působíme v Dvoře Králové nad Labem a okolí do vzdálenosti 30 km – zahrnuje to Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolní vesnice.',
+      answer: 'Rozšířili jsme dojezd na 50 km od Dvůra Králové nad Labem – nově obsluhujeme i krajské město Hradec Králové. Pokrýváme Hradec Králové, Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod, Hořice, Jičín a okolní obce.',
     },
     {
       question: 'Co je "Likvidace a čištění pozemků"?',
@@ -255,7 +255,7 @@ const HomePage = () => {
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Obhlídka</p>
                   </div>
                   <div className="text-center border-x-2 border-gray-100">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>30 km</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>50 km</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Dosah</p>
                   </div>
                   <div className="text-center">

@@ -103,6 +103,7 @@ function App() {
                   <Route path="/nase-prace/:slug" element={<GalleryDetailPage />} />
                   <Route path="/blog" element={<BlogListPage />} />
                   <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                  <Route path="/sekani-travy-hradec-kralove" element={<LocalLandingPage citySlug="hradec-kralove" />} />
                   <Route path="/sekani-travy-trutnov" element={<LocalLandingPage citySlug="trutnov" />} />
                   <Route path="/sekani-travy-vrchlabi" element={<LocalLandingPage citySlug="vrchlabi" />} />
                   <Route path="/sekani-travy-jaromer" element={<LocalLandingPage citySlug="jaromer" />} />

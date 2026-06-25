@@ -15,7 +15,7 @@ const SERVICE_DATA = {
   'strihani-keru-kaceni-stromu': {
     badge: 'Keře · túje · živé ploty · stromy',
     h1: 'Stříhání keřů a kácení stromů',
-    hero: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez i kompletní kácení stromů ve Dvoře Králové nad Labem a okolí do 30 km. Profesionální technika, úklid a odvoz větví v ceně.',
+    hero: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez i kompletní kácení stromů ve Dvoře Králové nad Labem a okolí do 50 km. Profesionální technika, úklid a odvoz větví v ceně.',
     metaTitle: 'Stříhání keřů a kácení stromů Dvůr Králové | SeknuTo.cz',
     metaDescription: 'Profesionální stříhání keřů, živých plotů a tújí, ořez a kácení stromů ve Dvoře Králové a okolí. Rizikové kácení, štěpkování a odvoz větví. Bezplatná obhlídka. 730 588 372',
     keywords: 'stříhání keřů Dvůr Králové, stříhání živých plotů, tvarování tújí, ořez stromů, kácení stromů Dvůr Králové, rizikové kácení, prořez ovocných stromů, štěpkování větví, řez keřů Trutnov',
@@ -34,7 +34,7 @@ const SERVICE_DATA = {
       'Rizikové kácení po částech tam, kde nelze kácet celé',
       'Štěpkování a odvoz větví rovnou v ceně',
       'Cena jasná před zahájením prací',
-      'Místní firma z Dvůra Králové, dojezd do 30 km',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
       'Rychlá odpověď do 24 hodin',
     ],
     faq: [
@@ -47,7 +47,7 @@ const SERVICE_DATA = {
   'pokladani-travniku': {
     badge: 'Travní koberec · setý trávník · podloží',
     h1: 'Pokládání trávníku',
-    hero: 'Pokládka travního koberce i zakládání trávníku ze semene ve Dvoře Králové nad Labem a okolí do 30 km. Připravíme podloží, položíme rolovaný trávník a předáme vám okamžitě zelenou zahradu – s úklidem a poradenstvím o péči.',
+    hero: 'Pokládka travního koberce i zakládání trávníku ze semene ve Dvoře Králové nad Labem a okolí do 50 km. Připravíme podloží, položíme rolovaný trávník a předáme vám okamžitě zelenou zahradu – s úklidem a poradenstvím o péči.',
     metaTitle: 'Pokládání trávníku a travní koberec Dvůr Králové | SeknuTo.cz',
     metaDescription: 'Pokládka travního koberce a zakládání trávníku ze semene ve Dvoře Králové a okolí. Příprava podloží, rolovaný trávník, okamžitě zelená zahrada. Bezplatná obhlídka. 730 588 372',
     keywords: 'pokládání trávníku, pokládka travního koberce, travní koberec cena, travní koberec cena za m2, založení trávníku, rolovaný trávník, anglický trávník, založení trávníku ze semene, výsev trávníku, příprava podloží pod trávník, nový trávník Dvůr Králové, travní koberec Dvůr Králové, pokládka trávníku Trutnov, pokládka trávníku Vrchlabí, zahradník Dvůr Králové',
@@ -66,7 +66,7 @@ const SERVICE_DATA = {
       'Koberec pokládáme do 24 hodin od sloupnutí pro maximální ujmutí',
       'Poradíme: travní koberec vs. setí ze semene podle vašeho rozpočtu',
       'Správně připravené podloží = trávník, který vydrží',
-      'Místní firma z Dvůra Králové, dojezd do 30 km',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
       'Cena jasná před zahájením, rychlá odpověď do 24 hodin',
     ],
     faq: [
@@ -100,7 +100,7 @@ const SERVICE_DATA = {
       'Trávník ze semene i rychlá pokládka travního koberce',
       'Poradíme s výběrem rostlin vhodných pro vaši zahradu',
       'Cena jasná před zahájením prací',
-      'Místní firma z Dvůra Králové, dojezd do 30 km',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
       'Rychlá odpověď do 24 hodin',
     ],
     faq: [

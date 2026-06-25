@@ -58,7 +58,7 @@ const PricingPage = () => {
     { icon: Star, title: '5/5 hodnocení', desc: 'Přes 20 spokojených zákazníků nás hodnotí na plný počet hvězd.' },
     { icon: Shield, title: 'Cena vždy předem', desc: 'Nikdy nezačínáme bez odsouhlasené ceny. Žádná překvapení.' },
     { icon: Clock, title: 'Odpověď do 24h', desc: 'Na každou poptávku odpovídáme nejpozději do druhého dne.' },
-    { icon: MapPin, title: 'Dvůr Králové + 30 km', desc: 'Pokrýváme Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolí.' },
+    { icon: MapPin, title: 'Dvůr Králové + 50 km', desc: 'Nově i Hradec Králové. Pokrýváme Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod, Hořice, Jičín a okolí.' },
   ];
 
   const faqItems = [

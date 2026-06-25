@@ -70,7 +70,7 @@ const ContactPage = () => {
       icon: MapPin,
       title: 'Oblast působení',
       value: 'Dvůr Králové nad Labem',
-      description: 'a okolí do 30 km',
+      description: 'a okolí do 50 km',
     },
   ];
 
@@ -304,7 +304,7 @@ const ContactPage = () => {
           <Reveal variant="reveal-scale" delay={100} className="bg-white rounded-2xl p-8 text-center border border-gray-100">
             <MapPin className="w-12 h-12 text-[#3FA34D] mx-auto mb-4" />
             <h3 className="text-xl font-bold text-[#222222] mb-2">Dvůr Králové nad Labem</h3>
-            <p className="text-[#4B5563] mb-4">a okolí do vzdálenosti 30 km</p>
+            <p className="text-[#4B5563] mb-4">a okolí do vzdálenosti 50 km</p>
             <p className="text-sm text-[#9CA3AF]">
               Trutnov • Jaroměř • Náchod • Hradec Králové • a další
             </p>

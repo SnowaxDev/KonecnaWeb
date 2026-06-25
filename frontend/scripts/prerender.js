@@ -31,6 +31,7 @@ const ROUTES = [
   '/strihani-keru-kaceni-stromu',
   '/realizace-zahrad',
   '/pokladani-travniku',
+  '/sekani-travy-hradec-kralove',
   '/sekani-travy-trutnov',
   '/sekani-travy-vrchlabi',
   '/sekani-travy-jaromer',
