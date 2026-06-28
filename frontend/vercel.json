@@ -24,9 +24,9 @@
       ]
     },
     {
-      "source": "/(.*\\.(?:png|jpg|jpeg|webp|svg|ico))",
+      "source": "/(.*\\.(?:png|jpg|jpeg|webp|svg|ico|woff2))",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=2592000" }
       ]
     },
     {
