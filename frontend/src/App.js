@@ -16,19 +16,23 @@ import CallButton from "./components/CallButton";
 // Landing page is eager so it renders immediately without a chunk round-trip
 import HomePage from "./pages/HomePage";
 
-// Secondary pages are code-split – they load only when their route is visited.
-// This keeps the initial mobile bundle small (esp. the heavy AdminPage).
-const ServicesPage = lazy(() => import("./pages/ServicesPage"));
-const PricingPage = lazy(() => import("./pages/PricingPage"));
-const BookingPage = lazy(() => import("./pages/BookingPage"));
-const AboutPage = lazy(() => import("./pages/AboutPage"));
-const ContactPage = lazy(() => import("./pages/ContactPage"));
+// Secondary pages are code-split – they load only when their route is visited,
+// which keeps the initial mobile bundle small (esp. the heavy AdminPage).
+// The public pages are marked webpackPrefetch so the browser fetches their
+// chunks during idle time – navigation stays instant/smooth, just like when
+// everything was bundled, but without bloating the first load.
+const ServicesPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/ServicesPage"));
+const PricingPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/PricingPage"));
+const BookingPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/BookingPage"));
+const AboutPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/AboutPage"));
+const ContactPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/ContactPage"));
+const GalleryPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/GalleryPage"));
+const LocalLandingPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/LocalLandingPage"));
+const BlogListPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/BlogPage").then((m) => ({ default: m.BlogListPage })));
+const BlogDetailPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogDetailPage })));
+// Admin & voucher stay lazy WITHOUT prefetch (rarely visited / admin-only).
 const VoucherPage = lazy(() => import("./pages/VoucherPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
-const GalleryPage = lazy(() => import("./pages/GalleryPage"));
-const LocalLandingPage = lazy(() => import("./pages/LocalLandingPage"));
-const BlogListPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogListPage })));
-const BlogDetailPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogDetailPage })));
 const EmailPopup = lazy(() => import("./components/EmailPopup"));
 const GoogleAnalytics = lazy(() => import("./components/GoogleAnalytics"));
 
