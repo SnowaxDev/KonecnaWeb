@@ -148,7 +148,7 @@ const HomePage = () => {
         <div 
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232E8B3E' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232C8339' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
         
@@ -156,8 +156,8 @@ const HomePage = () => {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left Content */}
             <div className="text-left">
-              <div className="inline-flex items-center gap-2 bg-white border-2 border-[#2E8B3E]/20 rounded-full px-4 py-2 mb-6 shadow-sm">
-                <Star className="w-4 h-4 text-[#2E8B3E]" fill="#2E8B3E" />
+              <div className="inline-flex items-center gap-2 bg-white border-2 border-[#2C8339]/20 rounded-full px-4 py-2 mb-6 shadow-sm">
+                <Star className="w-4 h-4 text-[#2C8339]" fill="#2C8339" />
                 <span className="text-sm font-semibold text-[#374151]">
                   Mladý tým s chutí do práce
                 </span>
@@ -168,7 +168,7 @@ const HomePage = () => {
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
                 Perfektní sekání{' '}
-                <span className="text-[#2E8B3E]">vašeho trávníku</span>
+                <span className="text-[#2C8339]">vašeho trávníku</span>
               </h1>
               
               <p className="text-base sm:text-lg md:text-xl text-[#374151] mb-8 leading-relaxed max-w-xl font-medium">
@@ -184,7 +184,7 @@ const HomePage = () => {
                   { icon: MapPin, text: 'Místní firma' },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm font-semibold text-[#374151]">
-                    <item.icon className="w-5 h-5 text-[#2E8B3E]" />
+                    <item.icon className="w-5 h-5 text-[#2C8339]" />
                     <span>{item.text}</span>
                   </div>
                 ))}
@@ -195,7 +195,7 @@ const HomePage = () => {
                 <Link to="/rezervace" className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
-                    className="w-full bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-full px-8 h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all"
+                    className="w-full bg-[#2C8339] hover:bg-[#256d31] text-white rounded-full px-8 h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all"
                     data-testid="hero-cta-rezervace"
                   >
                     Nezávazná poptávka
@@ -206,7 +206,7 @@ const HomePage = () => {
                   <Button 
                     size="lg" 
                     variant="outline"
-                    className="w-full border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold"
+                    className="w-full border-2 border-[#2C8339] text-[#2C8339] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold"
                     data-testid="hero-cta-whatsapp"
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
@@ -220,7 +220,7 @@ const HomePage = () => {
             <div className="relative mt-8 lg:mt-0">
               <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border-2 border-gray-100">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#2E8B3E] rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#2C8339] rounded-2xl flex items-center justify-center shadow-lg">
                     <Leaf className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                   </div>
                   <div>
@@ -233,15 +233,15 @@ const HomePage = () => {
                 
                 <div className="grid grid-cols-3 gap-4 sm:gap-6 py-6 border-t-2 border-b-2 border-gray-100">
                   <div className="text-center">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2C8339]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Obhlídka</p>
                   </div>
                   <div className="text-center border-x-2 border-gray-100">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>30 km</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2C8339]" style={{ fontFamily: 'Poppins, sans-serif' }}>30 km</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Dosah</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2C8339]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Kalkulace</p>
                   </div>
                 </div>
@@ -249,7 +249,7 @@ const HomePage = () => {
                 <div className="mt-6">
                   <Link to="/rezervace">
                     <Button 
-                      className="w-full bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-xl h-12 sm:h-14 font-bold text-base"
+                      className="w-full bg-[#2C8339] hover:bg-[#256d31] text-white rounded-xl h-12 sm:h-14 font-bold text-base"
                       data-testid="hero-card-cta"
                     >
                       Získat cenovou nabídku zdarma
@@ -279,11 +279,11 @@ const HomePage = () => {
             {services.map((service, idx) => (
               <Card 
                 key={idx} 
-                className="card-hover bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-[#2E8B3E]/30"
+                className="card-hover bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-[#2C8339]/30"
                 data-testid={`service-card-${idx}`}
               >
                 <CardContent className="p-5 sm:p-6 md:p-8">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#2E8B3E] rounded-xl flex items-center justify-center mb-5 shadow-md">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#2C8339] rounded-xl flex items-center justify-center mb-5 shadow-md">
                     <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-[#111827] mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -295,19 +295,19 @@ const HomePage = () => {
                   <ul className="space-y-2 mb-6">
                     {service.features.map((feature, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2 text-sm text-[#374151] font-medium">
-                        <CheckCircle className="w-4 h-4 text-[#2E8B3E] flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-[#2C8339] flex-shrink-0" />
                         {feature}
                       </li>
                     ))}
                   </ul>
                   <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
                     <span className="text-sm font-semibold text-[#6B7280]">Cena:</span>
-                    <span className="text-lg font-black text-[#2E8B3E]">{service.price}</span>
+                    <span className="text-lg font-black text-[#2C8339]">{service.price}</span>
                   </div>
                   <Link to="/rezervace" className="block mt-4">
                     <Button 
                       variant="outline" 
-                      className="w-full border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-lg font-bold"
+                      className="w-full border-2 border-[#2C8339] text-[#2C8339] hover:bg-[#F0FDF4] rounded-lg font-bold"
                     >
                       Nezávazná poptávka
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -321,7 +321,7 @@ const HomePage = () => {
           <div className="text-center mt-10">
             <Link to="/sluzby">
               <Button 
-                className="bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-full px-8 h-12 font-bold"
+                className="bg-[#2C8339] hover:bg-[#256d31] text-white rounded-full px-8 h-12 font-bold"
                 data-testid="view-all-services-btn"
               >
                 Zobrazit všechny služby
@@ -351,7 +351,7 @@ const HomePage = () => {
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md border border-gray-100">
                   <step.icon className="w-7 h-7 text-[#3FA34D]" />
                 </div>
-                <p className="text-sm text-[#9CA3AF] mb-1">{idx + 1}.</p>
+                <p className="text-sm text-[#6B7280] mb-1">{idx + 1}.</p>
                 <h4 className="font-semibold text-[#222222] mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   {step.title}
                 </h4>

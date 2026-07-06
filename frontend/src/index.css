@@ -6,7 +6,7 @@
 
 :root {
     /* Primary Colors - High Contrast */
-    --primary: #2E8B3E;          /* Darker green for better contrast */
+    --primary: #2C8339;          /* Darker green for better contrast */
     --primary-hover: #256d31;
     --primary-light: #3FA34D;
     --secondary: #1a5c26;
@@ -20,7 +20,7 @@
     --text-primary: #111827;      /* Almost black for best readability */
     --text-secondary: #374151;    /* Dark gray */
     --text-muted: #6B7280;        /* Medium gray */
-    --text-light: #9CA3AF;
+    --text-light: #6B7280;
     
     /* Borders */
     --border: #E5E7EB;
@@ -107,7 +107,7 @@ p {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2E8B3E;
+    background: #2C8339;
     border-radius: 5px;
 }
 
@@ -178,6 +178,29 @@ p {
     box-shadow: 0 6px 30px rgba(37, 211, 102, 0.5);
 }
 
+/* One-tap call button – stacked above the WhatsApp button */
+.call-float {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    z-index: 1000;
+    background: #2C8339;
+    color: white;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(44, 131, 57, 0.4);
+    transition: all 0.3s ease;
+}
+
+.call-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(44, 131, 57, 0.5);
+}
+
 /* Card hover effects */
 .card-hover {
     transition: all 0.3s ease;
@@ -198,13 +221,13 @@ p {
 /* Form focus styles */
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #2E8B3E;
+    border-color: #2C8339;
     box-shadow: 0 0 0 3px rgba(46, 139, 62, 0.15);
 }
 
 /* Button styles */
 .btn-primary {
-    background: #2E8B3E;
+    background: #2C8339;
     color: white;
     font-weight: 600;
     padding: 14px 28px;
@@ -251,13 +274,13 @@ input:focus, textarea:focus, select:focus {
 }
 
 .step-active {
-    background: #2E8B3E;
+    background: #2C8339;
     color: white;
     box-shadow: 0 4px 12px rgba(46, 139, 62, 0.3);
 }
 
 .step-completed {
-    background: #2E8B3E;
+    background: #2C8339;
     color: white;
 }
 
@@ -300,6 +323,13 @@ input:focus, textarea:focus, select:focus {
         width: 56px;
         height: 56px;
     }
+
+    .call-float {
+        bottom: 84px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+    }
     
     h1 {
         font-size: 2rem;
@@ -323,7 +353,7 @@ input:focus, textarea:focus, select:focus {
 
 /* Focus visible for accessibility */
 :focus-visible {
-    outline: 2px solid #2E8B3E;
+    outline: 2px solid #2C8339;
     outline-offset: 2px;
 }
 
@@ -361,14 +391,14 @@ label:active {
 /* Kliknutý den - feedback */
 .rdp-button:active:not([disabled]) {
     transform: scale(0.88) !important;
-    background-color: #2E8B3E !important;
+    background-color: #2C8339 !important;
     color: white !important;
     border-radius: 9999px !important;
 }
 
 /* Selection color */
 ::selection {
-    background: #2E8B3E;
+    background: #2C8339;
     color: white;
 }
 
@@ -380,7 +410,7 @@ a {
 }
 
 a:hover {
-    color: #2E8B3E;
+    color: #2C8339;
 }
 
 /* Better spacing for mobile */

@@ -104,7 +104,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
               </Button>
             </Link>
             <a href="https://wa.me/420730588372" target="_blank" rel="noopener noreferrer">
-              <Button size="lg" variant="outline" className="border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold">
+              <Button size="lg" variant="outline" className="border-2 border-[#2C8339] text-[#2C8339] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold">
                 <MessageCircle className="w-5 h-5 mr-2" />
                 WhatsApp: 730 588 372
               </Button>
