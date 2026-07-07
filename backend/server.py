@@ -1,9 +1,10 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File, BackgroundTasks
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import OperationFailure
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -79,6 +80,50 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+def _json_safe(value):
+    """Recursively convert Mongo/BSON documents into JSON-serializable values so a
+    single document with an unexpected type can't crash a whole list endpoint."""
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            return value.decode("utf-8", "ignore")
+        except Exception:
+            return ""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def _cors_allow_origin(request: Request) -> str:
+    """Resolve Access-Control-Allow-Origin so error responses (which bypass the
+    CORS middleware) still carry CORS headers."""
+    origin = request.headers.get("origin", "")
+    allowed = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
+    if "*" in allowed or not allowed:
+        return origin or "*"
+    return origin if origin in allowed else allowed[0]
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Log unexpected errors with a full traceback and return a CORS-enabled 500
+    instead of an opaque 'blocked by CORS policy' message that hides the cause."""
+    logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": _cors_allow_origin(request),
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
 
 # ============== GOOGLE CALENDAR HELPERS ==============
 
@@ -1380,8 +1425,33 @@ async def list_gallery_projects():
         }},
         {"$project": {"_id": 0, "videos": 0, "extra_images": 0}},
     ]
-    projects = await db.gallery_projects.aggregate(pipeline).to_list(100)
-    return projects
+    try:
+        projects = await db.gallery_projects.aggregate(pipeline).to_list(100)
+        return [_json_safe(p) for p in projects]
+    except OperationFailure as e:
+        # e.g. the $sort exceeded the in-memory limit before the index exists.
+        # Fall back to an unsorted fetch (streams, no sort buffer), then sort and
+        # trim in Python to mirror the pipeline output.
+        logger.warning(f"Gallery aggregate failed (code={getattr(e, 'code', '?')}); using in-app fallback")
+        docs = await db.gallery_projects.find({"published": True}, {"_id": 0}).to_list(100)
+        docs.sort(key=lambda d: d.get("created_at") or "", reverse=True)
+        trimmed = []
+        for d in docs[:100]:
+            before = d.get("before_images") or []
+            after = d.get("after_images") or []
+            extra = d.get("extra_images") or []
+            videos = d.get("videos") or []
+            d["photo_count"] = len(before) + len(after) + len(extra)
+            d["video_count"] = len(videos)
+            d["before_images"] = before[:1]
+            d["after_images"] = after[:1]
+            d.pop("videos", None)
+            d.pop("extra_images", None)
+            trimmed.append(d)
+        return [_json_safe(p) for p in trimmed]
+    except Exception as e:
+        logger.error(f"Failed to list public gallery projects: {e}", exc_info=True)
+        return []
 
 @api_router.get("/gallery/projects/{slug_or_id}")
 async def get_gallery_project(slug_or_id: str):
@@ -1429,8 +1499,17 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
 @api_router.get("/admin/gallery/projects")
 async def admin_list_gallery_projects(request: Request):
     await verify_admin(request)
-    projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    return projects
+    try:
+        try:
+            projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+        except OperationFailure as e:
+            logger.warning(f"Admin gallery DB sort failed (code={getattr(e, 'code', '?')}); using in-app sort")
+            projects = await db.gallery_projects.find({}, {"_id": 0}).to_list(200)
+            projects.sort(key=lambda d: d.get("created_at") or "", reverse=True)
+        return [_json_safe(p) for p in projects]
+    except Exception as e:
+        logger.error(f"Failed to list admin gallery projects: {e}", exc_info=True)
+        raise HTTPException(status_code=503, detail="Nepodařilo se načíst projekty z databáze. Zkuste to prosím za chvíli.")
 
 @api_router.patch("/admin/gallery/projects/{project_id}")
 async def admin_update_gallery_project(project_id: str, request: Request):
@@ -1998,6 +2077,19 @@ async def startup_db_client():
         logger.info("MongoDB indexes created successfully")
     except Exception as e:
         logger.warning(f"Index creation warning (may already exist): {str(e)}")
+
+    # Gallery projects embed large base64 images, so sorting them by created_at
+    # without an index buffers oversized documents past MongoDB's in-memory sort
+    # limit (error 292, QueryExceededMemoryLimitNoDiskUseAllowed) on free/shared
+    # clusters that cannot spill to disk. These indexes make the sort (both the
+    # aggregation $sort and the admin find().sort()) index-backed and streaming.
+    # Own try block so an unrelated index conflict above cannot skip this fix.
+    try:
+        await db.gallery_projects.create_index([("published", 1), ("created_at", -1)])
+        await db.gallery_projects.create_index([("created_at", -1)])
+        logger.info("Gallery indexes created successfully")
+    except Exception as e:
+        logger.warning(f"Gallery index creation warning (may already exist): {str(e)}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
