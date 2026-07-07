@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File, BackgroundTasks
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -79,6 +79,58 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+def _json_safe(value):
+    """Recursively convert Mongo/BSON documents into JSON-serializable values.
+
+    Prevents a single document with an unexpected type (datetime, bytes,
+    ObjectId, ...) from crashing an entire list endpoint with a 500.
+    """
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            return value.decode("utf-8", "ignore")
+        except Exception:
+            return ""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    # Fallback for ObjectId and other exotic BSON types
+    return str(value)
+
+
+def _cors_allow_origin(request: Request) -> str:
+    """Resolve the Access-Control-Allow-Origin value for a given request so that
+    error responses (which bypass CORSMiddleware) still carry CORS headers."""
+    origin = request.headers.get("origin", "")
+    allowed = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
+    if "*" in allowed or not allowed:
+        return origin or "*"
+    return origin if origin in allowed else allowed[0]
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch-all so unexpected errors are logged with a full traceback and the
+    browser receives a proper CORS-enabled 500 instead of an opaque
+    'blocked by CORS policy' message that hides the real cause."""
+    logger.error(
+        f"Unhandled error on {request.method} {request.url.path}: {exc}",
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": _cors_allow_origin(request),
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
 
 # ============== GOOGLE CALENDAR HELPERS ==============
 
@@ -1319,8 +1371,14 @@ class GalleryProjectCreate(BaseModel):
 @api_router.get("/gallery/projects")
 async def list_gallery_projects():
     """Public: list published gallery projects"""
-    projects = await db.gallery_projects.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
-    return projects
+    try:
+        projects = await db.gallery_projects.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return [_json_safe(p) for p in projects]
+    except Exception as e:
+        logger.error(f"Failed to list public gallery projects: {e}", exc_info=True)
+        # Degrade gracefully: return an empty (but valid, CORS-enabled) response
+        # instead of a 500 so the site never breaks on a transient DB issue.
+        return []
 
 @api_router.post("/admin/gallery/projects")
 async def admin_create_gallery_project(data: GalleryProjectCreate, request: Request):
@@ -1345,8 +1403,12 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
 @api_router.get("/admin/gallery/projects")
 async def admin_list_gallery_projects(request: Request):
     await verify_admin(request)
-    projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    return projects
+    try:
+        projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+        return [_json_safe(p) for p in projects]
+    except Exception as e:
+        logger.error(f"Failed to list admin gallery projects: {e}", exc_info=True)
+        raise HTTPException(status_code=503, detail="Nepodařilo se načíst projekty z databáze. Zkuste to prosím za chvíli.")
 
 @api_router.patch("/admin/gallery/projects/{project_id}")
 async def admin_update_gallery_project(project_id: str, request: Request):
