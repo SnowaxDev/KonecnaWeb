@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 
 const ServicesPage = () => {
   const [expandedService, setExpandedService] = useState(null);
@@ -49,6 +50,66 @@ const ServicesPage = () => {
       color: 'bg-orange-50 border-orange-200',
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
+    },
+    {
+      id: 'tree_shrub_care',
+      icon: TreeDeciduous,
+      title: 'Stříhání keřů a kácení stromů',
+      subtitle: 'Keře, túje, živé ploty, stromy',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez a profesionální kácení stromů včetně rizikového kácení a úklidu.',
+      features: [
+        { label: 'Stříhání živých plotů a tújí', price: '✓' },
+        { label: 'Tvarování okrasných keřů', price: '✓' },
+        { label: 'Ořez a prořez stromů', price: '✓' },
+        { label: 'Kácení stromů (i rizikové)', price: '✓' },
+        { label: 'Štěpkování a odvoz větví', price: '✓' },
+      ],
+      time: 'Dle rozsahu',
+      color: 'bg-teal-50 border-teal-200',
+      iconBg: 'bg-teal-100',
+      iconColor: 'text-teal-600',
+    },
+    {
+      id: 'garden_realization',
+      icon: Sprout,
+      title: 'Realizace zahrad',
+      subtitle: 'Návrh a založení nové zahrady',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Kompletní realizace zahrad na klíč – od návrhu přes terénní úpravy a založení trávníku až po výsadbu zeleně.',
+      features: [
+        { label: 'Návrh zahrady na míru', price: '✓' },
+        { label: 'Zakládání trávníků (semeno i koberec)', price: '✓' },
+        { label: 'Výsadba stromů, keřů a záhonů', price: '✓' },
+        { label: 'Terénní a sadové úpravy', price: '✓' },
+        { label: 'Příprava závlahy a obrub', price: '✓' },
+      ],
+      time: 'Dle projektu',
+      color: 'bg-lime-50 border-lime-200',
+      iconBg: 'bg-lime-100',
+      iconColor: 'text-lime-700',
+    },
+    {
+      id: 'turf_laying',
+      icon: Sprout,
+      title: 'Pokládání trávníku',
+      subtitle: 'Travní koberec i setý trávník',
+      price: 'Po obhlídce',
+      unit: '',
+      description: 'Pokládka travního koberce i zakládání trávníku ze semene – od přípravy podloží po okamžitě zelenou zahradu.',
+      features: [
+        { label: 'Příprava a srovnání podloží', price: '✓' },
+        { label: 'Pokládka travního koberce', price: '✓' },
+        { label: 'Založení trávníku ze semene', price: '✓' },
+        { label: 'Zaválcování a první zálivka', price: '✓' },
+        { label: 'Poradenství o péči a závlaze', price: '✓' },
+      ],
+      time: 'Dle plochy',
+      color: 'bg-green-50 border-green-200',
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-700',
     },
     {
       id: 'garden_work',
@@ -182,10 +243,10 @@ const ServicesPage = () => {
   return (
     <div className="min-h-screen pt-16" data-testid="services-page">
       <SEOHead
-        title="Zahradnické služby Dvůr Králové | Sekání trávy, likvidace pozemků, údržba zahrad | SeknuTo.cz"
-        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, likvidace zarostlých pozemků a parcel, sezónní balíčky, vertikutace, hnojení, odvoz odpadu. Bezplatná obhlídka."
+        title="Zahradnické služby Dvůr Králové | Sekání trávy, pokládání trávníku, stříhání keřů, kácení stromů, realizace zahrad | SeknuTo.cz"
+        description="Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, pokládání trávníku a travní koberec, stříhání keřů a živých plotů, kácení a ořez stromů, realizace zahrad, likvidace pozemků, sezónní balíčky. Bezplatná obhlídka."
         canonical="https://seknuto.cz/sluzby"
-        keywords="zahradnické služby Dvůr Králové, sekání trávy, likvidace pozemků, čištění zarostlých parcel, vertikutace, hnojení trávníku, údržba zahrad Trutnov, sekání trávy Vrchlabí, odvoz odpadu zahrada"
+        keywords="zahradnické služby Dvůr Králové, sekání trávy, pokládání trávníku, pokládka travního koberce, travní koberec cena, založení trávníku, stříhání keřů, stříhání živých plotů, tvarování tújí, kácení stromů Dvůr Králové, ořez stromů, rizikové kácení, realizace zahrad, návrh zahrady, likvidace pozemků, vertikutace, údržba zahrad Trutnov"
         schema={[
           SCHEMAS.breadcrumb([
             { name: 'Úvod', url: '/' },
@@ -196,22 +257,39 @@ const ServicesPage = () => {
             description: 'Profesionální sekání trávníků všech velikostí s možností hnojení a mulčování.',
             areaServed: 'Dvůr Králové nad Labem',
           }),
+          SCHEMAS.service({
+            name: 'Stříhání keřů a kácení stromů',
+            description: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez a kácení stromů včetně rizikového kácení a odvozu větví.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
+          SCHEMAS.service({
+            name: 'Realizace zahrad',
+            description: 'Realizace zahrad na klíč – návrh, terénní úpravy, zakládání trávníků ze semene i travního koberce a výsadba zeleně.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
+          SCHEMAS.service({
+            name: 'Pokládání trávníku',
+            description: 'Pokládka travního koberce i zakládání trávníku ze semene včetně přípravy podloží a poradenství o péči.',
+            areaServed: 'Dvůr Králové nad Labem',
+          }),
         ]}
       />
       {/* Hero */}
       <section className="py-10 bg-gradient-to-b from-[#F0FDF4] to-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
-            <Sprout className="w-4 h-4 text-[#3FA34D]" />
-            <span className="text-sm font-medium text-[#3FA34D]">Profesionální zahradnické služby</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Naše služby
-          </h1>
-          <p className="text-gray-600 max-w-xl mx-auto mb-6">
-            Od jednorázového sekání po celoroční péči. Všechny ceny jsou orientační – přesnou kalkulaci připravíme po obhlídce.
-          </p>
-          
+          <Reveal>
+            <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
+              <Sprout className="w-4 h-4 text-[#3FA34D]" />
+              <span className="text-sm font-medium text-[#3FA34D]">Profesionální zahradnické služby</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Naše služby
+            </h1>
+            <p className="text-gray-600 max-w-xl mx-auto mb-6">
+              Od jednorázového sekání po celoroční péči. Všechny ceny jsou orientační – přesnou kalkulaci připravíme po obhlídce.
+            </p>
+          </Reveal>
+
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
@@ -233,7 +311,7 @@ const ServicesPage = () => {
       {/* Basic Services */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-8">
+          <Reveal className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
               <Scissors className="w-5 h-5 text-white" />
             </div>
@@ -243,13 +321,13 @@ const ServicesPage = () => {
               </h2>
               <p className="text-sm text-gray-500">Jednorázové služby dle potřeby</p>
             </div>
-          </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-3 gap-5">
-            {basicServices.map((service) => (
-              <div 
-                key={service.id}
-                className={`rounded-2xl border-2 ${service.color} p-5 hover:shadow-lg transition-all cursor-pointer`}
+            {basicServices.map((service, idx) => (
+              <Reveal key={service.id} delay={(idx % 3) * 100} variant="reveal-scale">
+              <div
+                className={`rounded-2xl border-2 ${service.color} p-5 hover:shadow-lg transition-all cursor-pointer h-full`}
                 onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
                 data-testid={`service-${service.id}`}
               >
@@ -303,6 +381,7 @@ const ServicesPage = () => {
                   </div>
                 )}
               </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -311,7 +390,7 @@ const ServicesPage = () => {
       {/* Seasonal Packages */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
+          <Reveal className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#3FA34D] rounded-xl flex items-center justify-center">
                 <Sprout className="w-5 h-5 text-white" />
@@ -327,13 +406,13 @@ const ServicesPage = () => {
               <Zap className="w-3 h-3" />
               VÝHODNÉ BALÍČKY
             </span>
-          </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {seasonalPackages.map((pkg) => (
-              <div 
-                key={pkg.id}
-                className={`relative bg-gradient-to-br ${pkg.color} rounded-2xl border-2 ${pkg.borderColor} p-5 hover:shadow-lg transition-all`}
+            {seasonalPackages.map((pkg, idx) => (
+              <Reveal key={pkg.id} delay={(idx % 4) * 100} variant="reveal-scale">
+              <div
+                className={`relative bg-gradient-to-br ${pkg.color} rounded-2xl border-2 ${pkg.borderColor} p-5 hover:shadow-lg transition-all h-full`}
                 data-testid={`package-${pkg.id}`}
               >
                 {pkg.popular && (
@@ -375,6 +454,7 @@ const ServicesPage = () => {
                   </Link>
                 </div>
               </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -383,6 +463,7 @@ const ServicesPage = () => {
       {/* VIP Package */}
       <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4">
+          <Reveal variant="reveal-scale">
           <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 rounded-3xl border-2 border-amber-200 p-6 md:p-8 relative overflow-hidden">
             {/* Decorative */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -437,16 +518,20 @@ const ServicesPage = () => {
               </div>
             </div>
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Quick Compare Table */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-xl font-bold text-center text-gray-900 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Rychlé srovnání
-          </h2>
-          
+          <Reveal>
+            <h2 className="text-xl font-bold text-center text-gray-900 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Rychlé srovnání
+            </h2>
+          </Reveal>
+
+          <Reveal variant="reveal-scale">
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
@@ -471,6 +556,27 @@ const ServicesPage = () => {
                     <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
                   </td>
                 </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-teal-50/50">
+                  <td className="py-3 px-4 font-medium">🌳 Stříhání keřů a kácení</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Keře, túje, živé ploty, stromy</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-lime-50/50">
+                  <td className="py-3 px-4 font-medium">🌱 Realizace zahrad</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Návrh, trávníky, výsadba</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
+                  </td>
+                </tr>
+                <tr className="border-t border-gray-100 hover:bg-gray-50 bg-green-50/50">
+                  <td className="py-3 px-4 font-medium">🌿 Pokládání trávníku</td>
+                  <td className="py-3 px-4 text-center text-gray-500">Travní koberec i setí</td>
+                  <td className="py-3 px-4 text-right">
+                    <Link to="/rezervace" className="text-[#3FA34D] font-medium hover:underline">Poptat →</Link>
+                  </td>
+                </tr>
                 <tr className="border-t border-gray-100 hover:bg-gray-50 bg-pink-50/50">
                   <td className="py-3 px-4 font-medium">🌸 Sezónní balíčky</td>
                   <td className="py-3 px-4 text-center text-gray-500">Jaro, léto, podzim, zima</td>
@@ -488,13 +594,14 @@ const ServicesPage = () => {
               </tbody>
             </table>
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* CTA */}
       <section className="py-12 bg-[#222]">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <Reveal className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Nevíte, co vybrat?
@@ -518,7 +625,7 @@ const ServicesPage = () => {
                 </Button>
               </a>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
     </div>

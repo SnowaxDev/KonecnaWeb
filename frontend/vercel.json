@@ -24,6 +24,12 @@
       ]
     },
     {
+      "source": "/(.*\\.(?:png|jpg|jpeg|webp|svg|ico|woff2))",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=2592000" }
+      ]
+    },
+    {
       "source": "/sitemap.xml",
       "headers": [
         { "key": "Content-Type", "value": "application/xml" },

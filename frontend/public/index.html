@@ -7,11 +7,11 @@
         <meta name="seznam-wmt" content="PC31mMP43hbujEAW4Q9Yz5dzZoBg2Jzy" />
 
 
-        <meta name="description" content="Profesionální sekání trávy ve Dvoře Králové nad Labem a okolí. Vertikutace, hnojení, likvidace pozemků, sezónní balíčky. Bezplatná prohlídka a kalkulace. 730 588 372" />
-        <meta name="keywords" content="sekání trávy Dvůr Králové, zahradník Dvůr Králové nad Labem, zahradnické služby Královéhradecký kraj, sekání trávy Trutnov, sekání trávy Vrchlabí, vertikutace trávníku, hnojení trávy, údržba zahrady, likvidace pozemků" />
+        <meta name="description" content="Profesionální sekání trávy, pokládání trávníku a travního koberce, stříhání keřů a živých plotů, kácení a ořez stromů a realizace zahrad ve Dvoře Králové nad Labem a okolí. Likvidace pozemků, sezónní balíčky. Bezplatná prohlídka a kalkulace. 730 588 372" />
+        <meta name="keywords" content="sekání trávy Dvůr Králové, pokládání trávníku, pokládka travního koberce, travní koberec cena, založení trávníku, stříhání keřů Dvůr Králové, stříhání živých plotů, tvarování tújí, kácení stromů Dvůr Králové, ořez stromů, rizikové kácení, realizace zahrad, návrh zahrady, zakládání trávníků, zahradník Dvůr Králové nad Labem, zahradnické služby Královéhradecký kraj, sekání trávy Trutnov, vertikutace trávníku, údržba zahrady, likvidace pozemků" />
         <meta name="author" content="SeknuTo.cz" />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://seknuto.cz" />
+        <!-- canonical řídí per-stránku react-helmet-async (zapeče se při prerenderu) -->
 
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="SeknuTo.cz" />
@@ -36,15 +36,19 @@
 
         <title>SeknuTo.cz – Sekání trávy Dvůr Králové nad Labem</title>
 
-        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-        <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/logo192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="%PUBLIC_URL%/logo512.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" />
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-        <noscript><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+        <!-- Neblokující načtení fontů: stránka se vykreslí hned, fonty se doplní (display=swap) -->
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+        <noscript>
+            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        </noscript>
 
         <script type="application/ld+json">
         {
@@ -57,6 +61,7 @@
           "telephone": "+420730588372",
           "email": "info@seknuto.cz",
           "image": "https://seknuto.cz/og-image.jpg",
+          "logo": "https://seknuto.cz/logo512.png",
           "address": {
             "@type": "PostalAddress",
             "addressLocality": "Dvůr Králové nad Labem",
@@ -71,12 +76,14 @@
           },
           "areaServed": [
             {"@type": "City", "name": "Dvůr Králové nad Labem"},
+            {"@type": "City", "name": "Hradec Králové"},
             {"@type": "City", "name": "Trutnov"},
             {"@type": "City", "name": "Vrchlabí"},
             {"@type": "City", "name": "Hostinné"},
             {"@type": "City", "name": "Jaroměř"},
             {"@type": "City", "name": "Náchod"},
-            {"@type": "City", "name": "Hořice"}
+            {"@type": "City", "name": "Hořice"},
+            {"@type": "City", "name": "Jičín"}
           ],
           "openingHoursSpecification": [
             {
@@ -103,26 +110,69 @@
           ]
         }
         </script>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "@id": "https://seknuto.cz/#organization",
+          "name": "SeknuTo.cz",
+          "url": "https://seknuto.cz",
+          "logo": "https://seknuto.cz/logo512.png",
+          "image": "https://seknuto.cz/og-image.jpg",
+          "telephone": "+420730588372",
+          "email": "info@seknuto.cz",
+          "areaServed": "Dvůr Králové nad Labem a okolí do 50 km",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+420730588372",
+            "contactType": "customer service",
+            "areaServed": "CZ",
+            "availableLanguage": "cs"
+          },
+          "sameAs": [
+            "https://www.facebook.com/seknuto.cz",
+            "https://www.instagram.com/seknuto.cz"
+          ]
+        }
+        </script>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "@id": "https://seknuto.cz/#website",
+          "url": "https://seknuto.cz",
+          "name": "SeknuTo.cz",
+          "inLanguage": "cs-CZ",
+          "publisher": { "@id": "https://seknuto.cz/#organization" }
+        }
+        </script>
     </head>
     <body>
         <noscript>
             <div style="font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px">
-                <h1>SeknuTo.cz – Sekání trávy Dvůr Králové nad Labem</h1>
-                <p>Profesionální sekání trávy a zahradnické služby ve Dvoře Králové nad Labem a okolí (Trutnov, Vrchlabí, Jaroměř, Náchod). Bezplatná prohlídka a kalkulace zdarma.</p>
+                <h1>SeknuTo.cz – Sekání trávy a zahradnické služby Dvůr Králové nad Labem</h1>
+                <p>Profesionální sekání trávy a zahradnické služby ve Dvoře Králové nad Labem a okolí do 50 km (Hradec Králové, Trutnov, Vrchlabí, Jaroměř, Náchod, Hostinné, Hořice, Jičín). Bezplatná prohlídka a kalkulace zdarma. Telefon <a href="tel:+420730588372">730 588 372</a>.</p>
                 <h2>Naše služby</h2>
                 <ul>
-                    <li>Sekání trávy – pravidelné i jednorázové</li>
+                    <li><a href="/sluzby">Sekání trávy</a> – pravidelné i jednorázové, s hnojením i bez</li>
+                    <li><a href="/pokladani-travniku">Pokládání trávníku</a> – travní koberec i setí ze semene</li>
+                    <li><a href="/strihani-keru-kaceni-stromu">Stříhání keřů a kácení stromů</a> – keře, túje, živé ploty, ořez a kácení stromů</li>
+                    <li><a href="/realizace-zahrad">Realizace zahrad</a> – návrh, založení trávníku, výsadba</li>
                     <li>Likvidace a čištění zarostlých pozemků</li>
-                    <li>Střihaní keřů</li></li>
-                    <li>Zahradnicke práce</li>
-                    <li>Vertikutace trávníku</li>
-                    <li>Hnojení trávy</li>
-                    <li>Sezónní balíčky – jarní, letní, podzimní</li>
-                    <li>Celoroční VIP servis</li>
+                    <li>Vertikutace trávníku, hnojení, sezónní balíčky a celoroční VIP servis</li>
                 </ul>
-                <h2>Kontakt</h2>
-                <p>Telefon: <a href="tel:+420730588372">730 588 372</a></p>
-                <p>Oblast: Dvůr Králové nad Labem a okolí do 30 km</p>
+                <h2>Sekání trávy v okolí</h2>
+                <ul>
+                    <li><a href="/sekani-travy-hradec-kralove">Sekání trávy Hradec Králové</a></li>
+                    <li><a href="/sekani-travy-trutnov">Sekání trávy Trutnov</a></li>
+                    <li><a href="/sekani-travy-vrchlabi">Sekání trávy Vrchlabí</a></li>
+                    <li><a href="/sekani-travy-jaromer">Sekání trávy Jaroměř</a></li>
+                    <li><a href="/sekani-travy-nachod">Sekání trávy Náchod</a></li>
+                    <li><a href="/sekani-travy-hostinne">Sekání trávy Hostinné</a></li>
+                </ul>
+                <h2>Další stránky</h2>
+                <p><a href="/cenik">Jak to funguje a ceník</a> · <a href="/nase-prace">Naše práce</a> · <a href="/o-nas">O nás</a> · <a href="/kontakt">Kontakt</a> · <a href="/rezervace">Nezávazná poptávka</a></p>
+                <p>Oblast působení: Dvůr Králové nad Labem a okolí do 50 km.</p>
             </div>
         </noscript>
         <div id="root"></div>

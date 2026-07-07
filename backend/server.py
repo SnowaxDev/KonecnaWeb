@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File, BackgroundTasks
-from fastapi.responses import RedirectResponse, JSONResponse, Response
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -11,7 +11,6 @@ from slowapi.errors import RateLimitExceeded
 import os
 import logging
 import asyncio
-import base64
 import random
 import string
 from pathlib import Path
@@ -84,11 +83,8 @@ logger = logging.getLogger(__name__)
 
 
 def _json_safe(value):
-    """Recursively convert Mongo/BSON documents into JSON-serializable values.
-
-    Prevents a single document with an unexpected type (datetime, bytes,
-    ObjectId, ...) from crashing an entire list endpoint with a 500.
-    """
+    """Recursively convert Mongo/BSON documents into JSON-serializable values so a
+    single document with an unexpected type can't crash a whole list endpoint."""
     if isinstance(value, dict):
         return {k: _json_safe(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -102,41 +98,12 @@ def _json_safe(value):
         return value.isoformat()
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
-    # Fallback for ObjectId and other exotic BSON types
     return str(value)
 
 
-def _public_base_url(request: Request) -> str:
-    """Absolute public base URL of this backend, used to build image URLs that
-    resolve from the frontend's origin. Prefers the PUBLIC_BACKEND_URL env var
-    (deterministic) and falls back to the incoming request's base URL."""
-    env = os.environ.get("PUBLIC_BACKEND_URL", "").strip()
-    if env:
-        return env.rstrip("/")
-    return str(request.base_url).rstrip("/")
-
-
-async def _fetch_gallery_sorted(query: dict, limit: int):
-    """Fetch gallery projects newest-first.
-
-    Gallery documents embed large base64 images, so a DB-side sort on
-    created_at can exceed MongoDB's 32MB in-memory sort limit (error 292) on
-    free/shared clusters that lack a supporting index. If that happens we fall
-    back to an unsorted fetch (which streams and never hits the sort limit) and
-    sort the small, already-capped result set in Python instead.
-    """
-    try:
-        return await db.gallery_projects.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
-    except OperationFailure as e:
-        logger.warning(f"DB-side gallery sort failed (code={getattr(e, 'code', '?')}); using in-app sort")
-        docs = await db.gallery_projects.find(query, {"_id": 0}).to_list(limit)
-        docs.sort(key=lambda d: d.get("created_at") or "", reverse=True)
-        return docs
-
-
 def _cors_allow_origin(request: Request) -> str:
-    """Resolve the Access-Control-Allow-Origin value for a given request so that
-    error responses (which bypass CORSMiddleware) still carry CORS headers."""
+    """Resolve Access-Control-Allow-Origin so error responses (which bypass the
+    CORS middleware) still carry CORS headers."""
     origin = request.headers.get("origin", "")
     allowed = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
     if "*" in allowed or not allowed:
@@ -146,13 +113,9 @@ def _cors_allow_origin(request: Request) -> str:
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    """Catch-all so unexpected errors are logged with a full traceback and the
-    browser receives a proper CORS-enabled 500 instead of an opaque
-    'blocked by CORS policy' message that hides the real cause."""
-    logger.error(
-        f"Unhandled error on {request.method} {request.url.path}: {exc}",
-        exc_info=True,
-    )
+    """Log unexpected errors with a full traceback and return a CORS-enabled 500
+    instead of an opaque 'blocked by CORS policy' message that hides the cause."""
+    logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
@@ -173,6 +136,10 @@ SERVICE_NAMES = {
     'autumn_package': 'Podzimní balíček',
     'winter_snow': 'Zimní balíček',
     'vip_annual': 'VIP Celoroční',
+    'land_clearing': 'Likvidace a čištění pozemků',
+    'tree_shrub_care': 'Stříhání keřů a kácení stromů',
+    'garden_realization': 'Realizace zahrad',
+    'turf_laying': 'Pokládání trávníku',
     'garden_work': 'Zahradnické práce',
     'debris_removal': 'Odvoz odpadu',
     'debris_hourly': 'Odvoz odpadu',
@@ -426,6 +393,9 @@ SERVICE_PRICES = {
     
     # Projektové služby (cena po domluvě)
     "land_clearing": 0,            # Likvidace a čištění pozemků - projektová cena
+    "tree_shrub_care": 0,          # Stříhání keřů a kácení stromů - projektová cena
+    "garden_realization": 0,       # Realizace zahrad - individuální projekt
+    "turf_laying": 0,              # Pokládání trávníku - dle plochy a podloží
     "garden_work": 0,              # Zahradnické práce - dle rozsahu
     "debris_hourly": 0,            # Odvoz odpadu - dle objemu
     
@@ -499,6 +469,10 @@ SERVICE_NAMES_CZ = {
     "autumn_package": "🍂 Podzimní balíček – Příprava na zimu",
     "winter_snow": "❄️ Zimní balíček – Úklid sněhu",
     "vip_annual": "🌀 Celoroční VIP servis",
+    "land_clearing": "Likvidace a čištění pozemků",
+    "tree_shrub_care": "Stříhání keřů a kácení stromů",
+    "garden_realization": "Realizace zahrad (návrh a založení)",
+    "turf_laying": "Pokládání trávníku (travní koberec / setí)",
     "garden_work": "Zahradnické práce (ruční)",
     "debris_hourly": "Odvoz odpadu (hodinová sazba)",
     "other": "Jiná služba",
@@ -1387,41 +1361,133 @@ async def delete_voucher(code: str, request: Request):
 
 # ─── GALLERY ENDPOINTS ───────────────────────────────────────────────────────
 
+def slugify(text: str) -> str:
+    """Czech-friendly URL slug: 'Střih tújové stěny' → 'strih-tujove-steny'"""
+    import unicodedata
+    import re
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[^a-zA-Z0-9]+", "-", text).strip("-").lower()
+    return text or "projekt"
+
+async def unique_gallery_slug(title: str, exclude_id: Optional[str] = None) -> str:
+    base = slugify(title)
+    slug = base
+    suffix = 2
+    while True:
+        query = {"slug": slug}
+        if exclude_id:
+            query["id"] = {"$ne": exclude_id}
+        existing = await db.gallery_projects.find_one(query)
+        if not existing:
+            return slug
+        slug = f"{base}-{suffix}"
+        suffix += 1
+
 class GalleryProjectCreate(BaseModel):
     title: str
     category: str = "Sekání"
     location: str = ""
     date: str = ""
     description: str = ""
-    before_image: str  # URL
-    after_image: str   # URL
+    before_image: str = ""          # legacy: jedna fotka PŘED (URL)
+    after_image: str = ""           # legacy: jedna fotka PO (URL)
+    before_images: List[str] = []   # více fotek PŘED
+    after_images: List[str] = []    # více fotek PO
+    extra_images: List[str] = []    # další fotky (volitelné, mimo před/po)
+    services: List[str] = []        # provedené práce (odrážky na detailu)
+    area: str = ""                  # výměra, např. "450 m²"
+    duration: str = ""              # doba realizace, např. "1 den"
+    videos: List[str] = []          # videa/prohlídky – YouTube/Vimeo/mp4 URL
     tag: Optional[str] = None
     published: bool = True
 
 @api_router.get("/gallery/projects")
 async def list_gallery_projects():
-    """Public: list published gallery projects"""
+    """Public: list published gallery projects.
+
+    Vrací jen první fotku PŘED/PO + počty – fotky jsou base64 a plný
+    výpis všech projektů by měl megabajty (pomalé načítání galerie).
+    Kompletní fotky a videa vrací detail endpoint.
+    """
+    pipeline = [
+        {"$match": {"published": True}},
+        {"$sort": {"created_at": -1}},
+        {"$limit": 100},
+        {"$set": {
+            "photo_count": {"$add": [
+                {"$size": {"$ifNull": ["$before_images", []]}},
+                {"$size": {"$ifNull": ["$after_images", []]}},
+                {"$size": {"$ifNull": ["$extra_images", []]}},
+            ]},
+            "video_count": {"$size": {"$ifNull": ["$videos", []]}},
+            "before_images": {"$slice": [{"$ifNull": ["$before_images", []]}, 1]},
+            "after_images": {"$slice": [{"$ifNull": ["$after_images", []]}, 1]},
+        }},
+        {"$project": {"_id": 0, "videos": 0, "extra_images": 0}},
+    ]
     try:
-        projects = await _fetch_gallery_sorted({"published": True}, 100)
+        projects = await db.gallery_projects.aggregate(pipeline).to_list(100)
         return [_json_safe(p) for p in projects]
+    except OperationFailure as e:
+        # e.g. the $sort exceeded the in-memory limit before the index exists.
+        # Fall back to an unsorted fetch (streams, no sort buffer), then sort and
+        # trim in Python to mirror the pipeline output.
+        logger.warning(f"Gallery aggregate failed (code={getattr(e, 'code', '?')}); using in-app fallback")
+        docs = await db.gallery_projects.find({"published": True}, {"_id": 0}).to_list(100)
+        docs.sort(key=lambda d: d.get("created_at") or "", reverse=True)
+        trimmed = []
+        for d in docs[:100]:
+            before = d.get("before_images") or []
+            after = d.get("after_images") or []
+            extra = d.get("extra_images") or []
+            videos = d.get("videos") or []
+            d["photo_count"] = len(before) + len(after) + len(extra)
+            d["video_count"] = len(videos)
+            d["before_images"] = before[:1]
+            d["after_images"] = after[:1]
+            d.pop("videos", None)
+            d.pop("extra_images", None)
+            trimmed.append(d)
+        return [_json_safe(p) for p in trimmed]
     except Exception as e:
         logger.error(f"Failed to list public gallery projects: {e}", exc_info=True)
-        # Degrade gracefully: return an empty (but valid, CORS-enabled) response
-        # instead of a 500 so the site never breaks on a transient DB issue.
         return []
+
+@api_router.get("/gallery/projects/{slug_or_id}")
+async def get_gallery_project(slug_or_id: str):
+    """Public: gallery project detail by slug or id"""
+    project = await db.gallery_projects.find_one(
+        {"published": True, "$or": [{"slug": slug_or_id}, {"id": slug_or_id}]},
+        {"_id": 0},
+    )
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
 
 @api_router.post("/admin/gallery/projects")
 async def admin_create_gallery_project(data: GalleryProjectCreate, request: Request):
     await verify_admin(request)
+    before_images = data.before_images or ([data.before_image] if data.before_image else [])
+    after_images = data.after_images or ([data.after_image] if data.after_image else [])
+    if not before_images or not after_images:
+        raise HTTPException(status_code=400, detail="Projekt musí mít alespoň jednu fotku PŘED a jednu PO")
     project = {
         "id": str(uuid.uuid4()),
+        "slug": await unique_gallery_slug(data.title),
         "title": data.title,
         "category": data.category,
         "location": data.location,
         "date": data.date,
         "description": data.description,
-        "before_image": data.before_image,
-        "after_image": data.after_image,
+        "before_image": before_images[0],
+        "after_image": after_images[0],
+        "before_images": before_images,
+        "after_images": after_images,
+        "extra_images": data.extra_images,
+        "services": data.services,
+        "area": data.area,
+        "duration": data.duration,
+        "videos": data.videos,
         "tag": data.tag or data.category,
         "published": data.published,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1434,7 +1500,12 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
 async def admin_list_gallery_projects(request: Request):
     await verify_admin(request)
     try:
-        projects = await _fetch_gallery_sorted({}, 200)
+        try:
+            projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+        except OperationFailure as e:
+            logger.warning(f"Admin gallery DB sort failed (code={getattr(e, 'code', '?')}); using in-app sort")
+            projects = await db.gallery_projects.find({}, {"_id": 0}).to_list(200)
+            projects.sort(key=lambda d: d.get("created_at") or "", reverse=True)
         return [_json_safe(p) for p in projects]
     except Exception as e:
         logger.error(f"Failed to list admin gallery projects: {e}", exc_info=True)
@@ -1445,9 +1516,19 @@ async def admin_update_gallery_project(project_id: str, request: Request):
     await verify_admin(request)
     body = await request.json()
     body.pop("id", None)
+    body.pop("slug", None)
+    # Sync legacy single-image fields with the photo lists
+    if body.get("before_images"):
+        body["before_image"] = body["before_images"][0]
+    if body.get("after_images"):
+        body["after_image"] = body["after_images"][0]
+    if body.get("title"):
+        existing = await db.gallery_projects.find_one({"id": project_id}, {"_id": 0, "slug": 1, "title": 1})
+        if existing and (existing.get("title") != body["title"] or not existing.get("slug")):
+            body["slug"] = await unique_gallery_slug(body["title"], exclude_id=project_id)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.gallery_projects.update_one({"id": project_id}, {"$set": body})
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     return {"success": True}
 
@@ -1459,102 +1540,38 @@ async def admin_delete_gallery_project(project_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Project not found")
     return {"success": True}
 
-@api_router.get("/gallery/image/{image_id}")
-async def get_gallery_image(image_id: str):
-    """Public: stream a stored gallery image by id.
-
-    Images are kept in their own collection (not embedded in project documents),
-    so project listings stay small and fast, and each image is cached hard by the
-    browser/CDN via an immutable Cache-Control header."""
-    doc = await db.gallery_images.find_one({"id": image_id}, {"_id": 0})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Image not found")
-    data = doc.get("data")
-    # Support both raw BSON Binary (new) and legacy base64-string storage.
-    if isinstance(data, str):
-        try:
-            data = base64.b64decode(data)
-        except Exception:
-            data = b""
-    return Response(
-        content=bytes(data) if data else b"",
-        media_type=doc.get("mime", "image/jpeg"),
-        headers={"Cache-Control": "public, max-age=31536000, immutable"},
-    )
-
-
 @api_router.post("/admin/gallery/upload")
 async def admin_upload_gallery_image(request: Request, file: UploadFile = File(...)):
-    """Upload a gallery image. The binary is stored once in the gallery_images
-    collection (raw bytes, ~33% smaller than base64) and the project only keeps a
-    small URL reference — so listings never blow the sort memory limit and mobile
-    loads stay light. Persistent across Render restarts (lives in MongoDB)."""
+    """Upload gallery image – stores as base64 in MongoDB for persistence on Render"""
     await verify_admin(request)
     # Validate file type
     allowed = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Nepodporovaný formát souboru. Použijte JPG, PNG nebo WEBP.")
-
+    
     content = await file.read()
     if len(content) > 10 * 1024 * 1024:  # 10 MB limit
         raise HTTPException(status_code=413, detail="Soubor je příliš velký (max. 10 MB)")
-
-    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    
+    # Store as base64 data URL – persistent across Render restarts
+    import base64
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
     mime = file.content_type or f"image/{ext}"
-
-    image_id = str(uuid.uuid4())
-    await db.gallery_images.insert_one({
-        "id": image_id,
-        "data": content,  # raw bytes -> stored as BSON Binary
-        "mime": mime,
+    b64 = base64.b64encode(content).decode("utf-8")
+    data_url = f"data:{mime};base64,{b64}"
+    
+    # Save record to DB for tracking (optional)
+    record = {
+        "id": str(uuid.uuid4()),
         "filename": file.filename,
+        "mime": mime,
         "size_bytes": len(content),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    })
-
-    url = f"{_public_base_url(request)}/api/gallery/image/{image_id}"
-    logger.info(f"Gallery image uploaded: {file.filename} ({len(content)//1024}KB) -> {image_id}")
-    return {"url": url, "filename": file.filename}
-
-
-@api_router.post("/admin/gallery/migrate-images")
-async def admin_migrate_gallery_images(request: Request):
-    """One-time, idempotent migration: move any legacy base64 `data:` images that
-    are still embedded inside gallery projects into the gallery_images collection
-    and replace the field with a lightweight URL. Safe to run repeatedly — it only
-    touches fields that still hold a data: URI."""
-    await verify_admin(request)
-    base = _public_base_url(request)
-    migrated_projects = 0
-    migrated_images = 0
-    async for proj in db.gallery_projects.find({}):
-        updates = {}
-        for field in ("before_image", "after_image"):
-            val = proj.get(field, "")
-            if isinstance(val, str) and val.startswith("data:"):
-                try:
-                    header, b64 = val.split(",", 1)
-                    mime = header[5:].split(";")[0] or "image/jpeg"
-                    raw = base64.b64decode(b64)
-                except Exception as e:
-                    logger.warning(f"Skipping unparsable data URI on {proj.get('id')}/{field}: {e}")
-                    continue
-                image_id = str(uuid.uuid4())
-                await db.gallery_images.insert_one({
-                    "id": image_id,
-                    "data": raw,
-                    "mime": mime,
-                    "filename": f"{proj.get('id', 'img')}-{field}",
-                    "size_bytes": len(raw),
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                })
-                updates[field] = f"{base}/api/gallery/image/{image_id}"
-                migrated_images += 1
-        if updates:
-            await db.gallery_projects.update_one({"id": proj["id"]}, {"$set": updates})
-            migrated_projects += 1
-    logger.info(f"Gallery migration done: {migrated_projects} projects, {migrated_images} images")
-    return {"migrated_projects": migrated_projects, "migrated_images": migrated_images}
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.gallery_uploads.insert_one(record)
+    
+    logger.info(f"Gallery image uploaded: {file.filename} ({len(content)//1024}KB) as base64")
+    return {"url": data_url, "filename": file.filename}
 
 # ─── CONTACT MESSAGES ADMIN ──────────────────────────────────────────────────
 
@@ -2061,16 +2078,15 @@ async def startup_db_client():
     except Exception as e:
         logger.warning(f"Index creation warning (may already exist): {str(e)}")
 
-    # Gallery projects store large base64 images, so an in-memory sort on
-    # created_at blows past MongoDB's 32MB sort limit (error 292,
-    # QueryExceededMemoryLimitNoDiskUseAllowed) on shared/free clusters that
-    # cannot use disk. These indexes make the sort index-backed (streaming,
-    # non-blocking) so the limit no longer applies. Kept in its own try block so
-    # an unrelated index conflict above cannot skip this critical fix.
+    # Gallery projects embed large base64 images, so sorting them by created_at
+    # without an index buffers oversized documents past MongoDB's in-memory sort
+    # limit (error 292, QueryExceededMemoryLimitNoDiskUseAllowed) on free/shared
+    # clusters that cannot spill to disk. These indexes make the sort (both the
+    # aggregation $sort and the admin find().sort()) index-backed and streaming.
+    # Own try block so an unrelated index conflict above cannot skip this fix.
     try:
         await db.gallery_projects.create_index([("published", 1), ("created_at", -1)])
         await db.gallery_projects.create_index([("created_at", -1)])
-        await db.gallery_images.create_index("id", unique=True)
         logger.info("Gallery indexes created successfully")
     except Exception as e:
         logger.warning(f"Gallery index creation warning (may already exist): {str(e)}")

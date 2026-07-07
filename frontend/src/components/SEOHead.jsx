@@ -110,12 +110,14 @@ export const SCHEMAS = {
     },
     areaServed: [
       { '@type': 'City', name: 'Dvůr Králové nad Labem' },
+      { '@type': 'City', name: 'Hradec Králové' },
       { '@type': 'City', name: 'Trutnov' },
       { '@type': 'City', name: 'Vrchlabí' },
       { '@type': 'City', name: 'Hostinné' },
       { '@type': 'City', name: 'Jaroměř' },
       { '@type': 'City', name: 'Náchod' },
       { '@type': 'City', name: 'Hořice' },
+      { '@type': 'City', name: 'Jičín' },
     ],
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
@@ -124,6 +126,22 @@ export const SCHEMAS = {
         {
           '@type': 'Offer',
           itemOffered: { '@type': 'Service', name: 'Sekání trávy', description: 'Profesionální sekání trávníku – cena po bezplatné obhlídce' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Stříhání keřů a živých plotů', description: 'Stříhání a tvarování keřů, tújí a živých plotů' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Kácení a ořez stromů', description: 'Ořez, prořez a kácení stromů včetně rizikového kácení a odvozu větví' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Realizace zahrad', description: 'Realizace zahrad na klíč – návrh, zakládání trávníků a výsadba zeleně' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Pokládání trávníku', description: 'Pokládka travního koberce i zakládání trávníku ze semene včetně přípravy podloží' },
         },
         {
           '@type': 'Offer',
@@ -202,6 +220,31 @@ export const SCHEMAS = {
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${slug}` },
   }),
+
+  // Detail realizace v galerii – fotky + případná videa (jen veřejné http URL, ne base64)
+  galleryProject: ({ title, description, slug, images = [], videos = [], uploadDate }) => {
+    const httpImages = images.filter((u) => typeof u === 'string' && u.startsWith('http'));
+    const httpVideos = videos.filter((u) => typeof u === 'string' && u.startsWith('http'));
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ImageGallery',
+      name: title,
+      description: description || title,
+      url: `${SITE_URL}/nase-prace/${slug}`,
+      ...(httpImages.length > 0 && { image: httpImages }),
+      ...(httpVideos.length > 0 && {
+        video: httpVideos.map((v) => ({
+          '@type': 'VideoObject',
+          name: title,
+          description: description || title,
+          contentUrl: v,
+          thumbnailUrl: httpImages[0] || DEFAULT_IMAGE,
+          uploadDate: uploadDate || new Date().toISOString().slice(0, 10),
+        })),
+      }),
+      publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    };
+  },
 
   reviews: (reviewItems) => reviewItems.map((r) => ({
     '@context': 'https://schema.org',

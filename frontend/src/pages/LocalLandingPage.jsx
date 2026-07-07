@@ -7,8 +7,10 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 
 const CITY_DATA = {
+  'hradec-kralove': { name: 'Hradec Králové', distanceKm: 25 },
   trutnov:  { name: 'Trutnov',  distanceKm: 20 },
   vrchlabi: { name: 'Vrchlabí', distanceKm: 25 },
   jaromer:  { name: 'Jaroměř',  distanceKm: 22 },
@@ -58,7 +60,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
 
   const benefits = [
     `Místní firma – jezdíme pravidelně do ${name}`,
-    'Bez příplatku za dojezd v rámci 30 km',
+    'Bez příplatku za dojezd v rámci 50 km',
     'Cena jasná před zahájením prací',
     'Rychlá odpověď do 24 hodin',
     'Profesionální vybavení a zkušený tým',
@@ -84,7 +86,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
 
       {/* Hero */}
       <section className="py-12 bg-gradient-to-b from-[#F0FDF4] to-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+        <Reveal className="max-w-4xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 bg-white border border-[#3FA34D]/30 rounded-full px-4 py-1.5 mb-4">
             <MapPin className="w-4 h-4 text-[#3FA34D]" />
             <span className="text-sm font-medium text-[#3FA34D]">Dvůr Králové → {name} ({distanceKm} km)</span>
@@ -104,34 +106,36 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
               </Button>
             </Link>
             <a href="https://wa.me/420730588372" target="_blank" rel="noopener noreferrer">
-              <Button size="lg" variant="outline" className="border-2 border-[#2C8339] text-[#2C8339] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold">
+              <Button size="lg" variant="outline" className="border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold">
                 <MessageCircle className="w-5 h-5 mr-2" />
                 WhatsApp: 730 588 372
               </Button>
             </a>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* 3 Steps */}
       <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-10" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Jak to funguje
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-10" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Jak to funguje
+            </h2>
+          </Reveal>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { num: '01', title: 'Přijedeme se podívat', desc: 'Zdarma a nezávazně. Zhodnotíme stav zahrady na místě.' },
               { num: '02', title: 'Nacenění na místě', desc: 'Přesnou cenu dostanete přímo při prohlídce – bez čekání.' },
               { num: '03', title: 'Domluvíme termín', desc: 'Souhlasíte? Domluvíme termín. Nesouhlasíte? Žádný závazek.' },
-            ].map(step => (
-              <div key={step.num} className="text-center">
+            ].map((step, idx) => (
+              <Reveal key={step.num} delay={(idx % 3) * 100} variant="reveal-scale" className="text-center">
                 <div className="w-14 h-14 bg-[#3FA34D] rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-lg">{step.num}</span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">{step.title}</h3>
                 <p className="text-sm text-gray-500">{step.desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -140,12 +144,15 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
       {/* Services */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Co vše děláme v {name}
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Co vše děláme v {name}
+            </h2>
+          </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {services.map((s, i) => (
-              <Card key={i} className="rounded-xl border border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-md">
+              <Reveal key={i} delay={(i % 3) * 100} variant="reveal-scale" className="h-full">
+              <Card className="h-full rounded-xl border border-gray-100 hover:border-[#3FA34D]/30 transition-all hover:shadow-md">
                 <CardContent className="p-5">
                   <div className="w-10 h-10 bg-[#F0FDF4] rounded-lg flex items-center justify-center mb-3">
                     <s.icon className="w-5 h-5 text-[#3FA34D]" />
@@ -154,6 +161,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
                   <p className="text-xs text-gray-500">{s.desc}</p>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -162,15 +170,17 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
       {/* Benefits */}
       <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Proč my v {name}
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Proč my v {name}
+            </h2>
+          </Reveal>
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {benefits.map((b, i) => (
-              <div key={i} className="flex items-start gap-3 p-3">
+              <Reveal key={i} delay={(i % 2) * 100} variant="reveal-scale" className="flex items-start gap-3 p-3">
                 <CheckCircle className="w-5 h-5 text-[#3FA34D] shrink-0 mt-0.5" />
                 <span className="text-sm text-gray-700 font-medium">{b}</span>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -179,12 +189,15 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
       {/* FAQ */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Nejčastější dotazy
-          </h2>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Nejčastější dotazy
+            </h2>
+          </Reveal>
           <Accordion type="single" collapsible className="space-y-3">
             {faqItems.map((item, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="bg-white rounded-xl border border-gray-100 px-5">
+              <Reveal key={i} delay={i * 100} variant="reveal-scale">
+              <AccordionItem value={`faq-${i}`} className="bg-white rounded-xl border border-gray-100 px-5">
                 <AccordionTrigger className="text-left font-semibold text-gray-900 text-sm py-4">
                   {item.question}
                 </AccordionTrigger>
@@ -192,6 +205,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
+              </Reveal>
             ))}
           </Accordion>
         </div>
@@ -199,7 +213,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
 
       {/* CTA */}
       <section className="py-12 bg-[#222]">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+        <Reveal className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Sekání trávy {name} – bezplatná prohlídka
           </h2>
@@ -220,7 +234,7 @@ const LocalLandingPage = ({ citySlug: propSlug }) => {
               </Button>
             </a>
           </div>
-        </div>
+        </Reveal>
       </section>
     </div>
   );

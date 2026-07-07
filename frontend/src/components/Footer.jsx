@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Leaf, Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -9,9 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4" data-testid="footer-logo">
-              <div className="w-10 h-10 bg-[#3FA34D] rounded-full flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo.png" alt="SeknuTo.cz – zahradnické služby" width="40" height="40" className="w-10 h-10" />
               <span className="font-bold text-xl" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 SeknuTo<span className="text-[#3FA34D]">.cz</span>
               </span>
@@ -107,7 +105,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start gap-3 text-gray-400 text-sm">
                 <MapPin className="w-4 h-4 text-[#3FA34D] mt-0.5" />
-                <span>Dvůr Králové nad Labem<br />a okolí do 30 km</span>
+                <span>Dvůr Králové nad Labem<br />a okolí do 50 km</span>
               </li>
             </ul>
           </div>
@@ -145,6 +143,10 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2 text-sm">
               {[
+                { href: '/strihani-keru-kaceni-stromu', label: 'Stříhání keřů a kácení stromů' },
+                { href: '/realizace-zahrad', label: 'Realizace zahrad' },
+                { href: '/pokladani-travniku', label: 'Pokládání trávníku' },
+                { href: '/sekani-travy-hradec-kralove', label: 'Sekání trávy Hradec Králové' },
                 { href: '/sekani-travy-trutnov',  label: 'Sekání trávy Trutnov' },
                 { href: '/sekani-travy-vrchlabi', label: 'Sekání trávy Vrchlabí' },
                 { href: '/sekani-travy-jaromer',  label: 'Sekání trávy Jaroměř' },
@@ -167,7 +169,7 @@ const Footer = () => {
             © {new Date().getFullYear()} SeknuTo.cz. Všechna práva vyhrazena.
           </p>
           <p className="text-gray-600 text-xs text-center">
-            Sekání trávy Dvůr Králové nad Labem · Trutnov · Vrchlabí · Jaroměř · Náchod · Hostinné
+            Sekání trávy Dvůr Králové nad Labem · Hradec Králové · Trutnov · Vrchlabí · Jaroměř · Náchod · Hostinné
           </p>
           <div className="flex gap-6 text-sm">
             <Link to="/gdpr" className="text-gray-500 hover:text-gray-300 transition-colors">

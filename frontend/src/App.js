@@ -1,40 +1,35 @@
 import "@/App.css";
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { HelmetProvider } from "react-helmet-async";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import axios from "axios";
 
-// Layout Components (eager – above the fold / on every page)
+// Layout Components
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
-import CallButton from "./components/CallButton";
+import EmailPopup from "./components/EmailPopup";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 
-// Landing page is eager so it renders immediately without a chunk round-trip
+// Homepage se načítá hned (první dojem); ostatní stránky lazy –
+// návštěvník nestahuje admin, rezervaci ani blog, dokud na ně nejde
 import HomePage from "./pages/HomePage";
-
-// Secondary pages are code-split – they load only when their route is visited,
-// which keeps the initial mobile bundle small (esp. the heavy AdminPage).
-// The public pages are marked webpackPrefetch so the browser fetches their
-// chunks during idle time – navigation stays instant/smooth, just like when
-// everything was bundled, but without bloating the first load.
-const ServicesPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/ServicesPage"));
-const PricingPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/PricingPage"));
-const BookingPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/BookingPage"));
-const AboutPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/AboutPage"));
-const ContactPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/ContactPage"));
-const GalleryPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/GalleryPage"));
-const LocalLandingPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/LocalLandingPage"));
-const BlogListPage = lazy(() => import(/* webpackPrefetch: true */ "./pages/BlogPage").then((m) => ({ default: m.BlogListPage })));
-const BlogDetailPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogDetailPage })));
-// Admin & voucher stay lazy WITHOUT prefetch (rarely visited / admin-only).
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const BookingPage = lazy(() => import("./pages/BookingPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
 const VoucherPage = lazy(() => import("./pages/VoucherPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
-const EmailPopup = lazy(() => import("./components/EmailPopup"));
-const GoogleAnalytics = lazy(() => import("./components/GoogleAnalytics"));
+const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+const GalleryDetailPage = lazy(() => import("./pages/GalleryDetailPage"));
+const BlogListPage = lazy(() => import("./pages/BlogPage").then(m => ({ default: m.BlogListPage })));
+const BlogDetailPage = lazy(() => import("./pages/BlogPage").then(m => ({ default: m.BlogDetailPage })));
+const LocalLandingPage = lazy(() => import("./pages/LocalLandingPage"));
+const ServiceLandingPage = lazy(() => import("./pages/ServiceLandingPage"));
 
 // Set axios base timeout
 axios.defaults.timeout = 15000;
@@ -51,9 +46,29 @@ axios.interceptors.response.use(
   }
 );
 
-// Lightweight fallback while a lazy route chunk loads
-const RouteFallback = () => (
-  <div style={{ minHeight: "60vh" }} aria-hidden="true" />
+// Po změně routy odscrollovat nahoru
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
+// Plynulý nástup obsahu při přechodu mezi stránkami
+const PageFade = ({ children }) => {
+  const { pathname } = useLocation();
+  return (
+    <div key={pathname} className="page-enter">
+      {children}
+    </div>
+  );
+};
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-[#3FA34D] border-t-transparent rounded-full animate-spin" />
+  </div>
 );
 
 function App() {
@@ -61,49 +76,52 @@ function App() {
     <HelmetProvider>
     <div className="App">
       <BrowserRouter>
-        <Suspense fallback={null}>
-          <GoogleAnalytics />
-        </Suspense>
+        <GoogleAnalytics />
         <Analytics />
         <SpeedInsights />
+        <ScrollToTop />
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Admin - no header/footer */}
-          <Route path="/admin" element={<Suspense fallback={<RouteFallback />}><AdminPage /></Suspense>} />
+          <Route path="/admin" element={<AdminPage />} />
 
           {/* Public site */}
           <Route path="/*" element={
             <>
               <Header />
               <main>
-                <Suspense fallback={<RouteFallback />}>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/sluzby" element={<ServicesPage />} />
-                    <Route path="/cenik" element={<PricingPage />} />
-                    <Route path="/rezervace" element={<BookingPage />} />
-                    <Route path="/o-nas" element={<AboutPage />} />
-                    <Route path="/kontakt" element={<ContactPage />} />
-                    <Route path="/poukaz/:code" element={<VoucherPage />} />
-                    <Route path="/nase-prace" element={<GalleryPage />} />
-                    <Route path="/blog" element={<BlogListPage />} />
-                    <Route path="/blog/:slug" element={<BlogDetailPage />} />
-                    <Route path="/sekani-travy-trutnov" element={<LocalLandingPage citySlug="trutnov" />} />
-                    <Route path="/sekani-travy-vrchlabi" element={<LocalLandingPage citySlug="vrchlabi" />} />
-                    <Route path="/sekani-travy-jaromer" element={<LocalLandingPage citySlug="jaromer" />} />
-                    <Route path="/sekani-travy-nachod" element={<LocalLandingPage citySlug="nachod" />} />
-                    <Route path="/sekani-travy-hostinne" element={<LocalLandingPage citySlug="hostinne" />} />
-                  </Routes>
-                </Suspense>
+                <PageFade>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/sluzby" element={<ServicesPage />} />
+                  <Route path="/cenik" element={<PricingPage />} />
+                  <Route path="/rezervace" element={<BookingPage />} />
+                  <Route path="/o-nas" element={<AboutPage />} />
+                  <Route path="/kontakt" element={<ContactPage />} />
+                  <Route path="/poukaz/:code" element={<VoucherPage />} />
+                  <Route path="/nase-prace" element={<GalleryPage />} />
+                  <Route path="/nase-prace/:slug" element={<GalleryDetailPage />} />
+                  <Route path="/blog" element={<BlogListPage />} />
+                  <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                  <Route path="/sekani-travy-hradec-kralove" element={<LocalLandingPage citySlug="hradec-kralove" />} />
+                  <Route path="/sekani-travy-trutnov" element={<LocalLandingPage citySlug="trutnov" />} />
+                  <Route path="/sekani-travy-vrchlabi" element={<LocalLandingPage citySlug="vrchlabi" />} />
+                  <Route path="/sekani-travy-jaromer" element={<LocalLandingPage citySlug="jaromer" />} />
+                  <Route path="/sekani-travy-nachod" element={<LocalLandingPage citySlug="nachod" />} />
+                  <Route path="/sekani-travy-hostinne" element={<LocalLandingPage citySlug="hostinne" />} />
+                  <Route path="/strihani-keru-kaceni-stromu" element={<ServiceLandingPage serviceSlug="strihani-keru-kaceni-stromu" />} />
+                  <Route path="/realizace-zahrad" element={<ServiceLandingPage serviceSlug="realizace-zahrad" />} />
+                  <Route path="/pokladani-travniku" element={<ServiceLandingPage serviceSlug="pokladani-travniku" />} />
+                </Routes>
+                </PageFade>
               </main>
               <Footer />
-              <CallButton />
               <WhatsAppButton />
-              <Suspense fallback={null}>
-                <EmailPopup />
-              </Suspense>
+              <EmailPopup />
             </>
           } />
         </Routes>
+        </Suspense>
         <Toaster position="top-center" richColors />
       </BrowserRouter>
     </div>

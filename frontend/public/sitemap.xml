@@ -3,91 +3,119 @@
 
   <url>
     <loc>https://seknuto.cz/</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/sluzby</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/strihani-keru-kaceni-stromu</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/realizace-zahrad</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://seknuto.cz/pokladani-travniku</loc>
+    <lastmod>2026-06-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/cenik</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/rezervace</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/nase-prace</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/blog</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/o-nas</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/kontakt</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
+    <loc>https://seknuto.cz/sekani-travy-hradec-kralove</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://seknuto.cz/sekani-travy-trutnov</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/sekani-travy-vrchlabi</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/sekani-travy-jaromer</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/sekani-travy-nachod</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
 
   <url>
     <loc>https://seknuto.cz/sekani-travy-hostinne</loc>
-    <lastmod>2026-04-14</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>

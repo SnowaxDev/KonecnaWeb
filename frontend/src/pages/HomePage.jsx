@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from '../components/ui/accordion';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
+import CountUp from '../components/CountUp';
 
 const HomePage = () => {
   const services = [
@@ -24,11 +26,11 @@ const HomePage = () => {
       features: ['Sekání bez hnojení', 'Sekání s hnojením NPK', 'Hrubé sekání přerostlé trávy'],
     },
     {
-      icon: Sprout,
-      title: 'Sezónní balíčky',
-      description: 'Kompletní péče o trávník po celé sezóně – jaro, léto, podzim i zima.',
-      price: 'Individuální kalkulace',
-      features: ['Jarní restart trávníku', 'Letní pravidelná údržba', 'Podzimní příprava na zimu'],
+      icon: TreeDeciduous,
+      title: 'Stříhání keřů a kácení stromů',
+      description: 'Stříhání a tvarování keřů, tújí a živých plotů, ořez a kácení stromů.',
+      price: 'Cena po obhlídce',
+      features: ['Stříhání keřů, tújí a živých plotů', 'Ořez a tvarování stromů', 'Kácení stromů a odvoz větví'],
     },
     {
       icon: Flame,
@@ -60,11 +62,27 @@ const HomePage = () => {
     },
     {
       question: 'Co všechno děláte? Jaké služby nabízíte?',
-      answer: 'Nabízíme sekání trávy, vertikutaci, hnojení, sezónní balíčky (jaro, léto, podzim, zima), zahradnické práce, likvidaci a čištění zarostlých pozemků a parcel, odvoz odpadu a celoroční VIP péči.',
+      answer: 'Nabízíme sekání trávy, stříhání keřů, živých plotů a tújí, ořez a kácení stromů, realizace zahrad (návrh a založení trávníku), vertikutaci, hnojení, sezónní balíčky (jaro, léto, podzim, zima), likvidaci zarostlých pozemků, odvoz odpadu a celoroční VIP péči.',
+    },
+    {
+      question: 'Stříháte keře, živé ploty a túje?',
+      answer: 'Ano. Stříháme a tvarujeme okrasné keře, túje i živé ploty všech výšek – pravidelně i jednorázově. Součástí je úklid a odvoz nebo štěpkování větví.',
+    },
+    {
+      question: 'Provádíte kácení a ořez stromů?',
+      answer: 'Provádíme ořez, prořez i kompletní kácení stromů včetně rizikového kácení po částech u domů a vedení. Větve nastěpkujeme nebo odvezeme a po práci uklidíme.',
+    },
+    {
+      question: 'Co znamená "realizace zahrad"?',
+      answer: 'Realizujeme zahrady na klíč – od návrhu přes terénní úpravy a založení trávníku (ze semene i z travního koberce) až po výsadbu stromů, keřů a záhonů. Vytvoříme novou zahradu i proměníme stávající.',
+    },
+    {
+      question: 'Pokládáte travní koberec i zakládáte trávník ze semene?',
+      answer: 'Ano. Nabízíme pokládku travního koberce (rolovaného trávníku) s okamžitě zeleným výsledkem i levnější zakládání trávníku ze semene. Připravíme podloží, položíme nebo zaséjeme a poradíme s péčí a zálivkou. Travní koberec pokládáme do 24 hodin od sloupnutí.',
     },
     {
       question: 'Jaké oblasti pokrýváte vašimi službami?',
-      answer: 'Působíme v Dvoře Králové nad Labem a okolí do vzdálenosti 30 km – zahrnuje to Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod a okolní vesnice.',
+      answer: 'Rozšířili jsme dojezd na 50 km od Dvůra Králové nad Labem – nově obsluhujeme i krajské město Hradec Králové. Pokrýváme Hradec Králové, Trutnov, Vrchlabí, Hostinné, Jaroměř, Náchod, Hořice, Jičín a okolní obce.',
     },
     {
       question: 'Co je "Likvidace a čištění pozemků"?',
@@ -148,16 +166,16 @@ const HomePage = () => {
         <div 
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232C8339' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232E8B3E' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left Content */}
-            <div className="text-left">
-              <div className="inline-flex items-center gap-2 bg-white border-2 border-[#2C8339]/20 rounded-full px-4 py-2 mb-6 shadow-sm">
-                <Star className="w-4 h-4 text-[#2C8339]" fill="#2C8339" />
+            <Reveal variant="reveal-left" className="text-left">
+              <div className="inline-flex items-center gap-2 bg-white border-2 border-[#2E8B3E]/20 rounded-full px-4 py-2 mb-6 shadow-sm">
+                <Star className="w-4 h-4 text-[#2E8B3E]" fill="#2E8B3E" />
                 <span className="text-sm font-semibold text-[#374151]">
                   Mladý tým s chutí do práce
                 </span>
@@ -168,7 +186,7 @@ const HomePage = () => {
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
                 Perfektní sekání{' '}
-                <span className="text-[#2C8339]">vašeho trávníku</span>
+                <span className="text-[#2E8B3E]">vašeho trávníku</span>
               </h1>
               
               <p className="text-base sm:text-lg md:text-xl text-[#374151] mb-8 leading-relaxed max-w-xl font-medium">
@@ -184,7 +202,7 @@ const HomePage = () => {
                   { icon: MapPin, text: 'Místní firma' },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm font-semibold text-[#374151]">
-                    <item.icon className="w-5 h-5 text-[#2C8339]" />
+                    <item.icon className="w-5 h-5 text-[#2E8B3E]" />
                     <span>{item.text}</span>
                   </div>
                 ))}
@@ -195,7 +213,7 @@ const HomePage = () => {
                 <Link to="/rezervace" className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
-                    className="w-full bg-[#2C8339] hover:bg-[#256d31] text-white rounded-full px-8 h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all"
+                    className="w-full bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-full px-8 h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all"
                     data-testid="hero-cta-rezervace"
                   >
                     Nezávazná poptávka
@@ -206,7 +224,7 @@ const HomePage = () => {
                   <Button 
                     size="lg" 
                     variant="outline"
-                    className="w-full border-2 border-[#2C8339] text-[#2C8339] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold"
+                    className="w-full border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-full px-8 h-14 text-base font-bold"
                     data-testid="hero-cta-whatsapp"
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
@@ -214,13 +232,13 @@ const HomePage = () => {
                   </Button>
                 </a>
               </div>
-            </div>
+            </Reveal>
 
             {/* Right - Stats Card */}
-            <div className="relative mt-8 lg:mt-0">
-              <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border-2 border-gray-100">
+            <Reveal variant="reveal-right" delay={180} className="relative mt-8 lg:mt-0">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10 border-2 border-gray-100 lift-hover">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#2C8339] rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="icon-pop w-14 h-14 sm:w-16 sm:h-16 bg-[#2E8B3E] rounded-2xl flex items-center justify-center shadow-lg">
                     <Leaf className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                   </div>
                   <div>
@@ -233,15 +251,15 @@ const HomePage = () => {
                 
                 <div className="grid grid-cols-3 gap-4 sm:gap-6 py-6 border-t-2 border-b-2 border-gray-100">
                   <div className="text-center">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2C8339]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Obhlídka</p>
                   </div>
                   <div className="text-center border-x-2 border-gray-100">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2C8339]" style={{ fontFamily: 'Poppins, sans-serif' }}>30 km</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>50 km</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Dosah</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2C8339]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-[#2E8B3E]" style={{ fontFamily: 'Poppins, sans-serif' }}>Zdarma</p>
                     <p className="text-xs sm:text-sm font-semibold text-[#6B7280]">Kalkulace</p>
                   </div>
                 </div>
@@ -249,7 +267,7 @@ const HomePage = () => {
                 <div className="mt-6">
                   <Link to="/rezervace">
                     <Button 
-                      className="w-full bg-[#2C8339] hover:bg-[#256d31] text-white rounded-xl h-12 sm:h-14 font-bold text-base"
+                      className="w-full bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-xl h-12 sm:h-14 font-bold text-base"
                       data-testid="hero-card-cta"
                     >
                       Získat cenovou nabídku zdarma
@@ -257,7 +275,7 @@ const HomePage = () => {
                   </Link>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -265,25 +283,25 @@ const HomePage = () => {
       {/* Services Section */}
       <section className="py-16 md:py-24 bg-white" data-testid="services-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111827] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Naše služby
             </h2>
             <p className="text-[#374151] max-w-2xl mx-auto text-base sm:text-lg font-medium">
-              Kompletní zahradnické služby od sekání trávníků po likvidaci zarostlých pozemků. 
+              Kompletní zahradnické služby od sekání trávníků po likvidaci zarostlých pozemků.
               Profesionální přístup a férovost.
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {services.map((service, idx) => (
-              <Card 
-                key={idx} 
-                className="card-hover bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-[#2C8339]/30"
+              <Reveal key={idx} delay={idx * 110} variant="reveal-scale">
+              <Card
+                className="card-hover bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-[#2E8B3E]/30 h-full"
                 data-testid={`service-card-${idx}`}
               >
                 <CardContent className="p-5 sm:p-6 md:p-8">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#2C8339] rounded-xl flex items-center justify-center mb-5 shadow-md">
+                  <div className="icon-pop w-12 h-12 sm:w-14 sm:h-14 bg-[#2E8B3E] rounded-xl flex items-center justify-center mb-5 shadow-md">
                     <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-[#111827] mb-3" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -295,19 +313,19 @@ const HomePage = () => {
                   <ul className="space-y-2 mb-6">
                     {service.features.map((feature, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2 text-sm text-[#374151] font-medium">
-                        <CheckCircle className="w-4 h-4 text-[#2C8339] flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-[#2E8B3E] flex-shrink-0" />
                         {feature}
                       </li>
                     ))}
                   </ul>
                   <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
                     <span className="text-sm font-semibold text-[#6B7280]">Cena:</span>
-                    <span className="text-lg font-black text-[#2C8339]">{service.price}</span>
+                    <span className="text-lg font-black text-[#2E8B3E]">{service.price}</span>
                   </div>
                   <Link to="/rezervace" className="block mt-4">
                     <Button 
                       variant="outline" 
-                      className="w-full border-2 border-[#2C8339] text-[#2C8339] hover:bg-[#F0FDF4] rounded-lg font-bold"
+                      className="w-full border-2 border-[#2E8B3E] text-[#2E8B3E] hover:bg-[#F0FDF4] rounded-lg font-bold"
                     >
                       Nezávazná poptávka
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -315,13 +333,14 @@ const HomePage = () => {
                   </Link>
                 </CardContent>
               </Card>
+              </Reveal>
             ))}
           </div>
 
           <div className="text-center mt-10">
             <Link to="/sluzby">
               <Button 
-                className="bg-[#2C8339] hover:bg-[#256d31] text-white rounded-full px-8 h-12 font-bold"
+                className="bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-full px-8 h-12 font-bold"
                 data-testid="view-all-services-btn"
               >
                 Zobrazit všechny služby
@@ -334,45 +353,47 @@ const HomePage = () => {
       {/* Why Choose Us */}
       <section className="py-16 md:py-24 bg-[#F8FAFC]" data-testid="why-us-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111827] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Proč si vybrat naše služby?
             </h2>
             <p className="text-[#374151] max-w-2xl mx-auto text-base sm:text-lg font-medium">
-              Mladý tým s energií a profesionálním přístupem. 
+              Mladý tým s energií a profesionálním přístupem.
               Cenu znáte vždy předem, bez skrytých poplatků.
             </p>
-          </div>
+          </Reveal>
 
           {/* How it works */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-16">
             {steps.map((step, idx) => (
-              <div key={idx} className="text-center" data-testid={`step-${idx}`}>
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md border border-gray-100">
+              <Reveal key={idx} delay={idx * 100} className="text-center group" data-testid={`step-${idx}`}>
+                <div className="icon-pop w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md border border-gray-100">
                   <step.icon className="w-7 h-7 text-[#3FA34D]" />
                 </div>
-                <p className="text-sm text-[#6B7280] mb-1">{idx + 1}.</p>
+                <p className="text-sm text-[#9CA3AF] mb-1">{idx + 1}.</p>
                 <h4 className="font-semibold text-[#222222] mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   {step.title}
                 </h4>
                 <p className="text-sm text-[#4B5563]">{step.description}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, idx) => (
-              <div 
-                key={idx} 
-                className="bg-white rounded-xl p-6 text-center shadow-sm border border-gray-100"
+              <Reveal
+                key={idx}
+                delay={idx * 90}
+                variant="reveal-scale"
+                className="bg-white rounded-xl p-6 text-center shadow-sm border border-gray-100 lift-hover"
                 data-testid={`stat-${idx}`}
               >
                 <p className="text-3xl md:text-4xl font-bold text-[#3FA34D] mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  {stat.value}
+                  <CountUp value={stat.value} />
                 </p>
                 <p className="text-sm text-[#4B5563]">{stat.label}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -381,7 +402,7 @@ const HomePage = () => {
       {/* Reviews Section */}
       <section className="py-16 md:py-24 bg-[#F0FDF4]" data-testid="reviews-section">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <span className="inline-block text-xs font-semibold tracking-widest text-[#3FA34D] uppercase mb-3 bg-[#3FA34D]/10 px-4 py-1.5 rounded-full">
               Hodnocení zákazníků
             </span>
@@ -394,13 +415,14 @@ const HomePage = () => {
               ))}
             </div>
             <p className="text-[#4B5563] text-sm">Průměrné hodnocení 5.0 ze 5 — přes 20 recenzí</p>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {reviews.map((review, idx) => (
-              <div
+              <Reveal
                 key={idx}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                delay={(idx % 3) * 110}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow lift-hover"
                 data-testid={`review-card-${idx}`}
               >
                 <div className="flex items-center gap-1 mb-4">
@@ -423,7 +445,7 @@ const HomePage = () => {
                     <p className="text-xs text-gray-400">{review.location} · {review.date}</p>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -432,15 +454,16 @@ const HomePage = () => {
       {/* FAQ Section */}
       <section className="py-16 md:py-24 bg-white" data-testid="faq-section">
         <div className="max-w-3xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-12">
+          <Reveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
               Často kladené otázky
             </h2>
             <p className="text-[#4B5563]">
               Odpovědi na nejčastější otázky o našich službách a praktické rady pro vaši zahradu.
             </p>
-          </div>
+          </Reveal>
 
+          <Reveal>
           <Accordion type="single" collapsible className="space-y-4">
             {faqItems.map((item, idx) => (
               <AccordionItem 
@@ -458,6 +481,7 @@ const HomePage = () => {
               </AccordionItem>
             ))}
           </Accordion>
+          </Reveal>
         </div>
       </section>
 
@@ -470,10 +494,12 @@ const HomePage = () => {
             rel="noopener noreferrer"
             data-testid="firmy-cz-link"
           >
-            <img 
-              width="249" 
-              src="https://www.firmy.cz/img/widgets/firmy-ohodnotte-nas-tmave.svg" 
-              alt="SeknuTo.cz na Firmy.cz" 
+            <img
+              width="249"
+              height="68"
+              loading="lazy"
+              src="https://www.firmy.cz/img/widgets/firmy-ohodnotte-nas-tmave.svg"
+              alt="SeknuTo.cz na Firmy.cz"
               className="inline-block hover:opacity-80 transition-opacity"
             />
           </a>

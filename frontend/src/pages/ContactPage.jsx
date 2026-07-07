@@ -4,6 +4,7 @@ import { Phone, Mail, MapPin, MessageCircle, Clock, Send, Loader2 } from 'lucide
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
+import Reveal from '../components/Reveal';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
@@ -69,7 +70,7 @@ const ContactPage = () => {
       icon: MapPin,
       title: 'Oblast působení',
       value: 'Dvůr Králové nad Labem',
-      description: 'a okolí do 30 km',
+      description: 'a okolí do 50 km',
     },
   ];
 
@@ -84,13 +85,15 @@ const ContactPage = () => {
       {/* Hero */}
       <section className="py-12 md:py-20 bg-gradient-to-br from-[#F0FDF4] via-white to-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Kontakt
-          </h1>
-          <p className="text-lg text-[#4B5563] max-w-2xl mx-auto">
-            Máte dotaz nebo chcete nezávaznou cenovou nabídku? 
-            Ozvěte se nám – rádi pomůžeme!
-          </p>
+          <Reveal>
+            <h1 className="text-4xl md:text-5xl font-bold text-[#222222] mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Kontakt
+            </h1>
+            <p className="text-lg text-[#4B5563] max-w-2xl mx-auto">
+              Máte dotaz nebo chcete nezávaznou cenovou nabídku?
+              Ozvěte se nám – rádi pomůžeme!
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -99,16 +102,16 @@ const ContactPage = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Info */}
-            <div>
+            <Reveal variant="reveal-left">
               <h2 className="text-2xl font-bold text-[#222222] mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Kontaktní údaje
               </h2>
-              
+
               <div className="grid sm:grid-cols-2 gap-4 mb-8">
                 {contactInfo.map((item, idx) => (
-                  <Card 
-                    key={idx}
-                    className={`rounded-xl ${item.highlight ? 'border-[#25D366] bg-[#F0FFF4]' : 'border-gray-100'}`}
+                  <Reveal key={idx} delay={(idx % 2) * 100} variant="reveal-scale">
+                  <Card
+                    className={`rounded-xl h-full ${item.highlight ? 'border-[#25D366] bg-[#F0FFF4]' : 'border-gray-100'}`}
                     data-testid={`contact-info-${idx}`}
                   >
                     <CardContent className="p-5">
@@ -119,7 +122,7 @@ const ContactPage = () => {
                           <item.icon className={`w-6 h-6 ${item.highlight ? 'text-white' : 'text-[#3FA34D]'}`} />
                         </div>
                         <div>
-                          <p className="text-sm text-[#6B7280] mb-1">{item.title}</p>
+                          <p className="text-sm text-[#9CA3AF] mb-1">{item.title}</p>
                           {item.link ? (
                             <a 
                               href={item.link}
@@ -134,11 +137,12 @@ const ContactPage = () => {
                           ) : (
                             <p className="font-semibold text-[#222222]">{item.value}</p>
                           )}
-                          <p className="text-xs text-[#6B7280] mt-1">{item.description}</p>
+                          <p className="text-xs text-[#9CA3AF] mt-1">{item.description}</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+                  </Reveal>
                 ))}
               </div>
 
@@ -160,7 +164,7 @@ const ContactPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#4B5563]">Neděle</span>
-                      <span className="text-[#6B7280]">Zavřeno</span>
+                      <span className="text-[#9CA3AF]">Zavřeno</span>
                     </div>
                   </div>
                 </CardContent>
@@ -186,10 +190,10 @@ const ContactPage = () => {
                   </Button>
                 </a>
               </div>
-            </div>
+            </Reveal>
 
             {/* Contact Form */}
-            <div>
+            <Reveal variant="reveal-right" delay={120}>
               <h2 className="text-2xl font-bold text-[#222222] mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 Napište nám
               </h2>
@@ -284,7 +288,7 @@ const ContactPage = () => {
                   </form>
                 </CardContent>
               </Card>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -292,17 +296,19 @@ const ContactPage = () => {
       {/* Map placeholder */}
       <section className="py-12 md:py-20 bg-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-2xl font-bold text-[#222222] text-center mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Naše oblast působení
-          </h2>
-          <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
+          <Reveal>
+            <h2 className="text-2xl font-bold text-[#222222] text-center mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Naše oblast působení
+            </h2>
+          </Reveal>
+          <Reveal variant="reveal-scale" delay={100} className="bg-white rounded-2xl p-8 text-center border border-gray-100">
             <MapPin className="w-12 h-12 text-[#3FA34D] mx-auto mb-4" />
             <h3 className="text-xl font-bold text-[#222222] mb-2">Dvůr Králové nad Labem</h3>
-            <p className="text-[#4B5563] mb-4">a okolí do vzdálenosti 30 km</p>
-            <p className="text-sm text-[#6B7280]">
+            <p className="text-[#4B5563] mb-4">a okolí do vzdálenosti 50 km</p>
+            <p className="text-sm text-[#9CA3AF]">
               Trutnov • Jaroměř • Náchod • Hradec Králové • a další
             </p>
-          </div>
+          </Reveal>
         </div>
       </section>
     </div>
