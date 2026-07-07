@@ -119,7 +119,7 @@ const ContactPage = () => {
                           <item.icon className={`w-6 h-6 ${item.highlight ? 'text-white' : 'text-[#3FA34D]'}`} />
                         </div>
                         <div>
-                          <p className="text-sm text-[#9CA3AF] mb-1">{item.title}</p>
+                          <p className="text-sm text-[#6B7280] mb-1">{item.title}</p>
                           {item.link ? (
                             <a 
                               href={item.link}
@@ -134,7 +134,7 @@ const ContactPage = () => {
                           ) : (
                             <p className="font-semibold text-[#222222]">{item.value}</p>
                           )}
-                          <p className="text-xs text-[#9CA3AF] mt-1">{item.description}</p>
+                          <p className="text-xs text-[#6B7280] mt-1">{item.description}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -160,7 +160,7 @@ const ContactPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#4B5563]">Neděle</span>
-                      <span className="text-[#9CA3AF]">Zavřeno</span>
+                      <span className="text-[#6B7280]">Zavřeno</span>
                     </div>
                   </div>
                 </CardContent>
@@ -299,7 +299,7 @@ const ContactPage = () => {
             <MapPin className="w-12 h-12 text-[#3FA34D] mx-auto mb-4" />
             <h3 className="text-xl font-bold text-[#222222] mb-2">Dvůr Králové nad Labem</h3>
             <p className="text-[#4B5563] mb-4">a okolí do vzdálenosti 30 km</p>
-            <p className="text-sm text-[#9CA3AF]">
+            <p className="text-sm text-[#6B7280]">
               Trutnov • Jaroměř • Náchod • Hradec Králové • a další
             </p>
           </div>
