@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Users, Heart, MapPin, Leaf, ArrowRight } from 'lucide-react';
+import { Users, Heart, MapPin, Leaf, ArrowRight, User, Hash, Building2, FileCheck, Phone, Mail } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import SEOHead from '../components/SEOHead';
@@ -164,6 +164,92 @@ const AboutPage = () => {
               <div>
                 <p className="text-3xl font-bold text-[#3FA34D]" style={{ fontFamily: 'Poppins, sans-serif' }}>100%</p>
                 <p className="text-sm text-[#4B5563]">Nasazení</p>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Zákonné údaje o provozovateli */}
+      <section className="py-12 md:py-20 bg-[#F9FAFB]" data-testid="about-legal">
+        <div className="max-w-4xl mx-auto px-4 md:px-8">
+          <Reveal>
+            <h2 className="text-3xl font-bold text-[#222222] text-center mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Provozovatel
+            </h2>
+            <p className="text-center text-[#4B5563] mb-10 max-w-2xl mx-auto">
+              Zákonné informace o provozovateli webu a poskytovateli služeb SeknuTo.cz.
+            </p>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+              <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="flex items-start gap-3">
+                  <User className="w-5 h-5 text-[#3FA34D] mt-0.5 shrink-0" />
+                  <div>
+                    <dt className="text-sm text-[#6B7280]">Jméno a příjmení</dt>
+                    <dd className="font-semibold text-[#222222]">Dušan Macháček</dd>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Hash className="w-5 h-5 text-[#3FA34D] mt-0.5 shrink-0" />
+                  <div>
+                    <dt className="text-sm text-[#6B7280]">IČO</dt>
+                    <dd className="font-semibold text-[#222222]">24889229</dd>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Building2 className="w-5 h-5 text-[#3FA34D] mt-0.5 shrink-0" />
+                  <div>
+                    <dt className="text-sm text-[#6B7280]">Místo podnikání</dt>
+                    <dd className="font-semibold text-[#222222]">Fibichova 1294, 544 01 Dvůr Králové nad Labem</dd>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <FileCheck className="w-5 h-5 text-[#3FA34D] mt-0.5 shrink-0" />
+                  <div>
+                    <dt className="text-sm text-[#6B7280]">Zápis v rejstříku</dt>
+                    <dd className="font-semibold text-[#222222]">
+                      Fyzická osoba zapsaná v živnostenském rejstříku
+                    </dd>
+                    <dd className="text-sm text-[#6B7280] mt-1">
+                      Úřad příslušný podle §71 odst. 2 živnostenského zákona: Městský úřad Dvůr Králové nad Labem
+                    </dd>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Phone className="w-5 h-5 text-[#3FA34D] mt-0.5 shrink-0" />
+                  <div>
+                    <dt className="text-sm text-[#6B7280]">Telefon</dt>
+                    <dd className="font-semibold text-[#222222]">
+                      <a href="tel:+420730588372" className="hover:text-[#3FA34D] transition-colors">730 588 372</a>
+                    </dd>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-[#3FA34D] mt-0.5 shrink-0" />
+                  <div>
+                    <dt className="text-sm text-[#6B7280]">E-mail</dt>
+                    <dd className="font-semibold text-[#222222]">
+                      <a href="mailto:info@seknuto.cz" className="hover:text-[#3FA34D] transition-colors">info@seknuto.cz</a>
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+
+              <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                <Link to="/gdpr" className="text-[#3FA34D] hover:underline font-medium">
+                  Zásady ochrany osobních údajů
+                </Link>
+                <Link to="/obchodni-podminky" className="text-[#3FA34D] hover:underline font-medium">
+                  Obchodní podmínky
+                </Link>
               </div>
             </div>
           </Reveal>
