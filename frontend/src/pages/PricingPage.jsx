@@ -23,7 +23,7 @@ const PricingPage = () => {
       icon: MapPin, 
       title: 'Bezplatná obhlídka', 
       description: 'Přijedeme přímo k vám, zhodnotíme stav zahrady nebo pozemku a na místě připravíme přesnou kalkulaci. Obhlídka je zcela zdarma a nezávazná.',
-      color: 'bg-[#2E8B3E]'
+      color: 'bg-[#2C8339]'
     },
     { 
       num: '03', 
