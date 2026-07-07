@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import OperationFailure
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -102,6 +103,24 @@ def _json_safe(value):
         return value
     # Fallback for ObjectId and other exotic BSON types
     return str(value)
+
+
+async def _fetch_gallery_sorted(query: dict, limit: int):
+    """Fetch gallery projects newest-first.
+
+    Gallery documents embed large base64 images, so a DB-side sort on
+    created_at can exceed MongoDB's 32MB in-memory sort limit (error 292) on
+    free/shared clusters that lack a supporting index. If that happens we fall
+    back to an unsorted fetch (which streams and never hits the sort limit) and
+    sort the small, already-capped result set in Python instead.
+    """
+    try:
+        return await db.gallery_projects.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
+    except OperationFailure as e:
+        logger.warning(f"DB-side gallery sort failed (code={getattr(e, 'code', '?')}); using in-app sort")
+        docs = await db.gallery_projects.find(query, {"_id": 0}).to_list(limit)
+        docs.sort(key=lambda d: d.get("created_at") or "", reverse=True)
+        return docs
 
 
 def _cors_allow_origin(request: Request) -> str:
@@ -1372,7 +1391,7 @@ class GalleryProjectCreate(BaseModel):
 async def list_gallery_projects():
     """Public: list published gallery projects"""
     try:
-        projects = await db.gallery_projects.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        projects = await _fetch_gallery_sorted({"published": True}, 100)
         return [_json_safe(p) for p in projects]
     except Exception as e:
         logger.error(f"Failed to list public gallery projects: {e}", exc_info=True)
@@ -1404,7 +1423,7 @@ async def admin_create_gallery_project(data: GalleryProjectCreate, request: Requ
 async def admin_list_gallery_projects(request: Request):
     await verify_admin(request)
     try:
-        projects = await db.gallery_projects.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+        projects = await _fetch_gallery_sorted({}, 200)
         return [_json_safe(p) for p in projects]
     except Exception as e:
         logger.error(f"Failed to list admin gallery projects: {e}", exc_info=True)
@@ -1966,6 +1985,19 @@ async def startup_db_client():
         logger.info("MongoDB indexes created successfully")
     except Exception as e:
         logger.warning(f"Index creation warning (may already exist): {str(e)}")
+
+    # Gallery projects store large base64 images, so an in-memory sort on
+    # created_at blows past MongoDB's 32MB sort limit (error 292,
+    # QueryExceededMemoryLimitNoDiskUseAllowed) on shared/free clusters that
+    # cannot use disk. These indexes make the sort index-backed (streaming,
+    # non-blocking) so the limit no longer applies. Kept in its own try block so
+    # an unrelated index conflict above cannot skip this critical fix.
+    try:
+        await db.gallery_projects.create_index([("published", 1), ("created_at", -1)])
+        await db.gallery_projects.create_index([("created_at", -1)])
+        logger.info("Gallery indexes created successfully")
+    except Exception as e:
+        logger.warning(f"Gallery index creation warning (may already exist): {str(e)}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
