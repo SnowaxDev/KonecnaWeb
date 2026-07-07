@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File, BackgroundTasks
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 import os
 import logging
 import asyncio
+import base64
 import random
 import string
 from pathlib import Path
@@ -103,6 +104,16 @@ def _json_safe(value):
         return value
     # Fallback for ObjectId and other exotic BSON types
     return str(value)
+
+
+def _public_base_url(request: Request) -> str:
+    """Absolute public base URL of this backend, used to build image URLs that
+    resolve from the frontend's origin. Prefers the PUBLIC_BACKEND_URL env var
+    (deterministic) and falls back to the incoming request's base URL."""
+    env = os.environ.get("PUBLIC_BACKEND_URL", "").strip()
+    if env:
+        return env.rstrip("/")
+    return str(request.base_url).rstrip("/")
 
 
 async def _fetch_gallery_sorted(query: dict, limit: int):
@@ -1448,38 +1459,102 @@ async def admin_delete_gallery_project(project_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Project not found")
     return {"success": True}
 
+@api_router.get("/gallery/image/{image_id}")
+async def get_gallery_image(image_id: str):
+    """Public: stream a stored gallery image by id.
+
+    Images are kept in their own collection (not embedded in project documents),
+    so project listings stay small and fast, and each image is cached hard by the
+    browser/CDN via an immutable Cache-Control header."""
+    doc = await db.gallery_images.find_one({"id": image_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Image not found")
+    data = doc.get("data")
+    # Support both raw BSON Binary (new) and legacy base64-string storage.
+    if isinstance(data, str):
+        try:
+            data = base64.b64decode(data)
+        except Exception:
+            data = b""
+    return Response(
+        content=bytes(data) if data else b"",
+        media_type=doc.get("mime", "image/jpeg"),
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
 @api_router.post("/admin/gallery/upload")
 async def admin_upload_gallery_image(request: Request, file: UploadFile = File(...)):
-    """Upload gallery image – stores as base64 in MongoDB for persistence on Render"""
+    """Upload a gallery image. The binary is stored once in the gallery_images
+    collection (raw bytes, ~33% smaller than base64) and the project only keeps a
+    small URL reference — so listings never blow the sort memory limit and mobile
+    loads stay light. Persistent across Render restarts (lives in MongoDB)."""
     await verify_admin(request)
     # Validate file type
     allowed = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
     if file.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Nepodporovaný formát souboru. Použijte JPG, PNG nebo WEBP.")
-    
+
     content = await file.read()
     if len(content) > 10 * 1024 * 1024:  # 10 MB limit
         raise HTTPException(status_code=413, detail="Soubor je příliš velký (max. 10 MB)")
-    
-    # Store as base64 data URL – persistent across Render restarts
-    import base64
-    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
     mime = file.content_type or f"image/{ext}"
-    b64 = base64.b64encode(content).decode("utf-8")
-    data_url = f"data:{mime};base64,{b64}"
-    
-    # Save record to DB for tracking (optional)
-    record = {
-        "id": str(uuid.uuid4()),
-        "filename": file.filename,
+
+    image_id = str(uuid.uuid4())
+    await db.gallery_images.insert_one({
+        "id": image_id,
+        "data": content,  # raw bytes -> stored as BSON Binary
         "mime": mime,
+        "filename": file.filename,
         "size_bytes": len(content),
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.gallery_uploads.insert_one(record)
-    
-    logger.info(f"Gallery image uploaded: {file.filename} ({len(content)//1024}KB) as base64")
-    return {"url": data_url, "filename": file.filename}
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    url = f"{_public_base_url(request)}/api/gallery/image/{image_id}"
+    logger.info(f"Gallery image uploaded: {file.filename} ({len(content)//1024}KB) -> {image_id}")
+    return {"url": url, "filename": file.filename}
+
+
+@api_router.post("/admin/gallery/migrate-images")
+async def admin_migrate_gallery_images(request: Request):
+    """One-time, idempotent migration: move any legacy base64 `data:` images that
+    are still embedded inside gallery projects into the gallery_images collection
+    and replace the field with a lightweight URL. Safe to run repeatedly — it only
+    touches fields that still hold a data: URI."""
+    await verify_admin(request)
+    base = _public_base_url(request)
+    migrated_projects = 0
+    migrated_images = 0
+    async for proj in db.gallery_projects.find({}):
+        updates = {}
+        for field in ("before_image", "after_image"):
+            val = proj.get(field, "")
+            if isinstance(val, str) and val.startswith("data:"):
+                try:
+                    header, b64 = val.split(",", 1)
+                    mime = header[5:].split(";")[0] or "image/jpeg"
+                    raw = base64.b64decode(b64)
+                except Exception as e:
+                    logger.warning(f"Skipping unparsable data URI on {proj.get('id')}/{field}: {e}")
+                    continue
+                image_id = str(uuid.uuid4())
+                await db.gallery_images.insert_one({
+                    "id": image_id,
+                    "data": raw,
+                    "mime": mime,
+                    "filename": f"{proj.get('id', 'img')}-{field}",
+                    "size_bytes": len(raw),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                updates[field] = f"{base}/api/gallery/image/{image_id}"
+                migrated_images += 1
+        if updates:
+            await db.gallery_projects.update_one({"id": proj["id"]}, {"$set": updates})
+            migrated_projects += 1
+    logger.info(f"Gallery migration done: {migrated_projects} projects, {migrated_images} images")
+    return {"migrated_projects": migrated_projects, "migrated_images": migrated_images}
 
 # ─── CONTACT MESSAGES ADMIN ──────────────────────────────────────────────────
 
@@ -1995,6 +2070,7 @@ async def startup_db_client():
     try:
         await db.gallery_projects.create_index([("published", 1), ("created_at", -1)])
         await db.gallery_projects.create_index([("created_at", -1)])
+        await db.gallery_images.create_index("id", unique=True)
         logger.info("Gallery indexes created successfully")
     except Exception as e:
         logger.warning(f"Gallery index creation warning (may already exist): {str(e)}")
