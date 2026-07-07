@@ -17,6 +17,23 @@ const Footer = () => {
             <p className="text-gray-400 text-sm leading-relaxed mb-4">
               Profesionální zahradnické služby pro váš dokonalý trávník a zahradu. Rychle, spolehlivě a transparentně.
             </p>
+            <div className="text-gray-400 text-sm leading-relaxed mb-4 not-italic" data-testid="footer-business-info">
+              <p className="text-white font-medium">Dušan Macháček</p>
+              <p>Fibichova 1294, 544 01 Dvůr Králové nad Labem</p>
+              <p>IČO: 24889229</p>
+              <p>
+                Tel:{' '}
+                <a href="tel:+420730588372" className="hover:text-[#3FA34D] transition-colors">
+                  730 588 372
+                </a>
+              </p>
+              <p>
+                E-mail:{' '}
+                <a href="mailto:info@seknuto.cz" className="hover:text-[#3FA34D] transition-colors">
+                  info@seknuto.cz
+                </a>
+              </p>
+            </div>
             <p className="text-[#3FA34D] font-medium text-sm">
               🌱 Trávník bez starostí!
             </p>
