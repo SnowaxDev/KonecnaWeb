@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, UploadFile, File, BackgroundTasks
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -11,8 +11,10 @@ from slowapi.errors import RateLimitExceeded
 import os
 import logging
 import asyncio
+import base64
 import random
 import string
+from io import BytesIO
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import List, Optional, Dict
@@ -99,6 +101,31 @@ def _json_safe(value):
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     return str(value)
+
+
+def _public_base_url(request: Request) -> str:
+    """Absolute public base URL of this backend, used to build gallery image URLs
+    that resolve from the frontend's origin. Prefers PUBLIC_BACKEND_URL (set in
+    Render) and falls back to the incoming request's base URL."""
+    env = os.environ.get("PUBLIC_BACKEND_URL", "").strip()
+    if env:
+        return env.rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
+def _resize_image_to_webp(raw: bytes, width: int) -> bytes:
+    """Downscale image bytes to at most `width` px wide and return WebP bytes.
+    WebP is ~30% smaller than JPEG and supported by every modern mobile browser."""
+    from PIL import Image
+    img = Image.open(BytesIO(raw))
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGB")
+    if width and img.width > width:
+        h = max(1, round(img.height * (width / img.width)))
+        img = img.resize((width, h), Image.LANCZOS)
+    out = BytesIO()
+    img.save(out, format="WEBP", quality=80, method=4)
+    return out.getvalue()
 
 
 def _cors_allow_origin(request: Request) -> str:
@@ -1401,14 +1428,71 @@ class GalleryProjectCreate(BaseModel):
     tag: Optional[str] = None
     published: bool = True
 
+# Gallery images are stored base64-encoded inside project documents. Returning
+# them inline made the list response tens of MB (LCP > 100 s on mobile). Instead
+# the list/detail endpoints now emit small image URLs pointing at the endpoint
+# below, which streams a single image (optionally downscaled to WebP) with an
+# immutable cache header — so the JSON stays tiny and images load lazily + cached.
+_GALLERY_IMG_FIELDS = {"before": "before_images", "after": "after_images", "extra": "extra_images"}
+_GALLERY_THUMB_W = 1000   # card thumbnails in the list
+_GALLERY_DETAIL_W = 1600  # larger images on the detail page
+
+
+def _gallery_image_url(base: str, pid: str, kind: str, idx: int, width: int) -> str:
+    return f"{base}/api/gallery/projects/{pid}/image/{kind}/{idx}?w={width}"
+
+
+@api_router.get("/gallery/projects/{project_id}/image/{kind}/{idx}")
+async def get_gallery_project_image(project_id: str, kind: str, idx: int, w: int = 0):
+    """Stream a single gallery image by project + slot. Reads only the requested
+    array element (via $slice) so it never loads the whole megabyte document."""
+    field = _GALLERY_IMG_FIELDS.get(kind)
+    if field is None or idx < 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    proj = await db.gallery_projects.find_one(
+        {"$or": [{"id": project_id}, {"slug": project_id}]},
+        {"_id": 0, field: {"$slice": [idx, 1]}},
+    )
+    arr = (proj or {}).get(field) or []
+    if not arr or not isinstance(arr[0], str):
+        raise HTTPException(status_code=404, detail="Image not found")
+    val = arr[0]
+    if val.startswith("http"):
+        return RedirectResponse(val)  # already an external/migrated URL
+    if not val.startswith("data:"):
+        raise HTTPException(status_code=404, detail="Image not found")
+    try:
+        header, b64 = val.split(",", 1)
+        mime = header[5:].split(";")[0] or "image/jpeg"
+        raw = base64.b64decode(b64)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Bad image")
+    cache = {"Cache-Control": "public, max-age=31536000, immutable"}
+    if w and w > 0:
+        try:
+            return Response(content=_resize_image_to_webp(raw, w), media_type="image/webp", headers=cache)
+        except Exception as e:
+            logger.warning(f"Resize failed for {project_id}/{kind}/{idx}: {e}")
+    return Response(content=raw, media_type=mime, headers=cache)
+
+
 @api_router.get("/gallery/projects")
-async def list_gallery_projects():
+async def list_gallery_projects(request: Request):
     """Public: list published gallery projects.
 
-    Vrací jen první fotku PŘED/PO + počty – fotky jsou base64 a plný
-    výpis všech projektů by měl megabajty (pomalé načítání galerie).
-    Kompletní fotky a videa vrací detail endpoint.
+    Returns only the first PŘED/PO image as a URL + photo/video counts, so the
+    response stays a few kB instead of megabytes of inline base64.
     """
+    base = _public_base_url(request)
+
+    def _to_urls(p):
+        pid = p.get("id")
+        p["before_images"] = ([_gallery_image_url(base, pid, "before", 0, _GALLERY_THUMB_W)]
+                              if p.pop("has_before", False) else [])
+        p["after_images"] = ([_gallery_image_url(base, pid, "after", 0, _GALLERY_THUMB_W)]
+                             if p.pop("has_after", False) else [])
+        return p
+
     pipeline = [
         {"$match": {"published": True}},
         {"$sort": {"created_at": -1}},
@@ -1420,22 +1504,20 @@ async def list_gallery_projects():
                 {"$size": {"$ifNull": ["$extra_images", []]}},
             ]},
             "video_count": {"$size": {"$ifNull": ["$videos", []]}},
-            "before_images": {"$slice": [{"$ifNull": ["$before_images", []]}, 1]},
-            "after_images": {"$slice": [{"$ifNull": ["$after_images", []]}, 1]},
+            "has_before": {"$gt": [{"$size": {"$ifNull": ["$before_images", []]}}, 0]},
+            "has_after": {"$gt": [{"$size": {"$ifNull": ["$after_images", []]}}, 0]},
         }},
-        {"$project": {"_id": 0, "videos": 0, "extra_images": 0}},
+        # Drop the heavy base64 arrays entirely — the client gets URLs instead.
+        {"$project": {"_id": 0, "before_images": 0, "after_images": 0, "extra_images": 0, "videos": 0}},
     ]
     try:
         projects = await db.gallery_projects.aggregate(pipeline).to_list(100)
-        return [_json_safe(p) for p in projects]
+        return [_json_safe(_to_urls(p)) for p in projects]
     except OperationFailure as e:
-        # e.g. the $sort exceeded the in-memory limit before the index exists.
-        # Fall back to an unsorted fetch (streams, no sort buffer), then sort and
-        # trim in Python to mirror the pipeline output.
         logger.warning(f"Gallery aggregate failed (code={getattr(e, 'code', '?')}); using in-app fallback")
         docs = await db.gallery_projects.find({"published": True}, {"_id": 0}).to_list(100)
         docs.sort(key=lambda d: d.get("created_at") or "", reverse=True)
-        trimmed = []
+        out = []
         for d in docs[:100]:
             before = d.get("before_images") or []
             after = d.get("after_images") or []
@@ -1443,26 +1525,32 @@ async def list_gallery_projects():
             videos = d.get("videos") or []
             d["photo_count"] = len(before) + len(after) + len(extra)
             d["video_count"] = len(videos)
-            d["before_images"] = before[:1]
-            d["after_images"] = after[:1]
-            d.pop("videos", None)
+            d["has_before"] = len(before) > 0
+            d["has_after"] = len(after) > 0
             d.pop("extra_images", None)
-            trimmed.append(d)
-        return [_json_safe(p) for p in trimmed]
+            d.pop("videos", None)
+            out.append(_to_urls(d))  # overwrites base64 before/after arrays with URLs
+        return [_json_safe(p) for p in out]
     except Exception as e:
         logger.error(f"Failed to list public gallery projects: {e}", exc_info=True)
         return []
 
 @api_router.get("/gallery/projects/{slug_or_id}")
-async def get_gallery_project(slug_or_id: str):
-    """Public: gallery project detail by slug or id"""
+async def get_gallery_project(slug_or_id: str, request: Request):
+    """Public: gallery project detail by slug or id. Image arrays are returned as
+    URLs (not base64) so the detail page loads images lazily and cached."""
     project = await db.gallery_projects.find_one(
         {"published": True, "$or": [{"slug": slug_or_id}, {"id": slug_or_id}]},
         {"_id": 0},
     )
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    return project
+    base = _public_base_url(request)
+    pid = project.get("id")
+    for kind, field in _GALLERY_IMG_FIELDS.items():
+        count = len(project.get(field) or [])
+        project[field] = [_gallery_image_url(base, pid, kind, i, _GALLERY_DETAIL_W) for i in range(count)]
+    return _json_safe(project)
 
 @api_router.post("/admin/gallery/projects")
 async def admin_create_gallery_project(data: GalleryProjectCreate, request: Request):
