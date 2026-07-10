@@ -12,7 +12,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Karta projektu s interaktivním PŘED/PO sliderem, proklik na detail
-const BeforeAfterCard = ({ project }) => {
+const BeforeAfterCard = ({ project, priority = false }) => {
   const photoCount = project.photo_count || 0;
   const videoCount = project.video_count || 0;
 
@@ -27,6 +27,7 @@ const BeforeAfterCard = ({ project }) => {
           after={project.after_images[0]}
           alt={project.title}
           className="aspect-[4/3]"
+          priority={priority}
         />
 
         {/* Tag */}
@@ -149,7 +150,7 @@ export default function GalleryPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {filtered.map((project, idx) => (
                   <Reveal key={project.id} delay={(idx % 2) * 90} variant="reveal-scale">
-                    <BeforeAfterCard project={project} />
+                    <BeforeAfterCard project={project} priority={idx === 0} />
                   </Reveal>
                 ))}
               </div>

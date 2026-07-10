@@ -5,7 +5,7 @@ import { ChevronsLeftRight } from 'lucide-react';
  * Interaktivní porovnání PŘED/PO – tažením čáry po obrázku se odkrývá výsledek.
  * Funguje myší i dotykem (pointer events).
  */
-const BeforeAfterSlider = ({ before, after, alt = '', className = '', showLabels = true }) => {
+const BeforeAfterSlider = ({ before, after, alt = '', className = '', showLabels = true, priority = false }) => {
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
   const [position, setPosition] = useState(50); // % zleva
@@ -48,7 +48,9 @@ const BeforeAfterSlider = ({ before, after, alt = '', className = '', showLabels
         alt={`Po – ${alt}`}
         className="absolute inset-0 w-full h-full object-cover"
         draggable={false}
-        loading="lazy"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchpriority={priority ? 'high' : 'auto'}
+        decoding="async"
       />
       {/* PŘED – ořezává se podle pozice čáry */}
       <div
@@ -60,7 +62,8 @@ const BeforeAfterSlider = ({ before, after, alt = '', className = '', showLabels
           alt={`Před – ${alt}`}
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
         />
       </div>
 
