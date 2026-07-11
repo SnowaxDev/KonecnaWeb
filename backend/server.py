@@ -1442,38 +1442,85 @@ def _gallery_image_url(base: str, pid: str, kind: str, idx: int, width: int) -> 
     return f"{base}/api/gallery/projects/{pid}/image/{kind}/{idx}?w={width}"
 
 
-@api_router.get("/gallery/projects/{project_id}/image/{kind}/{idx}")
-async def get_gallery_project_image(project_id: str, kind: str, idx: int, w: int = 0):
-    """Stream a single gallery image by project + slot. Reads only the requested
-    array element (via $slice) so it never loads the whole megabyte document."""
-    field = _GALLERY_IMG_FIELDS.get(kind)
-    if field is None or idx < 0:
-        raise HTTPException(status_code=404, detail="Not found")
+_IMG_CACHE_HEADERS = {"Cache-Control": "public, max-age=31536000, immutable"}
+
+
+async def _render_gallery_image(project_id: str, field: str, idx: int, w: int):
+    """Return (bytes, mime) for one gallery image slot, resizing to WebP if w>0.
+    Reads only the requested array element via $slice."""
     proj = await db.gallery_projects.find_one(
         {"$or": [{"id": project_id}, {"slug": project_id}]},
         {"_id": 0, field: {"$slice": [idx, 1]}},
     )
     arr = (proj or {}).get(field) or []
     if not arr or not isinstance(arr[0], str):
-        raise HTTPException(status_code=404, detail="Image not found")
+        return None
     val = arr[0]
     if val.startswith("http"):
-        return RedirectResponse(val)  # already an external/migrated URL
+        return ("__redirect__", val)
     if not val.startswith("data:"):
-        raise HTTPException(status_code=404, detail="Image not found")
+        return None
     try:
         header, b64 = val.split(",", 1)
         mime = header[5:].split(";")[0] or "image/jpeg"
         raw = base64.b64decode(b64)
     except Exception:
-        raise HTTPException(status_code=404, detail="Bad image")
-    cache = {"Cache-Control": "public, max-age=31536000, immutable"}
+        return None
     if w and w > 0:
         try:
-            return Response(content=_resize_image_to_webp(raw, w), media_type="image/webp", headers=cache)
+            return (_resize_image_to_webp(raw, w), "image/webp")
         except Exception as e:
-            logger.warning(f"Resize failed for {project_id}/{kind}/{idx}: {e}")
-    return Response(content=raw, media_type=mime, headers=cache)
+            logger.warning(f"Resize failed for {project_id}/{field}/{idx}: {e}")
+    return (raw, mime)
+
+
+@api_router.get("/gallery/projects/{project_id}/image/{kind}/{idx}")
+async def get_gallery_project_image(project_id: str, kind: str, idx: int, w: int = 0):
+    """Stream a single gallery image by project + slot.
+
+    Resized WebP results are cached in gallery_image_cache so the (slow, free-tier)
+    CPU only runs Pillow once per image instead of on every request — after the
+    first hit the endpoint is a fast DB read. Browsers also cache it immutably.
+    """
+    field = _GALLERY_IMG_FIELDS.get(kind)
+    if field is None or idx < 0:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    cache_key = f"{project_id}:{kind}:{idx}:{w or 0}"
+    try:
+        cached = await db.gallery_image_cache.find_one({"_id": cache_key})
+    except Exception:
+        cached = None
+    if cached and cached.get("data") is not None:
+        return Response(content=bytes(cached["data"]),
+                        media_type=cached.get("mime", "image/webp"),
+                        headers=_IMG_CACHE_HEADERS)
+
+    result = await _render_gallery_image(project_id, field, idx, w)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    data, mime = result
+    if data == "__redirect__":
+        return RedirectResponse(mime)  # external/migrated URL
+
+    # Store in cache (best-effort) so subsequent requests skip Pillow entirely.
+    try:
+        await db.gallery_image_cache.replace_one(
+            {"_id": cache_key},
+            {"_id": cache_key, "project_id": project_id, "mime": mime, "w": w or 0, "data": data},
+            upsert=True,
+        )
+    except Exception as e:
+        logger.warning(f"Image cache write failed for {cache_key}: {e}")
+    return Response(content=data, media_type=mime, headers=_IMG_CACHE_HEADERS)
+
+
+async def _clear_gallery_image_cache(project_id: str):
+    """Drop cached renders for a project (call after its images change)."""
+    try:
+        await db.gallery_image_cache.delete_many({"project_id": project_id})
+    except Exception as e:
+        logger.warning(f"Image cache clear failed for {project_id}: {e}")
 
 
 @api_router.get("/gallery/projects")
@@ -1618,6 +1665,7 @@ async def admin_update_gallery_project(project_id: str, request: Request):
     result = await db.gallery_projects.update_one({"id": project_id}, {"$set": body})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
+    await _clear_gallery_image_cache(project_id)
     return {"success": True}
 
 @api_router.delete("/admin/gallery/projects/{project_id}")
@@ -1626,7 +1674,43 @@ async def admin_delete_gallery_project(project_id: str, request: Request):
     result = await db.gallery_projects.delete_one({"id": project_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
+    await _clear_gallery_image_cache(project_id)
     return {"success": True}
+
+@api_router.post("/admin/gallery/warm-cache")
+async def admin_warm_gallery_cache(request: Request):
+    """Pre-generate the WebP renders for all published projects so the first real
+    visitor (and Lighthouse) hits a warm cache instead of paying the resize cost.
+    Idempotent — safe to run repeatedly."""
+    await verify_admin(request)
+    warmed = 0
+    async for proj in db.gallery_projects.find({"published": True}, {"_id": 0, "id": 1, "before_images": 1, "after_images": 1, "extra_images": 1}):
+        pid = proj.get("id")
+        if not pid:
+            continue
+        jobs = [("before", 0, _GALLERY_THUMB_W), ("after", 0, _GALLERY_THUMB_W)]
+        for kind, field in _GALLERY_IMG_FIELDS.items():
+            for i in range(len(proj.get(field) or [])):
+                jobs.append((kind, i, _GALLERY_DETAIL_W))
+        for kind, i, w in jobs:
+            field = _GALLERY_IMG_FIELDS[kind]
+            cache_key = f"{pid}:{kind}:{i}:{w}"
+            if await db.gallery_image_cache.find_one({"_id": cache_key}, {"_id": 1}):
+                continue
+            result = await _render_gallery_image(pid, field, i, w)
+            if not result or result[0] == "__redirect__":
+                continue
+            data, mime = result
+            try:
+                await db.gallery_image_cache.replace_one(
+                    {"_id": cache_key},
+                    {"_id": cache_key, "project_id": pid, "mime": mime, "w": w, "data": data},
+                    upsert=True,
+                )
+                warmed += 1
+            except Exception as e:
+                logger.warning(f"Warm cache write failed for {cache_key}: {e}")
+    return {"warmed_images": warmed}
 
 @api_router.post("/admin/gallery/upload")
 async def admin_upload_gallery_image(request: Request, file: UploadFile = File(...)):
@@ -2175,6 +2259,7 @@ async def startup_db_client():
     try:
         await db.gallery_projects.create_index([("published", 1), ("created_at", -1)])
         await db.gallery_projects.create_index([("created_at", -1)])
+        await db.gallery_image_cache.create_index("project_id")
         logger.info("Gallery indexes created successfully")
     except Exception as e:
         logger.warning(f"Gallery index creation warning (may already exist): {str(e)}")
