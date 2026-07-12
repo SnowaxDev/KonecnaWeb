@@ -2023,13 +2023,20 @@ async def admin_analytics(request: Request, days: int = 30):
     counts = {}
     for d in docs:
         day = (d.get("created_at") or "")[:10]
-        if day:
-            counts[day] = counts.get(day, 0) + 1
+        if not day:
+            continue
+        slot = counts.setdefault(day, {"count": 0, "pending": 0, "confirmed": 0, "completed": 0, "cancelled": 0})
+        slot["count"] += 1
+        st = d.get("status")
+        if st in slot:
+            slot[st] += 1
     series = []
     base = datetime.now(timezone.utc)
+    empty = {"count": 0, "pending": 0, "confirmed": 0, "completed": 0, "cancelled": 0}
     for i in range(days - 1, -1, -1):
         day = (base - timedelta(days=i)).strftime("%Y-%m-%d")
-        series.append({"date": day, "count": counts.get(day, 0)})
+        slot = counts.get(day, empty)
+        series.append({"date": day, **slot})
 
     status_counts = {}
     for s in VALID_BOOKING_STATUSES:

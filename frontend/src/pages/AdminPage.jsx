@@ -9,7 +9,7 @@ import {
   MessageSquare, Upload, CheckCheck, Archive, ExternalLink,
   Search, Download, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as ChartTooltip, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, Tooltip as ChartTooltip, CartesianGrid, ReferenceDot } from 'recharts';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
@@ -147,10 +147,90 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 );
 
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
+// ─── Graf objednávek: rozsahy, agregace a tooltip ────────────────────────────
+const CHART_RANGES = [
+  { days: 7, label: '7 dní' },
+  { days: 30, label: '30 dní' },
+  { days: 90, label: '90 dní' },
+  { days: 365, label: 'Rok' },
+];
+
+const WEEKDAY_NAMES = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
+
+const CZ_DATE = (iso, opts) => new Date(iso + 'T12:00:00').toLocaleDateString('cs-CZ', opts);
+const SHORT = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
+
+// Denní data pro 7/30 dní, týdenní součty pro 90 dní, měsíční pro rok
+const aggregateSeries = (series, rangeDays) => {
+  const KEYS = ['count', 'pending', 'confirmed', 'completed', 'cancelled'];
+  if (rangeDays <= 30) {
+    return series.map(d => ({
+      ...d,
+      label: SHORT(d.date),
+      tooltipLabel: CZ_DATE(d.date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+    }));
+  }
+  if (rangeDays <= 90) {
+    const out = [];
+    for (let i = 0; i < series.length; i += 7) {
+      const chunk = series.slice(i, i + 7);
+      const first = chunk[0].date, last = chunk[chunk.length - 1].date;
+      const bucket = { date: first, label: SHORT(first), tooltipLabel: `Týden ${SHORT(first)} – ${SHORT(last)}${last.slice(0, 4)}` };
+      KEYS.forEach(k => { bucket[k] = chunk.reduce((a, d) => a + (d[k] || 0), 0); });
+      out.push(bucket);
+    }
+    return out;
+  }
+  const byMonth = new Map();
+  series.forEach(d => {
+    const m = d.date.slice(0, 7);
+    if (!byMonth.has(m)) {
+      byMonth.set(m, {
+        date: d.date,
+        label: CZ_DATE(d.date, { month: 'short', year: '2-digit' }),
+        tooltipLabel: CZ_DATE(d.date, { month: 'long', year: 'numeric' }),
+        count: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0,
+      });
+    }
+    const slot = byMonth.get(m);
+    KEYS.forEach(k => { slot[k] += d[k] || 0; });
+  });
+  return [...byMonth.values()];
+};
+
+// Klouzavý průměr přes `window` bodů – vyhladí trend mezi výkyvy
+const withMovingAverage = (data, window) => data.map((d, i) => {
+  const from = Math.max(0, i - window + 1);
+  const slice = data.slice(from, i + 1);
+  return { ...d, ma: +(slice.reduce((a, x) => a + x.count, 0) / slice.length).toFixed(1) };
+});
+
+const OrdersTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs space-y-1">
+      <p className="font-semibold text-gray-900">{d.tooltipLabel || d.label}</p>
+      <p className="font-bold text-[#1B4332] text-sm">{d.count} objedn{d.count === 1 ? 'ávka' : d.count >= 2 && d.count <= 4 ? 'ávky' : 'ávek'}</p>
+      {d.count > 0 && (
+        <div className="text-gray-500 space-y-0.5 pt-1 border-t border-gray-100">
+          {d.completed > 0 && <p><span className="inline-block w-2 h-2 rounded-full bg-[#3FA34D] mr-1.5" />Dokončené: {d.completed}</p>}
+          {d.confirmed > 0 && <p><span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1.5" />Potvrzené: {d.confirmed}</p>}
+          {d.pending > 0 && <p><span className="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1.5" />Čeká: {d.pending}</p>}
+          {d.cancelled > 0 && <p><span className="inline-block w-2 h-2 rounded-full bg-red-400 mr-1.5" />Zrušené: {d.cancelled}</p>}
+        </div>
+      )}
+      {typeof d.ma === 'number' && <p className="text-gray-400 pt-0.5">Ø trend: {d.ma}/den</p>}
+    </div>
+  );
+};
+
 const OverviewTab = ({ token, handle401, onNavigate }) => {
   const [stats, setStats] = useState(null);
   const [newMessages, setNewMessages] = useState(0);
   const [analytics, setAnalytics] = useState(null);
+  const [chartRange, setChartRange] = useState(30);
+  const [chartLoading, setChartLoading] = useState(false);
   const [statsError, setStatsError] = useState(false);
   const headers = { 'X-Admin-Token': token };
 
@@ -161,10 +241,15 @@ const OverviewTab = ({ token, handle401, onNavigate }) => {
     axios.get(`${API}/admin/contact`, { headers })
       .then(r => setNewMessages(r.data.filter(m => m.status === 'new').length))
       .catch(() => {}); // non-critical
-    axios.get(`${API}/admin/analytics`, { headers, params: { days: 30 } })
-      .then(r => setAnalytics(r.data))
-      .catch(() => {}); // chart is optional — older backend may not have it
   }, []); // eslint-disable-line
+
+  useEffect(() => {
+    setChartLoading(true);
+    axios.get(`${API}/admin/analytics`, { headers, params: { days: chartRange } })
+      .then(r => setAnalytics(r.data))
+      .catch(() => {}) // chart is optional — older backend may not have it
+      .finally(() => setChartLoading(false));
+  }, [chartRange]); // eslint-disable-line
 
   if (statsError) return (
     <div className="bg-white rounded-xl border p-10 text-center text-gray-500 text-sm">
@@ -173,7 +258,16 @@ const OverviewTab = ({ token, handle401, onNavigate }) => {
   );
   if (!stats) return <div className="flex justify-center py-12"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>;
 
-  const chartTotal = analytics ? analytics.series.reduce((a, d) => a + d.count, 0) : 0;
+  const dailySeries = analytics?.series || [];
+  const chartTotal = dailySeries.reduce((a, d) => a + d.count, 0);
+  const showMA = chartRange <= 30;
+  const aggregated = analytics ? aggregateSeries(dailySeries, chartRange) : [];
+  const chartData = showMA ? withMovingAverage(aggregated, 7) : aggregated;
+  const peak = chartData.reduce((m, d) => (d.count > (m?.count || 0) ? d : m), null);
+  const avgPerDay = dailySeries.length ? chartTotal / dailySeries.length : 0;
+  const weekdayTotals = [0, 0, 0, 0, 0, 0, 0];
+  dailySeries.forEach(d => { weekdayTotals[new Date(d.date + 'T12:00:00').getDay()] += d.count; });
+  const bestWeekday = chartTotal > 0 ? weekdayTotals.indexOf(Math.max(...weekdayTotals)) : -1;
 
   return (
     <div className="space-y-6">
@@ -186,45 +280,56 @@ const OverviewTab = ({ token, handle401, onNavigate }) => {
         <StatCard icon={TrendingUp} label="Obrat (dokončené)" value={`${(stats.total_revenue_estimate ?? 0).toLocaleString('cs-CZ')} Kč`} color="bg-emerald-600" />
       </div>
 
-      {/* Trend objednávek za posledních 30 dní */}
+      {/* Detailní vývoj objednávek s volbou období */}
       {analytics && (
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-            <div>
-              <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>Objednávky za posledních 30 dní</h3>
-              <p className="text-sm text-gray-500">{chartTotal} nových poptávek</p>
-            </div>
-            <div className="flex gap-4 text-xs text-gray-500">
-              {['pending', 'confirmed', 'completed'].map(st => (
-                <span key={st} className="whitespace-nowrap">
-                  <span className={`inline-block w-2 h-2 rounded-full mr-1 ${st === 'pending' ? 'bg-amber-400' : st === 'confirmed' ? 'bg-blue-400' : 'bg-[#3FA34D]'}`} />
-                  {STATUS_LABELS[st]?.label}: {analytics.status_counts?.[st] ?? 0}
-                </span>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+            <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>Vývoj objednávek</h3>
+            <div className="flex gap-1 bg-gray-50 border border-gray-100 rounded-full p-1">
+              {CHART_RANGES.map(r => (
+                <button key={r.days} onClick={() => setChartRange(r.days)}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${chartRange === r.days ? 'bg-[#1B4332] text-white' : 'text-gray-500 hover:text-gray-800'}`}
+                  data-testid={`chart-range-${r.days}`}>
+                  {r.label}
+                </button>
               ))}
             </div>
           </div>
-          <div style={{ width: '100%', height: 220 }}>
+
+          <div className="flex gap-x-5 gap-y-1 text-xs text-gray-500 mb-4 flex-wrap">
+            <span><b className="text-gray-900">{chartTotal}</b> poptávek celkem</span>
+            <span>Ø <b className="text-gray-900">{avgPerDay.toFixed(1)}</b> denně</span>
+            {peak && peak.count > 0 && (
+              <span>🏆 Nejvíce: <b className="text-gray-900">{peak.count}</b> · {peak.tooltipLabel || peak.label}</span>
+            )}
+            {bestWeekday >= 0 && (
+              <span>Nejsilnější den v týdnu: <b className="text-gray-900">{WEEKDAY_NAMES[bestWeekday]}</b></span>
+            )}
+          </div>
+
+          <div style={{ width: '100%', height: 240 }} className={`transition-opacity ${chartLoading ? 'opacity-40' : ''}`}>
             <ResponsiveContainer>
-              <AreaChart data={analytics.series} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
-                <defs>
-                  <linearGradient id="bookingsFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3FA34D" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#3FA34D" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
+              <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -18 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false}
-                  minTickGap={28} tickFormatter={d => `${d.slice(8, 10)}.${d.slice(5, 7)}.`} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false}
+                  minTickGap={18} interval="preserveStartEnd" />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
-                <ChartTooltip
-                  labelFormatter={d => new Date(d).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' })}
-                  formatter={(v) => [`${v}`, 'Objednávek']}
-                  contentStyle={{ borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 13 }}
-                />
-                <Area type="monotone" dataKey="count" stroke="#3FA34D" strokeWidth={2} fill="url(#bookingsFill)" dot={false} activeDot={{ r: 4 }} />
-              </AreaChart>
+                <ChartTooltip content={<OrdersTooltip />} cursor={{ fill: 'rgba(63,163,77,0.08)' }} />
+                <Bar dataKey="count" fill="#3FA34D" fillOpacity={0.8} radius={[4, 4, 0, 0]} maxBarSize={26} />
+                {showMA && (
+                  <Line type="monotone" dataKey="ma" stroke="#1B4332" strokeWidth={2} strokeDasharray="6 3" dot={false} activeDot={false} />
+                )}
+                {peak && peak.count > 0 && (
+                  <ReferenceDot x={peak.label} y={peak.count} r={5} fill="#F59E0B" stroke="#fff" strokeWidth={2} />
+                )}
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-[11px] text-gray-400 mt-2">
+            {showMA
+              ? 'Sloupce = objednávky za den · čárkovaná linka = průměrný trend (7 dní) · oranžový bod = rekordní den. Najetím na sloupec uvidíte rozpad podle stavů.'
+              : `Sloupce = souhrn za ${chartRange === 90 ? 'týden' : 'měsíc'} · oranžový bod = nejsilnější období. Najetím na sloupec uvidíte rozpad podle stavů.`}
+          </p>
         </div>
       )}
 
