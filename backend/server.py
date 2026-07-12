@@ -9,6 +9,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import os
+import re
 import logging
 import asyncio
 import base64
@@ -1917,13 +1918,19 @@ async def admin_stats(request: Request):
     total_coupons = await db.coupons.count_documents({})
     total_subscribers = await db.subscribers.count_documents({})
 
-    # Revenue estimate from confirmed bookings
-    bookings = await db.bookings.find({}, {"estimated_price": 1, "_id": 0}).to_list(1000)
-    total_revenue = sum(b.get("estimated_price", 0) for b in bookings)
+    completed_bookings = await db.bookings.count_documents({"status": "completed"})
+
+    # Real revenue from completed jobs: prefer the admin-entered final_price,
+    # fall back to the estimate when no final price was recorded.
+    completed = await db.bookings.find(
+        {"status": "completed"}, {"final_price": 1, "estimated_price": 1, "_id": 0}
+    ).to_list(5000)
+    total_revenue = sum((b.get("final_price") or b.get("estimated_price") or 0) for b in completed)
 
     return {
         "total_bookings": total_bookings,
         "pending_bookings": pending_bookings,
+        "completed_bookings": completed_bookings,
         "active_vouchers": active_vouchers,
         "total_coupons": total_coupons,
         "total_subscribers": total_subscribers,
@@ -1932,12 +1939,109 @@ async def admin_stats(request: Request):
 
 # ─── ADMIN BOOKINGS ───────────────────────────────────────────────────────────
 
+VALID_BOOKING_STATUSES = ["pending", "confirmed", "completed", "cancelled"]
+
+
+def _bookings_query(status=None, q=None, date_from=None, date_to=None):
+    """Build a MongoDB filter for admin booking search."""
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    if q:
+        rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+        query["$or"] = [
+            {"customer_name": rx}, {"customer_email": rx},
+            {"customer_phone": rx}, {"property_address": rx},
+        ]
+    if date_from or date_to:
+        rng = {}
+        if date_from:
+            rng["$gte"] = date_from
+        if date_to:
+            rng["$lte"] = date_to + "T23:59:59"
+        query["created_at"] = rng  # created_at is ISO string → lexical range works
+    return query
+
+
 @api_router.get("/admin/bookings")
-async def admin_get_bookings(request: Request, skip: int = 0, limit: int = 100):
+async def admin_get_bookings(request: Request, skip: int = 0, limit: int = 20,
+                             status: str = None, q: str = None,
+                             date_from: str = None, date_to: str = None):
     await verify_admin(request)
-    bookings = await db.bookings.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    total = await db.bookings.count_documents({})
+    query = _bookings_query(status, q, date_from, date_to)
+    bookings = await db.bookings.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.bookings.count_documents(query)
     return {"bookings": bookings, "total": total, "skip": skip, "limit": limit}
+
+
+@api_router.patch("/admin/bookings/{booking_id}")
+async def admin_update_booking(booking_id: str, request: Request):
+    """Edit a booking — notably to record the real agreed price (final_price)."""
+    await verify_admin(request)
+    body = await request.json()
+    allowed = {"final_price", "estimated_price", "notes", "customer_name", "customer_phone",
+               "customer_email", "property_address", "preferred_date", "preferred_time", "status"}
+    update = {k: v for k, v in body.items() if k in allowed}
+    if "status" in update and update["status"] not in VALID_BOOKING_STATUSES:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    for pf in ("final_price", "estimated_price"):
+        if pf in update and update[pf] not in (None, ""):
+            try:
+                update[pf] = int(update[pf])
+            except (TypeError, ValueError):
+                raise HTTPException(status_code=400, detail=f"{pf} musí být číslo")
+    if not update:
+        raise HTTPException(status_code=400, detail="Žádná změna")
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.bookings.update_one({"id": booking_id}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return {"success": True}
+
+
+@api_router.delete("/admin/bookings/{booking_id}")
+async def admin_delete_booking(booking_id: str, request: Request):
+    await verify_admin(request)
+    result = await db.bookings.delete_one({"id": booking_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    return {"success": True}
+
+
+@api_router.get("/admin/analytics")
+async def admin_analytics(request: Request, days: int = 30):
+    """Daily booking counts + status breakdown + real revenue (from completed
+    bookings' final_price) for the dashboard trend chart."""
+    await verify_admin(request)
+    days = max(1, min(days, 365))
+    since = (datetime.now(timezone.utc) - timedelta(days=days - 1)).strftime("%Y-%m-%d")
+    docs = await db.bookings.find(
+        {"created_at": {"$gte": since}},
+        {"_id": 0, "created_at": 1, "status": 1},
+    ).to_list(5000)
+
+    counts = {}
+    for d in docs:
+        day = (d.get("created_at") or "")[:10]
+        if day:
+            counts[day] = counts.get(day, 0) + 1
+    series = []
+    base = datetime.now(timezone.utc)
+    for i in range(days - 1, -1, -1):
+        day = (base - timedelta(days=i)).strftime("%Y-%m-%d")
+        series.append({"date": day, "count": counts.get(day, 0)})
+
+    status_counts = {}
+    for s in VALID_BOOKING_STATUSES:
+        status_counts[s] = await db.bookings.count_documents({"status": s})
+
+    completed = await db.bookings.find(
+        {"status": "completed"}, {"_id": 0, "final_price": 1, "estimated_price": 1}
+    ).to_list(5000)
+    revenue = sum((b.get("final_price") or b.get("estimated_price") or 0) for b in completed)
+
+    return {"series": series, "status_counts": status_counts,
+            "revenue_completed": revenue, "days": days}
 
 @api_router.patch("/admin/bookings/{booking_id}/status")
 async def admin_update_booking_status(booking_id: str, request: Request):
@@ -2083,6 +2187,24 @@ async def admin_get_coupons(request: Request):
     coupons = await db.coupons.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return coupons
 
+@api_router.patch("/admin/coupons/{code}")
+async def admin_update_coupon(code: str, request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    allowed = {"discount_percent", "description", "active"}
+    update = {k: v for k, v in body.items() if k in allowed}
+    if "discount_percent" in update:
+        try:
+            update["discount_percent"] = int(update["discount_percent"])
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Sleva musí být číslo")
+    if not update:
+        raise HTTPException(status_code=400, detail="Žádná změna")
+    result = await db.coupons.update_one({"code": code.upper()}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Kupón nenalezen")
+    return {"success": True}
+
 @api_router.delete("/admin/coupons/{code}")
 async def admin_delete_coupon(code: str, request: Request):
     await verify_admin(request)
@@ -2098,6 +2220,27 @@ async def admin_get_vouchers(request: Request):
     await verify_admin(request)
     vouchers = await db.vouchers.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return vouchers
+
+@api_router.patch("/admin/vouchers/{code}")
+async def admin_update_voucher(code: str, request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    allowed = {"display_name", "discount_type", "discount_value", "free_service_id",
+               "max_uses", "valid_from", "valid_until", "campaign_name",
+               "flyer_batch", "target_audience", "status"}
+    update = {k: v for k, v in body.items() if k in allowed}
+    for nf in ("discount_value", "max_uses"):
+        if nf in update and update[nf] not in (None, ""):
+            try:
+                update[nf] = int(update[nf])
+            except (TypeError, ValueError):
+                raise HTTPException(status_code=400, detail=f"{nf} musí být číslo")
+    if not update:
+        raise HTTPException(status_code=400, detail="Žádná změna")
+    result = await db.vouchers.update_one({"code": code.upper()}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Poukaz nenalezen")
+    return {"success": True}
 
 # ─────────────────────────────────────────────────────────────────────────────
 

@@ -6,8 +6,10 @@ import {
   Plus, Trash2, Check, X, RefreshCw, Eye, EyeOff, Copy,
   TrendingUp, Users, Leaf, CreditCard, ChevronDown, ChevronUp,
   Calendar, Phone, Mail, MapPin, Edit3, FileText, Bold, Italic, Image,
-  MessageSquare, Upload, CheckCheck, Archive, ExternalLink
+  MessageSquare, Upload, CheckCheck, Archive, ExternalLink,
+  Search, Download, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as ChartTooltip, CartesianGrid } from 'recharts';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
@@ -145,21 +147,33 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
 );
 
 // ─── OVERVIEW TAB ─────────────────────────────────────────────────────────────
-const OverviewTab = ({ token, handle401 }) => {
+const OverviewTab = ({ token, handle401, onNavigate }) => {
   const [stats, setStats] = useState(null);
   const [newMessages, setNewMessages] = useState(0);
+  const [analytics, setAnalytics] = useState(null);
+  const [statsError, setStatsError] = useState(false);
   const headers = { 'X-Admin-Token': token };
 
   useEffect(() => {
     axios.get(`${API}/admin/stats`, { headers })
       .then(r => setStats(r.data))
-      .catch(err => { if (!handle401(err)) console.error(err); });
+      .catch(err => { if (!handle401(err)) setStatsError(true); });
     axios.get(`${API}/admin/contact`, { headers })
       .then(r => setNewMessages(r.data.filter(m => m.status === 'new').length))
       .catch(() => {}); // non-critical
+    axios.get(`${API}/admin/analytics`, { headers, params: { days: 30 } })
+      .then(r => setAnalytics(r.data))
+      .catch(() => {}); // chart is optional — older backend may not have it
   }, []); // eslint-disable-line
 
+  if (statsError) return (
+    <div className="bg-white rounded-xl border p-10 text-center text-gray-500 text-sm">
+      Nepodařilo se načíst statistiky. <button onClick={() => window.location.reload()} className="text-[#3FA34D] font-medium hover:underline">Zkusit znovu</button>
+    </div>
+  );
   if (!stats) return <div className="flex justify-center py-12"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>;
+
+  const chartTotal = analytics ? analytics.series.reduce((a, d) => a + d.count, 0) : 0;
 
   return (
     <div className="space-y-6">
@@ -167,33 +181,75 @@ const OverviewTab = ({ token, handle401 }) => {
         <StatCard icon={ClipboardList} label="Objednávek celkem" value={stats.total_bookings} color="bg-[#3FA34D]" />
         <StatCard icon={Calendar} label="Čeká na potvrzení" value={stats.pending_bookings} color="bg-amber-500" />
         <StatCard icon={MessageSquare} label="Nových zpráv" value={newMessages} color="bg-blue-500" />
-        <StatCard icon={Ticket} label="Aktivních poukazů" value={stats.active_vouchers} color="bg-purple-500" />
+        <StatCard icon={CheckCheck} label="Dokončených zakázek" value={stats.completed_bookings ?? '–'} color="bg-teal-600" />
         <StatCard icon={Users} label="Odběratelů" value={stats.total_subscribers} color="bg-[#1B4332]" />
-        <StatCard icon={TrendingUp} label="Odhadovaný obrat" value={`${stats.total_revenue_estimate.toLocaleString('cs-CZ')} Kč`} color="bg-emerald-600" />
+        <StatCard icon={TrendingUp} label="Obrat (dokončené)" value={`${(stats.total_revenue_estimate ?? 0).toLocaleString('cs-CZ')} Kč`} color="bg-emerald-600" />
       </div>
+
+      {/* Trend objednávek za posledních 30 dní */}
+      {analytics && (
+        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+          <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
+            <div>
+              <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>Objednávky za posledních 30 dní</h3>
+              <p className="text-sm text-gray-500">{chartTotal} nových poptávek</p>
+            </div>
+            <div className="flex gap-4 text-xs text-gray-500">
+              {['pending', 'confirmed', 'completed'].map(st => (
+                <span key={st} className="whitespace-nowrap">
+                  <span className={`inline-block w-2 h-2 rounded-full mr-1 ${st === 'pending' ? 'bg-amber-400' : st === 'confirmed' ? 'bg-blue-400' : 'bg-[#3FA34D]'}`} />
+                  {STATUS_LABELS[st]?.label}: {analytics.status_counts?.[st] ?? 0}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{ width: '100%', height: 220 }}>
+            <ResponsiveContainer>
+              <AreaChart data={analytics.series} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
+                <defs>
+                  <linearGradient id="bookingsFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3FA34D" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#3FA34D" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false}
+                  minTickGap={28} tickFormatter={d => `${d.slice(8, 10)}.${d.slice(5, 7)}.`} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
+                <ChartTooltip
+                  labelFormatter={d => new Date(d).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' })}
+                  formatter={(v) => [`${v}`, 'Objednávek']}
+                  contentStyle={{ borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 13 }}
+                />
+                <Area type="monotone" dataKey="count" stroke="#3FA34D" strokeWidth={2} fill="url(#bookingsFill)" dot={false} activeDot={{ r: 4 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <h3 className="font-semibold text-gray-900 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Rychlé akce</h3>
         <p className="text-sm text-gray-500 mb-4">Nejčastěji používané funkce</p>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          <a href="/admin#vouchers" className="flex items-center gap-3 p-3 rounded-lg border-2 border-[#3FA34D]/30 bg-[#F0FDF4] hover:border-[#3FA34D] transition-colors">
+          <button onClick={() => onNavigate('vouchers')} className="flex items-center gap-3 p-3 rounded-lg border-2 border-[#3FA34D]/30 bg-[#F0FDF4] hover:border-[#3FA34D] transition-colors text-left" data-testid="quick-vouchers">
             <Ticket className="w-5 h-5 text-[#3FA34D]" />
             <span className="text-sm font-medium text-[#1B4332]">Nový poukaz</span>
-          </a>
-          <a href="/admin#coupons" className="flex items-center gap-3 p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:border-blue-400 transition-colors">
+          </button>
+          <button onClick={() => onNavigate('coupons')} className="flex items-center gap-3 p-3 rounded-lg border-2 border-blue-200 bg-blue-50 hover:border-blue-400 transition-colors text-left" data-testid="quick-coupons">
             <Tag className="w-5 h-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-800">Nový kupón</span>
-          </a>
-          <a href="/admin#bookings" className="flex items-center gap-3 p-3 rounded-lg border-2 border-amber-200 bg-amber-50 hover:border-amber-400 transition-colors">
+          </button>
+          <button onClick={() => onNavigate('bookings')} className="flex items-center gap-3 p-3 rounded-lg border-2 border-amber-200 bg-amber-50 hover:border-amber-400 transition-colors text-left" data-testid="quick-bookings">
             <ClipboardList className="w-5 h-5 text-amber-600" />
             <span className="text-sm font-medium text-amber-800">Objednávky</span>
-          </a>
-          <a href="/admin#contact" className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${newMessages > 0 ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-400'}`}>
+          </button>
+          <button onClick={() => onNavigate('contact')} className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors text-left ${newMessages > 0 ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-400'}`} data-testid="quick-contact">
             <MessageSquare className={`w-5 h-5 ${newMessages > 0 ? 'text-blue-600' : 'text-gray-400'}`} />
             <span className={`text-sm font-medium ${newMessages > 0 ? 'text-blue-800' : 'text-gray-600'}`}>
               Zprávy {newMessages > 0 && <span className="ml-1 bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{newMessages}</span>}
             </span>
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -250,11 +306,53 @@ const VouchersTab = ({ token, handle401 }) => {
   };
 
   const handleDeactivate = async (code) => {
+    if (!window.confirm(`Opravdu deaktivovat poukaz ${code}?`)) return;
     try {
       await axios.delete(`${API}/vouchers/${code}`, { headers });
       toast.success('Poukaz deaktivován');
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
+  };
+
+  const handleReactivate = async (code) => {
+    try {
+      await axios.patch(`${API}/admin/vouchers/${code}`, { status: 'active' }, { headers });
+      toast.success('Poukaz znovu aktivován');
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(parseError(err)); }
+  };
+
+  const [editVoucher, setEditVoucher] = useState(null); // voucher object or null
+  const [editForm, setEditForm] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (v) => {
+    setEditVoucher(v);
+    setEditForm({
+      display_name: v.display_name || '',
+      discount_value: v.discount_value ?? '',
+      max_uses: v.max_uses ?? 1,
+      valid_until: (v.valid_until || '').slice(0, 10),
+      campaign_name: v.campaign_name || '',
+    });
+  };
+
+  const saveEdit = async () => {
+    setSavingEdit(true);
+    try {
+      const payload = {
+        display_name: editForm.display_name.trim(),
+        discount_value: Number(editForm.discount_value),
+        max_uses: Number(editForm.max_uses),
+        campaign_name: editForm.campaign_name,
+      };
+      if (editForm.valid_until) payload.valid_until = new Date(editForm.valid_until + 'T23:59:59').toISOString();
+      await axios.patch(`${API}/admin/vouchers/${editVoucher.code}`, payload, { headers });
+      toast.success('Poukaz upraven');
+      setEditVoucher(null);
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(parseError(err)); }
+    finally { setSavingEdit(false); }
   };
 
   const copyUrl = (code) => {
@@ -387,19 +485,93 @@ const VouchersTab = ({ token, handle401 }) => {
                       </button>
                     </div>
                   </div>
-                  {v.status === 'active' && (
-                    <button onClick={() => handleDeactivate(v.code)}
-                      className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors shrink-0"
-                      title="Deaktivovat">
-                      <Trash2 className="w-4 h-4" />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => openEdit(v)}
+                      className="text-gray-400 hover:text-[#1B4332] p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                      title="Upravit" data-testid={`voucher-edit-${v.code}`}>
+                      <Edit3 className="w-4 h-4" />
                     </button>
-                  )}
+                    {v.status === 'active' ? (
+                      <button onClick={() => handleDeactivate(v.code)}
+                        className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Deaktivovat">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button onClick={() => handleReactivate(v.code)}
+                        className="text-gray-400 hover:text-green-600 p-1.5 rounded-lg hover:bg-green-50 transition-colors"
+                        title="Znovu aktivovat" data-testid={`voucher-reactivate-${v.code}`}>
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Modal: úprava poukazu */}
+      {editVoucher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" data-testid="voucher-edit-modal">
+            <div className="bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] px-6 py-4">
+              <h3 className="text-white font-bold">Upravit poukaz</h3>
+              <p className="text-white/70 text-xs font-mono tracking-wider">{editVoucher.code}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Název poukazu</label>
+                <input type="text" value={editForm.display_name}
+                  onChange={e => setEditForm(f => ({ ...f, display_name: e.target.value }))}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Hodnota slevy {editVoucher.discount_type === 'percentage' ? '(%)' : '(Kč)'}
+                  </label>
+                  <input type="number" min="1" value={editForm.discount_value}
+                    onChange={e => setEditForm(f => ({ ...f, discount_value: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Max. použití</label>
+                  <input type="number" min="1" value={editForm.max_uses}
+                    onChange={e => setEditForm(f => ({ ...f, max_uses: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Platnost do</label>
+                  <input type="date" value={editForm.valid_until}
+                    onChange={e => setEditForm(f => ({ ...f, valid_until: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Kampaň</label>
+                  <input type="text" value={editForm.campaign_name}
+                    onChange={e => setEditForm(f => ({ ...f, campaign_name: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end pt-1">
+                <button onClick={() => setEditVoucher(null)}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  Zrušit
+                </button>
+                <button onClick={saveEdit} disabled={savingEdit || !editForm.display_name?.trim()}
+                  className="px-4 py-2 text-sm bg-[#3FA34D] text-white rounded-lg hover:bg-[#2d7a38] disabled:opacity-50 font-medium"
+                  data-testid="voucher-edit-save">
+                  {savingEdit ? 'Ukládám...' : 'Uložit změny'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -441,11 +613,43 @@ const CouponsTab = ({ token, handle401 }) => {
   };
 
   const handleDelete = async (code) => {
+    if (!window.confirm(`Opravdu deaktivovat kupón ${code}?`)) return;
     try {
       await axios.delete(`${API}/admin/coupons/${code}`, { headers });
       toast.success('Kupón deaktivován');
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
+  };
+
+  const handleReactivate = async (code) => {
+    try {
+      await axios.patch(`${API}/admin/coupons/${code}`, { active: true }, { headers });
+      toast.success('Kupón znovu aktivován');
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(parseError(err)); }
+  };
+
+  const [editCoupon, setEditCoupon] = useState(null); // coupon object or null
+  const [editForm, setEditForm] = useState({ discount_percent: 10, description: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (c) => {
+    setEditCoupon(c);
+    setEditForm({ discount_percent: c.discount_percent ?? 10, description: c.description || '' });
+  };
+
+  const saveEdit = async () => {
+    setSavingEdit(true);
+    try {
+      await axios.patch(`${API}/admin/coupons/${editCoupon.code}`, {
+        discount_percent: Number(editForm.discount_percent),
+        description: editForm.description,
+      }, { headers });
+      toast.success('Kupón upraven');
+      setEditCoupon(null);
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(parseError(err)); }
+    finally { setSavingEdit(false); }
   };
 
   const copyCode = (code) => {
@@ -524,9 +728,16 @@ const CouponsTab = ({ token, handle401 }) => {
                   <button onClick={() => copyCode(c.code)} className="text-blue-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50" title="Kopírovat kód">
                     <Copy className="w-4 h-4" />
                   </button>
-                  {c.active && (
+                  <button onClick={() => openEdit(c)} className="text-gray-400 hover:text-blue-700 p-1.5 rounded-lg hover:bg-gray-100" title="Upravit" data-testid={`coupon-edit-${c.code}`}>
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  {c.active ? (
                     <button onClick={() => handleDelete(c.code)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50" title="Deaktivovat">
                       <Trash2 className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button onClick={() => handleReactivate(c.code)} className="text-gray-400 hover:text-green-600 p-1.5 rounded-lg hover:bg-green-50" title="Znovu aktivovat" data-testid={`coupon-reactivate-${c.code}`}>
+                      <Check className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -535,13 +746,77 @@ const CouponsTab = ({ token, handle401 }) => {
           </div>
         )}
       </div>
+
+      {/* Modal: úprava kupónu */}
+      {editCoupon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden" data-testid="coupon-edit-modal">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-4">
+              <h3 className="text-white font-bold">Upravit kupón</h3>
+              <p className="text-white/70 text-xs font-mono tracking-wider">{editCoupon.code}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Sleva (%)</label>
+                <input type="number" min="1" max="100" value={editForm.discount_percent}
+                  onChange={e => setEditForm(f => ({ ...f, discount_percent: e.target.value }))}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Popis</label>
+                <input type="text" value={editForm.description}
+                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none" />
+              </div>
+              <div className="flex gap-3 justify-end pt-1">
+                <button onClick={() => setEditCoupon(null)}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  Zrušit
+                </button>
+                <button onClick={saveEdit} disabled={savingEdit}
+                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                  data-testid="coupon-edit-save">
+                  {savingEdit ? 'Ukládám...' : 'Uložit změny'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── BOOKINGS TAB ─────────────────────────────────────────────────────────────
+const BOOKING_PAGE_SIZE = 20;
+
+const BOOKING_FILTERS = [
+  { key: 'all', label: 'Vše' },
+  { key: 'pending', label: 'Čeká' },
+  { key: 'confirmed', label: 'Potvrzené' },
+  { key: 'completed', label: 'Dokončené' },
+  { key: 'cancelled', label: 'Zrušené' },
+];
+
+// Nadpis skupiny dne – „Dnes / Včera / pátek 10. července 2026"
+const dayHeading = (iso) => {
+  const d = new Date(iso);
+  const base = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 86400000);
+  if (d.toDateString() === today.toDateString()) return `Dnes · ${base}`;
+  if (d.toDateString() === yesterday.toDateString()) return `Včera · ${base}`;
+  return base;
+};
+
 const BookingsTab = ({ token, handle401 }) => {
   const [bookings, setBookings] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
@@ -549,21 +824,40 @@ const BookingsTab = ({ token, handle401 }) => {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [priceModal, setPriceModal] = useState(null); // booking object or null
+  const [priceValue, setPriceValue] = useState('');
+  const [savingPrice, setSavingPrice] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const headers = { 'X-Admin-Token': token };
 
-  const load = useCallback(async () => {
+  const buildParams = (skip, limit) => {
+    const params = { skip, limit };
+    if (statusFilter !== 'all') params.status = statusFilter;
+    if (search.trim()) params.q = search.trim();
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
+    return params;
+  };
+
+  const load = async (p = page) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/admin/bookings`, { headers });
-      // Handle both old array format and new paginated format
-      setBookings(Array.isArray(res.data) ? res.data : res.data.bookings || []);
+      const res = await axios.get(`${API}/admin/bookings`, { headers, params: buildParams(p * BOOKING_PAGE_SIZE, BOOKING_PAGE_SIZE) });
+      const data = res.data;
+      setBookings(Array.isArray(data) ? data : data.bookings || []);
+      setTotal(Array.isArray(data) ? data.length : data.total || 0);
     } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst objednávky'); }
     finally { setLoading(false); }
-  }, []); // eslint-disable-line
+  };
 
-  useEffect(() => { load(); }, [load]);
+  // Načtení při změně stránky/filtrů; hledání s krátkou prodlevou při psaní
+  useEffect(() => {
+    const t = setTimeout(() => load(page), search ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [page, statusFilter, dateFrom, dateTo, search]); // eslint-disable-line
 
   const updateStatus = async (id, status) => {
+    if (status === 'cancelled' && !window.confirm('Opravdu označit objednávku jako zrušenou?')) return;
     setUpdatingId(id);
     try {
       await axios.patch(`${API}/admin/bookings/${id}/status`, { status }, { headers });
@@ -571,6 +865,69 @@ const BookingsTab = ({ token, handle401 }) => {
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
     finally { setUpdatingId(null); }
+  };
+
+  const deleteBooking = async (b) => {
+    if (!window.confirm(`Opravdu trvale smazat objednávku od „${b.customer_name}"? Tato akce je nevratná.`)) return;
+    try {
+      await axios.delete(`${API}/admin/bookings/${b.id}`, { headers });
+      toast.success('Objednávka smazána');
+      load();
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se smazat objednávku'); }
+  };
+
+  const openPriceModal = (b) => {
+    setPriceModal(b);
+    setPriceValue(b.final_price > 0 ? String(b.final_price) : '');
+  };
+
+  const saveFinalPrice = async () => {
+    const num = parseInt(priceValue, 10);
+    if (!priceValue || Number.isNaN(num) || num < 0) { toast.error('Zadejte platnou cenu v Kč'); return; }
+    setSavingPrice(true);
+    try {
+      await axios.patch(`${API}/admin/bookings/${priceModal.id}`, { final_price: num }, { headers });
+      toast.success('Konečná cena uložena');
+      setPriceModal(null);
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(err.response?.data?.detail || 'Chyba při ukládání ceny'); }
+    finally { setSavingPrice(false); }
+  };
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const res = await axios.get(`${API}/admin/bookings`, { headers, params: buildParams(0, 1000) });
+      const rows = Array.isArray(res.data) ? res.data : res.data.bookings || [];
+      const cols = [
+        ['Vytvořeno', b => new Date(b.created_at).toLocaleString('cs-CZ')],
+        ['Zákazník', b => b.customer_name],
+        ['Telefon', b => b.customer_phone],
+        ['E-mail', b => b.customer_email],
+        ['Adresa', b => b.property_address],
+        ['Služba', b => SERVICE_NAMES[b.service] || b.service],
+        ['Stav', b => (STATUS_LABELS[b.status] || {}).label || b.status],
+        ['Termín', b => `${b.preferred_date || ''} ${b.preferred_time || ''}`.trim()],
+        ['Odhad (Kč)', b => b.estimated_price || 0],
+        ['Konečná cena (Kč)', b => b.final_price || ''],
+        ['Kupón', b => b.coupon_code || ''],
+        ['Poznámka', b => b.notes || ''],
+      ];
+      const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csv = '\uFEFF' + [
+        cols.map(c => esc(c[0])).join(';'),
+        ...rows.map(b => cols.map(c => esc(c[1](b))).join(';')),
+      ].join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `objednavky-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Exportováno ${rows.length} objednávek`);
+    } catch (err) { if (!handle401(err)) toast.error('Export se nezdařil'); }
+    finally { setExporting(false); }
   };
 
   const openEmailModal = (booking) => {
@@ -598,22 +955,92 @@ const BookingsTab = ({ token, handle401 }) => {
     } finally { setSendingEmail(false); }
   };
 
+  const totalPages = Math.max(1, Math.ceil(total / BOOKING_PAGE_SIZE));
+
+  // Seskupení podle dne vytvoření – přehled „kdy byly jaké objednávky"
+  const grouped = [];
+  let lastDay = null;
+  bookings.forEach(b => {
+    const day = (b.created_at || '').slice(0, 10);
+    if (day !== lastDay) {
+      lastDay = day;
+      grouped.push({ type: 'day', key: `day-${day}`, iso: b.created_at });
+    }
+    grouped.push({ type: 'booking', key: b.id, booking: b });
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">Celkem {bookings.length} objednávek</p>
-        <Button variant="outline" size="sm" onClick={load} className="h-8">
-          <RefreshCw className="w-3.5 h-3.5 mr-1" /> Obnovit
-        </Button>
+      {/* Toolbar: hledání, datum, filtr stavu, export */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(0); }}
+              placeholder="Hledat jméno, e-mail, telefon nebo adresu…"
+              className="w-full h-10 pl-9 pr-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+              data-testid="bookings-search-input"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(0); }}
+              className="h-10 px-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:border-[#3FA34D] focus:outline-none" title="Od data" />
+            <span className="text-gray-400 text-sm">–</span>
+            <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(0); }}
+              className="h-10 px-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:border-[#3FA34D] focus:outline-none" title="Do data" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {BOOKING_FILTERS.map(f => (
+            <button key={f.key} onClick={() => { setStatusFilter(f.key); setPage(0); }}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                statusFilter === f.key
+                  ? 'bg-[#1B4332] text-white border-[#1B4332]'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-400'
+              }`}
+              data-testid={`bookings-filter-${f.key}`}
+            >
+              {f.label}
+            </button>
+          ))}
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={exportCsv} disabled={exporting} className="h-8" data-testid="bookings-export-btn">
+              {exporting ? <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />} Export CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => load()} className="h-8">
+              <RefreshCw className="w-3.5 h-3.5 mr-1" /> Obnovit
+            </Button>
+          </div>
+        </div>
       </div>
+
+      <p className="text-sm text-gray-500">
+        Celkem {total} objednávek{totalPages > 1 ? ` · strana ${page + 1} z ${totalPages}` : ''}
+      </p>
 
       {loading ? (
         <div className="flex justify-center py-10"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>
       ) : bookings.length === 0 ? (
-        <div className="bg-white rounded-xl border p-10 text-center text-gray-500 text-sm">Žádné objednávky</div>
+        <div className="bg-white rounded-xl border p-10 text-center text-gray-500 text-sm">
+          {search || statusFilter !== 'all' || dateFrom || dateTo ? 'Filtru neodpovídají žádné objednávky' : 'Žádné objednávky'}
+        </div>
       ) : (
         <div className="space-y-3">
-          {bookings.map(b => {
+          {grouped.map(item => {
+            if (item.type === 'day') {
+              return (
+                <div key={item.key} className="flex items-center gap-3 pt-3 first:pt-0">
+                  <span className="text-xs font-bold uppercase tracking-wide text-[#1B4332] whitespace-nowrap">
+                    {dayHeading(item.iso)}
+                  </span>
+                  <div className="h-px bg-gray-200 flex-1" />
+                </div>
+              );
+            }
+            const b = item.booking;
             const isOpen = expanded === b.id;
             const s = STATUS_LABELS[b.status] || STATUS_LABELS.pending;
             return (
@@ -630,12 +1057,14 @@ const BookingsTab = ({ token, handle401 }) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-bold text-[#3FA34D] text-sm whitespace-nowrap">
-                      {b.estimated_price > 0 ? `~${b.estimated_price.toLocaleString('cs-CZ')} Kč` : 'Po obhlídce'}
+                    <span className={`font-bold text-sm whitespace-nowrap ${b.final_price > 0 ? 'text-[#1B4332]' : 'text-[#3FA34D]'}`}>
+                      {b.final_price > 0
+                        ? `${b.final_price.toLocaleString('cs-CZ')} Kč`
+                        : b.estimated_price > 0 ? `~${b.estimated_price.toLocaleString('cs-CZ')} Kč` : 'Po obhlídce'}
                     </span>
                     <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${s.color}`}>{s.label}</span>
                     <span className="text-xs text-gray-400 hidden sm:block whitespace-nowrap">
-                      {new Date(b.created_at).toLocaleDateString('cs-CZ')}
+                      {new Date(b.created_at).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                   </div>
@@ -676,6 +1105,14 @@ const BookingsTab = ({ token, handle401 }) => {
                             <span className="font-medium">Kupón:</span> {b.coupon_code}
                           </div>
                         )}
+                        <div className="text-gray-600">
+                          <span className="font-medium">Cena:</span>{' '}
+                          {b.final_price > 0
+                            ? <span className="font-bold text-[#1B4332]">{b.final_price.toLocaleString('cs-CZ')} Kč (konečná)</span>
+                            : b.estimated_price > 0
+                              ? <span>~{b.estimated_price.toLocaleString('cs-CZ')} Kč (odhad)</span>
+                              : <span className="text-gray-400">zatím nestanovena</span>}
+                        </div>
                       </div>
                     </div>
 
@@ -696,20 +1133,53 @@ const BookingsTab = ({ token, handle401 }) => {
                           {STATUS_LABELS[st]?.label || st}
                         </button>
                       ))}
-                      <button
-                        onClick={() => openEmailModal(b)}
-                        className="text-xs px-3 py-1.5 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 font-medium transition-all ml-auto"
-                        data-testid={`email-btn-${b.id}`}
-                      >
-                        <Mail className="w-3 h-3 inline mr-1" />
-                        Poslat email
-                      </button>
+                      <div className="ml-auto flex items-center gap-2">
+                        <button
+                          onClick={() => openPriceModal(b)}
+                          className="text-xs px-3 py-1.5 rounded-full border border-[#3FA34D]/40 text-[#1B4332] hover:bg-[#F0FDF4] font-medium transition-all"
+                          data-testid={`price-btn-${b.id}`}
+                        >
+                          <CreditCard className="w-3 h-3 inline mr-1" />
+                          {b.final_price > 0 ? 'Upravit cenu' : 'Zadat cenu'}
+                        </button>
+                        <button
+                          onClick={() => openEmailModal(b)}
+                          className="text-xs px-3 py-1.5 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 font-medium transition-all"
+                          data-testid={`email-btn-${b.id}`}
+                        >
+                          <Mail className="w-3 h-3 inline mr-1" />
+                          Poslat email
+                        </button>
+                        <button
+                          onClick={() => deleteBooking(b)}
+                          className="text-xs px-3 py-1.5 rounded-full border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-all"
+                          data-testid={`delete-btn-${b.id}`}
+                        >
+                          <Trash2 className="w-3 h-3 inline mr-1" />
+                          Smazat
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Stránkování */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Button variant="outline" size="sm" className="h-8" disabled={page === 0 || loading}
+            onClick={() => setPage(p => Math.max(0, p - 1))} data-testid="bookings-prev-page">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Předchozí
+          </Button>
+          <span className="text-sm text-gray-500 whitespace-nowrap">Strana {page + 1} z {totalPages}</span>
+          <Button variant="outline" size="sm" className="h-8" disabled={page + 1 >= totalPages || loading}
+            onClick={() => setPage(p => p + 1)} data-testid="bookings-next-page">
+            Další <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         </div>
       )}
 
@@ -757,6 +1227,54 @@ const BookingsTab = ({ token, handle401 }) => {
                   data-testid="email-send-btn"
                 >
                   {sendingEmail ? 'Odesílám...' : 'Odeslat email'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: konečná cena zakázky */}
+      {priceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden" data-testid="price-modal">
+            <div className="bg-[#1B4332] px-6 py-4">
+              <h3 className="text-white font-bold">Konečná cena zakázky</h3>
+              <p className="text-white/70 text-xs">{priceModal.customer_name} – {SERVICE_NAMES[priceModal.service] || priceModal.service}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {priceModal.estimated_price > 0 && (
+                <p className="text-sm text-gray-500">Původní odhad: ~{priceModal.estimated_price.toLocaleString('cs-CZ')} Kč</p>
+              )}
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Skutečně domluvená / fakturovaná cena (Kč)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={priceValue}
+                  onChange={e => setPriceValue(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveFinalPrice(); }}
+                  className="w-full h-11 px-3 border border-gray-200 rounded-lg text-lg font-bold focus:border-[#3FA34D] focus:outline-none"
+                  placeholder="např. 2500"
+                  autoFocus
+                  data-testid="price-input"
+                />
+                <p className="text-xs text-gray-400 mt-1">Započítá se do obratu na Přehledu (u dokončených zakázek).</p>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setPriceModal(null)}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={saveFinalPrice}
+                  disabled={savingPrice || !priceValue}
+                  className="px-4 py-2 text-sm bg-[#1B4332] text-white rounded-lg hover:bg-[#2D6A4F] disabled:opacity-50 font-medium"
+                  data-testid="price-save-btn"
+                >
+                  {savingPrice ? 'Ukládám...' : 'Uložit cenu'}
                 </button>
               </div>
             </div>
@@ -1668,6 +2186,27 @@ export default function AdminPage() {
     return false;
   }, []); // eslint-disable-line
 
+  // Upozornění na nové objednávky – každou minutu porovná počet se stavem z minula
+  const prevCountsRef = useRef(null);
+  useEffect(() => {
+    if (!token) return;
+    const check = async () => {
+      try {
+        const r = await axios.get(`${API}/admin/stats`, { headers: { 'X-Admin-Token': token } });
+        const cur = { bookings: r.data.total_bookings, pending: r.data.pending_bookings };
+        const prev = prevCountsRef.current;
+        if (prev && cur.bookings > prev.bookings) {
+          const diff = cur.bookings - prev.bookings;
+          toast.success(diff === 1 ? '🔔 Nová objednávka!' : `🔔 ${diff} nové objednávky!`, { duration: 10000 });
+        }
+        prevCountsRef.current = cur;
+      } catch { /* tichý poll – chyby neřešíme */ }
+    };
+    check();
+    const id = setInterval(check, 60000);
+    return () => clearInterval(id);
+  }, [token]);
+
   if (!token) return <LoginScreen onLogin={setToken} />;
 
   return (
@@ -1753,7 +2292,7 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6 pb-24 md:pb-6">
-            {activeTab === 'overview' && <OverviewTab token={token} handle401={handle401} />}
+            {activeTab === 'overview' && <OverviewTab token={token} handle401={handle401} onNavigate={setActiveTab} />}
             {activeTab === 'contact' && <ContactTab token={token} handle401={handle401} />}
             {activeTab === 'vouchers' && <VouchersTab token={token} handle401={handle401} />}
             {activeTab === 'coupons' && <CouponsTab token={token} handle401={handle401} />}
