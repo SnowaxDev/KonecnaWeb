@@ -2123,6 +2123,8 @@ async def _upsert_client(name=None, phone=None, email=None, address=None, source
 
 
 def _client_bookings_filter(client, booking):
+    if booking.get("client_id") and booking.get("client_id") == client.get("id"):
+        return True
     np_, ne_ = client.get("phone_norm"), client.get("email_norm")
     return ((np_ and _norm_phone(booking.get("customer_phone")) == np_)
             or (ne_ and _norm_email(booking.get("customer_email")) == ne_))
@@ -2137,18 +2139,20 @@ async def admin_list_clients(request: Request, q: str = None):
         query = {"$or": [{"name": rx}, {"email": rx}, {"phone": rx}, {"address": rx}, {"note": rx}]}
     clients = await db.clients.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
 
-    # Attach booking stats matched by normalized phone/e-mail
+    # Attach booking stats matched by normalized phone/e-mail or explicit client_id
     bookings = await db.bookings.find(
         {}, {"_id": 0, "customer_phone": 1, "customer_email": 1, "status": 1,
-             "final_price": 1, "estimated_price": 1, "created_at": 1}
+             "final_price": 1, "estimated_price": 1, "created_at": 1, "client_id": 1}
     ).to_list(5000)
-    by_phone, by_email = {}, {}
+    by_phone, by_email, by_cid = {}, {}, {}
     for b in bookings:
         p, e = _norm_phone(b.get("customer_phone")), _norm_email(b.get("customer_email"))
         if p:
             by_phone.setdefault(p, []).append(b)
         if e:
             by_email.setdefault(e, []).append(b)
+        if b.get("client_id"):
+            by_cid.setdefault(b["client_id"], []).append(b)
     for c in clients:
         matched = {}
         if c.get("phone_norm"):
@@ -2157,6 +2161,8 @@ async def admin_list_clients(request: Request, q: str = None):
         if c.get("email_norm"):
             for b in by_email.get(c["email_norm"], []):
                 matched[id(b)] = b
+        for b in by_cid.get(c["id"], []):
+            matched[id(b)] = b
         bl = list(matched.values())
         c["bookings_count"] = len(bl)
         c["total_spent"] = sum((b.get("final_price") or b.get("estimated_price") or 0)
@@ -2182,6 +2188,59 @@ async def admin_get_client(client_id: str, request: Request):
     return {"client": _json_safe(client),
             "bookings": [_json_safe(b) for b in bookings],
             "messages": [_json_safe(m) for m in messages]}
+
+
+@api_router.post("/admin/clients/{client_id}/bookings")
+async def admin_add_client_booking(client_id: str, request: Request):
+    """Manually add a work/order for a client (phone or walk-in job). The client's
+    details are pre-filled and client_id is stored so the work always shows in the
+    client's history — even for a client with no phone/e-mail."""
+    await verify_admin(request)
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Klient nenalezen")
+    body = await request.json()
+
+    status = body.get("status") or "confirmed"
+    if status not in VALID_BOOKING_STATUSES:
+        raise HTTPException(status_code=400, detail="Neplatný stav")
+
+    def _int(v):
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return 0
+
+    work_date = (body.get("work_date") or "").strip()
+    created_at = (work_date + "T12:00:00+00:00") if work_date else datetime.now(timezone.utc).isoformat()
+    fp = body.get("final_price")
+
+    booking = {
+        "id": str(uuid.uuid4()),
+        "service": (body.get("service") or "other").strip() or "other",
+        "property_size": _int(body.get("property_size")),
+        "condition": (body.get("condition") or "").strip(),
+        "additional_services": [],
+        "preferred_date": (body.get("preferred_date") or "").strip(),
+        "preferred_time": (body.get("preferred_time") or "").strip(),
+        "alternative_date": None,
+        "customer_name": (body.get("customer_name") or client.get("name") or "").strip(),
+        "customer_phone": (body.get("customer_phone") or client.get("phone") or "").strip(),
+        "customer_email": (body.get("customer_email") or client.get("email") or "").strip(),
+        "property_address": (body.get("property_address") or client.get("address") or "").strip(),
+        "notes": (body.get("notes") or "").strip(),
+        "estimated_price": _int(body.get("estimated_price")),
+        "final_price": _int(fp) if fp not in (None, "") else None,
+        "discount_applied": 0,
+        "coupon_code": None,
+        "status": status,
+        "client_id": client_id,
+        "source": "admin",
+        "created_at": created_at,
+    }
+    await db.bookings.insert_one(booking)
+    booking.pop("_id", None)
+    return _json_safe(booking)
 
 
 @api_router.post("/admin/clients")
