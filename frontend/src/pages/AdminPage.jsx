@@ -1398,6 +1398,7 @@ const SOURCE_LABELS = {
 };
 
 const EMPTY_CLIENT_FORM = { name: '', phone: '', email: '', address: '', note: '' };
+const EMPTY_WORK_FORM = { service: 'lawn_mowing', status: 'completed', work_date: '', property_size: '', final_price: '', estimated_price: '', notes: '' };
 
 const clientInitials = (name) =>
   (name || '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
@@ -1487,6 +1488,36 @@ const ClientsTab = ({ token, handle401 }) => {
       if (expanded === c.id) { setExpanded(null); setDetail(null); }
       load();
     } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se smazat klienta'); }
+  };
+
+  // Přidání práce (zakázky) ke klientovi
+  const [workModal, setWorkModal] = useState(null); // client object or null
+  const [workForm, setWorkForm] = useState(EMPTY_WORK_FORM);
+  const [savingWork, setSavingWork] = useState(false);
+
+  const openWork = (client) => {
+    setWorkForm({ ...EMPTY_WORK_FORM, work_date: new Date().toISOString().slice(0, 10) });
+    setWorkModal(client);
+  };
+
+  const saveWork = async () => {
+    setSavingWork(true);
+    try {
+      await axios.post(`${API}/admin/clients/${workModal.id}/bookings`, {
+        service: workForm.service,
+        status: workForm.status,
+        work_date: workForm.work_date || undefined,
+        property_size: workForm.property_size || 0,
+        final_price: workForm.final_price !== '' ? workForm.final_price : undefined,
+        estimated_price: workForm.estimated_price || 0,
+        notes: workForm.notes,
+      }, { headers });
+      toast.success('Práce přidána ke klientovi');
+      setWorkModal(null);
+      if (expanded === workModal.id) fetchDetail(workModal.id);
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(err.response?.data?.detail || 'Nepodařilo se přidat práci'); }
+    finally { setSavingWork(false); }
   };
 
   return (
@@ -1615,13 +1646,20 @@ const ClientsTab = ({ token, handle401 }) => {
                           </button>
                         </div>
 
-                        {/* Historie objednávek */}
+                        {/* Historie objednávek / prací */}
                         <div className="mt-5">
-                          <h4 className="text-xs font-bold uppercase tracking-wide text-[#1B4332] mb-2 flex items-center gap-1.5">
-                            <ClipboardList className="w-3.5 h-3.5" /> Objednávky ({detail.bookings.length})
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-xs font-bold uppercase tracking-wide text-[#1B4332] flex items-center gap-1.5">
+                              <ClipboardList className="w-3.5 h-3.5" /> Práce a objednávky ({detail.bookings.length})
+                            </h4>
+                            <button onClick={() => openWork(detail.client)}
+                              className="text-xs px-2.5 py-1 rounded-full border border-[#3FA34D]/40 text-[#1B4332] hover:bg-[#F0FDF4] font-medium transition-all"
+                              data-testid={`client-add-work-${c.id}`}>
+                              <Plus className="w-3 h-3 inline mr-1" /> Přidat práci
+                            </button>
+                          </div>
                           {detail.bookings.length === 0 ? (
-                            <p className="text-xs text-gray-400">Žádné objednávky</p>
+                            <p className="text-xs text-gray-400">Zatím žádné práce – přidejte první přes „Přidat práci".</p>
                           ) : (
                             <div className="space-y-1.5">
                               {detail.bookings.map(b => {
@@ -1730,6 +1768,84 @@ const ClientsTab = ({ token, handle401 }) => {
                   className="px-4 py-2 text-sm bg-[#3FA34D] text-white rounded-lg hover:bg-[#2d7a38] disabled:opacity-50 font-medium"
                   data-testid="client-save-btn">
                   {saving ? 'Ukládám...' : modal.mode === 'add' ? 'Přidat klienta' : 'Uložit změny'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: přidat práci (zakázku) ke klientovi */}
+      {workModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" data-testid="work-modal">
+            <div className="bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] px-6 py-4">
+              <h3 className="text-white font-bold">Přidat práci</h3>
+              <p className="text-white/70 text-xs">pro klienta: {workModal.name}</p>
+            </div>
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Služba</label>
+                <select value={workForm.service}
+                  onChange={e => setWorkForm(f => ({ ...f, service: e.target.value }))}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#3FA34D] focus:outline-none"
+                  data-testid="work-service-select">
+                  {Object.entries(SERVICE_NAMES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Datum práce</label>
+                  <input type="date" value={workForm.work_date}
+                    onChange={e => setWorkForm(f => ({ ...f, work_date: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Stav</label>
+                  <select value={workForm.status}
+                    onChange={e => setWorkForm(f => ({ ...f, status: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#3FA34D] focus:outline-none">
+                    {['pending', 'confirmed', 'completed', 'cancelled'].map(st => (
+                      <option key={st} value={st}>{STATUS_LABELS[st].label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Cena (Kč)</label>
+                  <input type="number" min="0" value={workForm.final_price}
+                    onChange={e => setWorkForm(f => ({ ...f, final_price: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                    placeholder="např. 2500" data-testid="work-price-input" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Plocha (m²)</label>
+                  <input type="number" min="0" value={workForm.property_size}
+                    onChange={e => setWorkForm(f => ({ ...f, property_size: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                    placeholder="volitelné" />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Poznámka</label>
+                <textarea value={workForm.notes} rows={2}
+                  onChange={e => setWorkForm(f => ({ ...f, notes: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none resize-none"
+                  placeholder="Detaily zakázky…" />
+              </div>
+              <p className="text-xs text-gray-400">
+                Cena u dokončených prací se započítá do obratu. Práce se objeví i v sekci Objednávky.
+              </p>
+              <div className="flex gap-3 justify-end pt-1">
+                <button onClick={() => setWorkModal(null)}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  Zrušit
+                </button>
+                <button onClick={saveWork} disabled={savingWork}
+                  className="px-4 py-2 text-sm bg-[#1B4332] text-white rounded-lg hover:bg-[#2D6A4F] disabled:opacity-50 font-medium"
+                  data-testid="work-save-btn">
+                  {savingWork ? 'Ukládám...' : 'Přidat práci'}
                 </button>
               </div>
             </div>
