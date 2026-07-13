@@ -1390,6 +1390,356 @@ const BookingsTab = ({ token, handle401 }) => {
   );
 }; 
 
+// ─── CLIENTS TAB (CRM) ────────────────────────────────────────────────────────
+const SOURCE_LABELS = {
+  booking: { label: 'Z objednávky', color: 'bg-green-100 text-green-800 border-green-200' },
+  contact: { label: 'Ze zprávy', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  manual: { label: 'Ručně přidán', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+};
+
+const EMPTY_CLIENT_FORM = { name: '', phone: '', email: '', address: '', note: '' };
+
+const clientInitials = (name) =>
+  (name || '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+
+const ClientsTab = ({ token, handle401 }) => {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [modal, setModal] = useState(null); // { mode: 'add' } | { mode: 'edit', client }
+  const [form, setForm] = useState(EMPTY_CLIENT_FORM);
+  const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(null); // client id
+  const [detail, setDetail] = useState(null);     // { client, bookings, messages }
+  const [detailLoading, setDetailLoading] = useState(false);
+  const headers = { 'X-Admin-Token': token };
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/clients`, { headers, params: search.trim() ? { q: search.trim() } : {} });
+      setClients(res.data);
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst klienty'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    const t = setTimeout(load, search ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [search]); // eslint-disable-line
+
+  const fetchDetail = async (id) => {
+    setDetailLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/clients/${id}`, { headers });
+      setDetail(res.data);
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se načíst detail klienta'); }
+    finally { setDetailLoading(false); }
+  };
+
+  const toggleDetail = (id) => {
+    if (expanded === id) { setExpanded(null); setDetail(null); return; }
+    setExpanded(id);
+    setDetail(null);
+    fetchDetail(id);
+  };
+
+  const syncClients = async () => {
+    setSyncing(true);
+    try {
+      const res = await axios.post(`${API}/admin/clients/sync`, {}, { headers });
+      toast.success(`Synchronizováno – ${res.data.created} nových klientů (celkem ${res.data.total})`);
+      load();
+    } catch (err) { if (!handle401(err)) toast.error('Synchronizace se nezdařila'); }
+    finally { setSyncing(false); }
+  };
+
+  const openAdd = () => { setForm(EMPTY_CLIENT_FORM); setModal({ mode: 'add' }); };
+  const openEdit = (c) => {
+    setForm({ name: c.name || '', phone: c.phone || '', email: c.email || '', address: c.address || '', note: c.note || '' });
+    setModal({ mode: 'edit', client: c });
+  };
+
+  const save = async () => {
+    if (!form.name.trim()) { toast.error('Vyplňte jméno klienta'); return; }
+    setSaving(true);
+    try {
+      if (modal.mode === 'add') {
+        await axios.post(`${API}/admin/clients`, form, { headers });
+        toast.success('Klient přidán');
+      } else {
+        await axios.patch(`${API}/admin/clients/${modal.client.id}`, form, { headers });
+        toast.success('Klient upraven');
+        if (expanded === modal.client.id) fetchDetail(modal.client.id);
+      }
+      setModal(null);
+      load();
+    } catch (err) { if (!handle401(err)) toast.error(err.response?.data?.detail || 'Chyba při ukládání'); }
+    finally { setSaving(false); }
+  };
+
+  const deleteClient = async (c) => {
+    if (!window.confirm(`Opravdu smazat klienta „${c.name}"? Jeho objednávky a zprávy zůstanou zachovány.`)) return;
+    try {
+      await axios.delete(`${API}/admin/clients/${c.id}`, { headers });
+      toast.success('Klient smazán');
+      if (expanded === c.id) { setExpanded(null); setDetail(null); }
+      load();
+    } catch (err) { if (!handle401(err)) toast.error('Nepodařilo se smazat klienta'); }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Hledat jméno, telefon, e-mail, adresu nebo poznámku…"
+              className="w-full h-10 pl-9 pr-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+              data-testid="clients-search-input"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={syncClients} disabled={syncing} className="h-10" data-testid="clients-sync-btn"
+              title="Vytvoří klienty ze všech dosavadních objednávek a zpráv (bez duplicit)">
+              <RefreshCw className={`w-4 h-4 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Synchronizuji…' : 'Načíst z objednávek'}
+            </Button>
+            <Button size="sm" onClick={openAdd} className="h-10 bg-[#3FA34D] hover:bg-[#2d7a38]" data-testid="clients-add-btn">
+              <Plus className="w-4 h-4 mr-1.5" /> Přidat klienta
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-500">Celkem {clients.length} klientů</p>
+
+      {loading ? (
+        <div className="flex justify-center py-10"><RefreshCw className="w-6 h-6 animate-spin text-[#3FA34D]" /></div>
+      ) : clients.length === 0 ? (
+        <div className="bg-white rounded-xl border p-10 text-center text-gray-500 text-sm space-y-3">
+          <p>{search ? 'Hledání nenašlo žádného klienta' : 'Zatím žádní klienti'}</p>
+          {!search && (
+            <p>Klikněte na <b>„Načíst z objednávek"</b> – vytvoří kartu pro každého zákazníka z dosavadních objednávek a zpráv.</p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {clients.map(c => {
+            const isOpen = expanded === c.id;
+            const src = SOURCE_LABELS[c.source] || SOURCE_LABELS.manual;
+            return (
+              <div key={c.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <button
+                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors gap-3"
+                  onClick={() => toggleDetail(c.id)}
+                  data-testid={`client-row-${c.id}`}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-[#1B4332] text-white flex items-center justify-center text-sm font-bold shrink-0">
+                      {clientInitials(c.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{c.name || '(beze jména)'}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {[c.phone, c.email].filter(Boolean).join(' · ') || 'bez kontaktu'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {c.bookings_count > 0 && (
+                      <span className="text-xs text-gray-500 whitespace-nowrap hidden sm:block">
+                        {c.bookings_count} obj.
+                      </span>
+                    )}
+                    {c.total_spent > 0 && (
+                      <span className="font-bold text-[#1B4332] text-sm whitespace-nowrap">
+                        {c.total_spent.toLocaleString('cs-CZ')} Kč
+                      </span>
+                    )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium hidden md:block ${src.color}`}>{src.label}</span>
+                    {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="px-5 pb-5 border-t border-gray-100 bg-gray-50">
+                    {detailLoading || !detail ? (
+                      <div className="flex justify-center py-8"><RefreshCw className="w-5 h-5 animate-spin text-[#3FA34D]" /></div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 text-sm">
+                          <div className="space-y-2">
+                            {detail.client.phone && (
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <Phone className="w-3.5 h-3.5 shrink-0" />
+                                <a href={`tel:${detail.client.phone}`} className="hover:text-[#3FA34D]">{detail.client.phone}</a>
+                              </div>
+                            )}
+                            {detail.client.email && (
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <Mail className="w-3.5 h-3.5 shrink-0" />
+                                <a href={`mailto:${detail.client.email}`} className="hover:text-[#3FA34D] truncate">{detail.client.email}</a>
+                              </div>
+                            )}
+                            {detail.client.address && (
+                              <div className="flex items-start gap-2 text-gray-600">
+                                <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                <span>{detail.client.address}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-2 text-gray-600">
+                            <p><span className="font-medium">Přidán:</span> {new Date(detail.client.created_at).toLocaleDateString('cs-CZ')}</p>
+                            {detail.client.note && (
+                              <p><span className="font-medium">Poznámka:</span> {detail.client.note}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                          <button onClick={() => openEdit(detail.client)}
+                            className="text-xs px-3 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:border-gray-500 font-medium transition-all"
+                            data-testid={`client-edit-${c.id}`}>
+                            <Edit3 className="w-3 h-3 inline mr-1" /> Upravit
+                          </button>
+                          <button onClick={() => deleteClient(detail.client)}
+                            className="text-xs px-3 py-1.5 rounded-full border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-all">
+                            <Trash2 className="w-3 h-3 inline mr-1" /> Smazat
+                          </button>
+                        </div>
+
+                        {/* Historie objednávek */}
+                        <div className="mt-5">
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-[#1B4332] mb-2 flex items-center gap-1.5">
+                            <ClipboardList className="w-3.5 h-3.5" /> Objednávky ({detail.bookings.length})
+                          </h4>
+                          {detail.bookings.length === 0 ? (
+                            <p className="text-xs text-gray-400">Žádné objednávky</p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {detail.bookings.map(b => {
+                                const bs = STATUS_LABELS[b.status] || STATUS_LABELS.pending;
+                                return (
+                                  <div key={b.id} className="bg-white rounded-lg border border-gray-100 px-3 py-2 flex items-center justify-between gap-3 text-xs">
+                                    <div className="min-w-0">
+                                      <span className="text-gray-400 mr-2">{new Date(b.created_at).toLocaleDateString('cs-CZ')}</span>
+                                      <span className="font-medium text-gray-800">{SERVICE_NAMES[b.service] || b.service}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <span className="font-bold text-[#1B4332] whitespace-nowrap">
+                                        {b.final_price > 0
+                                          ? `${b.final_price.toLocaleString('cs-CZ')} Kč`
+                                          : b.estimated_price > 0 ? `~${b.estimated_price.toLocaleString('cs-CZ')} Kč` : 'Po obhlídce'}
+                                      </span>
+                                      <span className={`px-2 py-0.5 rounded-full border font-medium ${bs.color}`}>{bs.label}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Historie zpráv / poptávek */}
+                        <div className="mt-4">
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-[#1B4332] mb-2 flex items-center gap-1.5">
+                            <MessageSquare className="w-3.5 h-3.5" /> Zprávy a poptávky ({detail.messages.length})
+                          </h4>
+                          {detail.messages.length === 0 ? (
+                            <p className="text-xs text-gray-400">Žádné zprávy</p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {detail.messages.map(m => (
+                                <div key={m.id} className="bg-white rounded-lg border border-gray-100 px-3 py-2 text-xs">
+                                  <span className="text-gray-400 mr-2">{new Date(m.created_at).toLocaleDateString('cs-CZ')}</span>
+                                  <span className="text-gray-700">{(m.message || '').slice(0, 160)}{(m.message || '').length > 160 ? '…' : ''}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal: přidat / upravit klienta */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" data-testid="client-modal">
+            <div className="bg-[#1B4332] px-6 py-4">
+              <h3 className="text-white font-bold">{modal.mode === 'add' ? 'Přidat klienta' : 'Upravit klienta'}</h3>
+              <p className="text-white/70 text-xs">Např. zákazník, který zavolal nebo napsal mimo web</p>
+            </div>
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Jméno a příjmení *</label>
+                <input type="text" value={form.name} autoFocus
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                  data-testid="client-name-input" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Telefon</label>
+                  <input type="tel" value={form.phone}
+                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                    placeholder="730 000 000" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">E-mail</label>
+                  <input type="email" value={form.email}
+                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                    placeholder="jmeno@email.cz" />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Adresa</label>
+                <input type="text" value={form.address}
+                  onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                  className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
+                  placeholder="Ulice 123, Dvůr Králové n. L." />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Poznámka</label>
+                <textarea value={form.note} rows={3}
+                  onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none resize-none"
+                  placeholder="Volal 12. 7. – chce posekat zahradu 500 m², ozvat se v srpnu…" />
+              </div>
+              <div className="flex gap-3 justify-end pt-1">
+                <button onClick={() => setModal(null)}
+                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  Zrušit
+                </button>
+                <button onClick={save} disabled={saving || !form.name.trim()}
+                  className="px-4 py-2 text-sm bg-[#3FA34D] text-white rounded-lg hover:bg-[#2d7a38] disabled:opacity-50 font-medium"
+                  data-testid="client-save-btn">
+                  {saving ? 'Ukládám...' : modal.mode === 'add' ? 'Přidat klienta' : 'Uložit změny'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── GALLERY TAB ──────────────────────────────────────────────────────────────
 const GALLERY_CATEGORIES = ['Sekání', 'Hrubé sekání', 'Stříhání keřů a stromů', 'Kácení stromů', 'Realizace zahrad', 'Pokládání trávníku', 'Jarní balíček', 'Letní balíček', 'Podzimní balíček', 'Zahradní práce', 'Jiné'];
 
@@ -2268,6 +2618,7 @@ const TABS = [
   { id: 'vouchers', label: 'Poukazů', icon: Ticket },
   { id: 'coupons', label: 'Kupóny', icon: Tag },
   { id: 'bookings', label: 'Objednávky', icon: ClipboardList },
+  { id: 'clients', label: 'Klienti', icon: Users },
   { id: 'gallery', label: 'Galerie', icon: Image },
   { id: 'blog', label: 'Blog', icon: FileText },
 ];
@@ -2402,6 +2753,7 @@ export default function AdminPage() {
             {activeTab === 'vouchers' && <VouchersTab token={token} handle401={handle401} />}
             {activeTab === 'coupons' && <CouponsTab token={token} handle401={handle401} />}
             {activeTab === 'bookings' && <BookingsTab token={token} handle401={handle401} />}
+            {activeTab === 'clients' && <ClientsTab token={token} handle401={handle401} />}
             {activeTab === 'gallery' && <GalleryTab token={token} handle401={handle401} />}
             {activeTab === 'blog' && <BlogTab token={token} handle401={handle401} />}
           </div>

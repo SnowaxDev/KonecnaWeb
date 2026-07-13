@@ -854,6 +854,14 @@ async def create_booking(booking_data: BookingCreate):
     await db.bookings.insert_one(doc)
     logger.info(f"New booking created: {booking.id} for {booking.customer_name}")
 
+    # Auto-capture the customer into the CRM (best-effort, must never block a booking)
+    try:
+        await _upsert_client(name=booking.customer_name, phone=booking.customer_phone,
+                             email=booking.customer_email, address=booking.property_address,
+                             source="booking")
+    except Exception as e:
+        logger.warning(f"Client auto-capture (booking) failed: {e}")
+
     # Mark coupon as used if provided
     if booking_data.coupon_code:
         await db.coupons.update_one(
@@ -999,6 +1007,12 @@ async def submit_contact_form(form: ContactForm):
     
     await db.contact_messages.insert_one(doc)
     logger.info(f"Contact form submitted by {form.name}")
+
+    # Auto-capture the sender into the CRM (best-effort)
+    try:
+        await _upsert_client(name=form.name, phone=form.phone, email=form.email, source="contact")
+    except Exception as e:
+        logger.warning(f"Client auto-capture (contact) failed: {e}")
     
     # Send admin notification
     if resend and RESEND_API_KEY and ADMIN_EMAIL:
@@ -2050,6 +2064,224 @@ async def admin_analytics(request: Request, days: int = 30):
     return {"series": series, "status_counts": status_counts,
             "revenue_completed": revenue, "days": days}
 
+
+# ─── ADMIN CLIENTS (CRM) ─────────────────────────────────────────────────────
+# Clients live in their own collection and are matched to bookings and contact
+# messages by normalized phone / e-mail, so the history assembles automatically.
+
+def _norm_phone(phone: str) -> str:
+    """Normalize a Czech phone number to its last 9 digits for matching
+    (strips spaces, +420 / 00420 prefixes)."""
+    digits = re.sub(r"\D", "", phone or "")
+    return digits[-9:] if len(digits) >= 9 else digits
+
+
+def _norm_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+async def _upsert_client(name=None, phone=None, email=None, address=None, source="manual", note=""):
+    """Create a client if none matches by phone/e-mail; otherwise fill in the
+    matched client's missing fields (never overwrites admin edits).
+    Returns (client_id, created_bool)."""
+    np_, ne_ = _norm_phone(phone), _norm_email(email)
+    match = []
+    if ne_:
+        match.append({"email_norm": ne_})
+    if np_:
+        match.append({"phone_norm": np_})
+    existing = await db.clients.find_one({"$or": match}) if match else None
+    if existing:
+        update = {}
+        if name and not existing.get("name"):
+            update["name"] = name
+        if phone and not existing.get("phone"):
+            update["phone"] = phone
+            update["phone_norm"] = np_
+        if email and not existing.get("email"):
+            update["email"] = email
+            update["email_norm"] = ne_
+        if address and not existing.get("address"):
+            update["address"] = address
+        if update:
+            update["updated_at"] = datetime.now(timezone.utc).isoformat()
+            await db.clients.update_one({"id": existing["id"]}, {"$set": update})
+        return existing["id"], False
+    client = {
+        "id": str(uuid.uuid4()),
+        "name": name or "",
+        "phone": phone or "", "phone_norm": np_,
+        "email": email or "", "email_norm": ne_,
+        "address": address or "",
+        "note": note or "",
+        "source": source,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": None,
+    }
+    await db.clients.insert_one(client)
+    return client["id"], True
+
+
+def _client_bookings_filter(client, booking):
+    np_, ne_ = client.get("phone_norm"), client.get("email_norm")
+    return ((np_ and _norm_phone(booking.get("customer_phone")) == np_)
+            or (ne_ and _norm_email(booking.get("customer_email")) == ne_))
+
+
+@api_router.get("/admin/clients")
+async def admin_list_clients(request: Request, q: str = None):
+    await verify_admin(request)
+    query = {}
+    if q:
+        rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+        query = {"$or": [{"name": rx}, {"email": rx}, {"phone": rx}, {"address": rx}, {"note": rx}]}
+    clients = await db.clients.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+
+    # Attach booking stats matched by normalized phone/e-mail
+    bookings = await db.bookings.find(
+        {}, {"_id": 0, "customer_phone": 1, "customer_email": 1, "status": 1,
+             "final_price": 1, "estimated_price": 1, "created_at": 1}
+    ).to_list(5000)
+    by_phone, by_email = {}, {}
+    for b in bookings:
+        p, e = _norm_phone(b.get("customer_phone")), _norm_email(b.get("customer_email"))
+        if p:
+            by_phone.setdefault(p, []).append(b)
+        if e:
+            by_email.setdefault(e, []).append(b)
+    for c in clients:
+        matched = {}
+        if c.get("phone_norm"):
+            for b in by_phone.get(c["phone_norm"], []):
+                matched[id(b)] = b
+        if c.get("email_norm"):
+            for b in by_email.get(c["email_norm"], []):
+                matched[id(b)] = b
+        bl = list(matched.values())
+        c["bookings_count"] = len(bl)
+        c["total_spent"] = sum((b.get("final_price") or b.get("estimated_price") or 0)
+                               for b in bl if b.get("status") == "completed")
+        c["last_booking_at"] = max((b.get("created_at") or "" for b in bl), default=None) or None
+    return [_json_safe(c) for c in clients]
+
+
+@api_router.get("/admin/clients/{client_id}")
+async def admin_get_client(client_id: str, request: Request):
+    """Client detail with their full history: bookings + contact messages."""
+    await verify_admin(request)
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Klient nenalezen")
+    np_, ne_ = client.get("phone_norm"), client.get("email_norm")
+    all_bookings = await db.bookings.find({}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+    bookings = [b for b in all_bookings if _client_bookings_filter(client, b)]
+    all_msgs = await db.contact_messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    messages = [m for m in all_msgs
+                if (ne_ and _norm_email(m.get("email")) == ne_)
+                or (np_ and _norm_phone(m.get("phone")) == np_)]
+    return {"client": _json_safe(client),
+            "bookings": [_json_safe(b) for b in bookings],
+            "messages": [_json_safe(m) for m in messages]}
+
+
+@api_router.post("/admin/clients")
+async def admin_create_client(request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    name = (body.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Jméno je povinné")
+    phone, email = (body.get("phone") or "").strip(), (body.get("email") or "").strip()
+    np_, ne_ = _norm_phone(phone), _norm_email(email)
+    dup = []
+    if np_:
+        dup.append({"phone_norm": np_})
+    if ne_:
+        dup.append({"email_norm": ne_})
+    if dup and await db.clients.find_one({"$or": dup}, {"_id": 1}):
+        raise HTTPException(status_code=409, detail="Klient s tímto telefonem nebo e-mailem už existuje")
+    client = {
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "phone": phone, "phone_norm": np_,
+        "email": email, "email_norm": ne_,
+        "address": (body.get("address") or "").strip(),
+        "note": (body.get("note") or "").strip(),
+        "source": "manual",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": None,
+    }
+    await db.clients.insert_one(client)
+    client.pop("_id", None)
+    return client
+
+
+@api_router.patch("/admin/clients/{client_id}")
+async def admin_update_client(client_id: str, request: Request):
+    await verify_admin(request)
+    body = await request.json()
+    allowed = {"name", "phone", "email", "address", "note"}
+    update = {k: (v or "").strip() if isinstance(v, str) else v
+              for k, v in body.items() if k in allowed}
+    if "name" in update and not update["name"]:
+        raise HTTPException(status_code=400, detail="Jméno je povinné")
+    if "phone" in update:
+        update["phone_norm"] = _norm_phone(update["phone"])
+    if "email" in update:
+        update["email_norm"] = _norm_email(update["email"])
+    if not update:
+        raise HTTPException(status_code=400, detail="Žádná změna")
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.clients.update_one({"id": client_id}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Klient nenalezen")
+    return {"success": True}
+
+
+@api_router.delete("/admin/clients/{client_id}")
+async def admin_delete_client(client_id: str, request: Request):
+    await verify_admin(request)
+    result = await db.clients.delete_one({"id": client_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Klient nenalezen")
+    return {"success": True}
+
+
+@api_router.post("/admin/clients/sync")
+async def admin_sync_clients(request: Request):
+    """Backfill the client database from existing bookings and contact messages.
+    Idempotent — matching is by normalized phone/e-mail, so re-running never
+    creates duplicates."""
+    await verify_admin(request)
+    created = 0
+    bookings = await db.bookings.find(
+        {}, {"_id": 0, "customer_name": 1, "customer_phone": 1,
+             "customer_email": 1, "property_address": 1}
+    ).sort("created_at", 1).to_list(5000)
+    for b in bookings:
+        try:
+            _, was_new = await _upsert_client(
+                name=b.get("customer_name"), phone=b.get("customer_phone"),
+                email=b.get("customer_email"), address=b.get("property_address"),
+                source="booking")
+            created += 1 if was_new else 0
+        except Exception as e:
+            logger.warning(f"Client sync (booking) failed: {e}")
+    messages = await db.contact_messages.find(
+        {}, {"_id": 0, "name": 1, "phone": 1, "email": 1}
+    ).sort("created_at", 1).to_list(2000)
+    for m in messages:
+        try:
+            _, was_new = await _upsert_client(
+                name=m.get("name"), phone=m.get("phone"),
+                email=m.get("email"), source="contact")
+            created += 1 if was_new else 0
+        except Exception as e:
+            logger.warning(f"Client sync (contact) failed: {e}")
+    total = await db.clients.count_documents({})
+    return {"created": created, "total": total}
+
+
 @api_router.patch("/admin/bookings/{booking_id}/status")
 async def admin_update_booking_status(booking_id: str, request: Request):
     await verify_admin(request)
@@ -2410,6 +2642,9 @@ async def startup_db_client():
         await db.gallery_projects.create_index([("published", 1), ("created_at", -1)])
         await db.gallery_projects.create_index([("created_at", -1)])
         await db.gallery_image_cache.create_index("project_id")
+        await db.clients.create_index("id", unique=True)
+        await db.clients.create_index("phone_norm")
+        await db.clients.create_index("email_norm")
         logger.info("Gallery indexes created successfully")
     except Exception as e:
         logger.warning(f"Gallery index creation warning (may already exist): {str(e)}")
