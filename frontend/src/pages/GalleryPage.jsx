@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import Reveal from '../components/Reveal';
-import { SAMPLE_PROJECTS, normalizeProject } from '../data/galleryData';
+import { normalizeProject } from '../data/galleryData';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -70,15 +70,19 @@ const BeforeAfterCard = ({ project, priority = false }) => {
 export default function GalleryPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Vše');
 
   useEffect(() => {
+    // Zobrazujeme VÝHRADNĚ vlastní nahrané realizace. Žádné ukázkové/stock fotky –
+    // při prázdnu nebo chybě raději nic (resp. hláška), ať web nepůsobí falešně.
     axios.get(`${API}/gallery/projects`)
       .then(r => {
         const data = Array.isArray(r.data) ? r.data : [];
-        setProjects((data.length > 0 ? data : SAMPLE_PROJECTS).map(normalizeProject));
+        setProjects(data.map(normalizeProject));
+        setError(false);
       })
-      .catch(() => setProjects(SAMPLE_PROJECTS.map(normalizeProject)))
+      .catch(() => { setProjects([]); setError(true); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -145,6 +149,28 @@ export default function GalleryPage() {
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 border-4 border-[#3FA34D] border-t-transparent rounded-full animate-spin" />
             </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <p className="text-lg font-semibold text-gray-700 mb-1">Ukázky se teď nepodařilo načíst</p>
+              <p className="text-gray-500 mb-6">Zkuste to prosím za chvíli, nebo nás rovnou nezávazně kontaktujte.</p>
+              <Link to="/rezervace">
+                <Button className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-8 h-11 font-semibold">
+                  Nezávazná poptávka
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-lg font-semibold text-gray-700 mb-1">Připravujeme ukázky našich realizací</p>
+              <p className="text-gray-500 mb-6">Fotky před/po brzy doplníme. Mezitím nám můžete napsat nezávaznou poptávku.</p>
+              <Link to="/rezervace">
+                <Button className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-8 h-11 font-semibold">
+                  Nezávazná poptávka
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -156,7 +182,7 @@ export default function GalleryPage() {
               </div>
               {filtered.length === 0 && (
                 <div className="text-center py-20 text-gray-400">
-                  <p className="text-lg">Žádné projekty v této kategorii</p>
+                  <p className="text-lg">Žádné realizace v této kategorii</p>
                 </div>
               )}
             </>
