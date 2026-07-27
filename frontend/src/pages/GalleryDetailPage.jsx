@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import SEOHead, { SCHEMAS } from '../components/SEOHead';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import Reveal from '../components/Reveal';
-import { SAMPLE_PROJECTS, normalizeProject, parseVideo } from '../data/galleryData';
+import { normalizeProject, parseVideo } from '../data/galleryData';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -89,12 +89,8 @@ export default function GalleryDetailPage() {
           if (!found) throw new Error('not found');
           if (!cancelled) setProject(normalizeProject(found));
         } catch {
-          // 3) Fallback: ukázkové projekty
-          const sample = SAMPLE_PROJECTS.find(p => p.slug === slug || p.id === slug);
-          if (!cancelled) {
-            if (sample) setProject(normalizeProject(sample));
-            else setNotFound(true);
-          }
+          // Žádné ukázkové/stock fotky – když realizace není, ukážeme „nenalezeno".
+          if (!cancelled) setNotFound(true);
         }
       } finally {
         if (!cancelled) setLoading(false);
