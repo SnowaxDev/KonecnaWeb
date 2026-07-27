@@ -74,16 +74,30 @@ export default function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState('Vše');
 
   useEffect(() => {
+    let cancelled = false;
     // Zobrazujeme VÝHRADNĚ vlastní nahrané realizace. Žádné ukázkové/stock fotky –
     // při prázdnu nebo chybě raději nic (resp. hláška), ať web nepůsobí falešně.
-    axios.get(`${API}/gallery/projects`)
-      .then(r => {
-        const data = Array.isArray(r.data) ? r.data : [];
-        setProjects(data.map(normalizeProject));
-        setError(false);
-      })
-      .catch(() => { setProjects([]); setError(true); })
-      .finally(() => setLoading(false));
+    // Backend (Render free) se může uspat → pár pokusů, ať přežijeme studený start.
+    const load = async () => {
+      const delays = [0, 3000, 6000, 12000]; // 4 pokusy, ~25 s celkem
+      for (let i = 0; i < delays.length; i++) {
+        if (delays[i]) await new Promise(res => setTimeout(res, delays[i]));
+        if (cancelled) return;
+        try {
+          const r = await axios.get(`${API}/gallery/projects`, { timeout: 30000 });
+          if (cancelled) return;
+          setProjects((Array.isArray(r.data) ? r.data : []).map(normalizeProject));
+          setError(false);
+          setLoading(false);
+          return;
+        } catch {
+          // zkusíme znovu; error nastavíme až po vyčerpání pokusů
+        }
+      }
+      if (!cancelled) { setProjects([]); setError(true); setLoading(false); }
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   // Build dynamic categories from loaded projects
