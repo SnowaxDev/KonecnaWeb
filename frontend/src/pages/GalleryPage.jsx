@@ -67,9 +67,20 @@ const BeforeAfterCard = ({ project, priority = false }) => {
   );
 };
 
+const GALLERY_CACHE_KEY = 'seknuto_gallery_v1';
+const readGalleryCache = () => {
+  try {
+    const c = JSON.parse(localStorage.getItem(GALLERY_CACHE_KEY));
+    return Array.isArray(c) ? c : null;
+  } catch { return null; }
+};
+
 export default function GalleryPage() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Z cache ukážeme galerii OKAMŽITĚ (opakovaná návštěva = bez čekání),
+  // na pozadí ji pak necháme z API aktualizovat.
+  const cached = readGalleryCache();
+  const [projects, setProjects] = useState(cached || []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Vše');
 
@@ -86,15 +97,18 @@ export default function GalleryPage() {
         try {
           const r = await axios.get(`${API}/gallery/projects`, { timeout: 30000 });
           if (cancelled) return;
-          setProjects((Array.isArray(r.data) ? r.data : []).map(normalizeProject));
+          const data = (Array.isArray(r.data) ? r.data : []).map(normalizeProject);
+          setProjects(data);
           setError(false);
           setLoading(false);
+          try { localStorage.setItem(GALLERY_CACHE_KEY, JSON.stringify(data)); } catch { /* plno / privátní režim */ }
           return;
         } catch {
           // zkusíme znovu; error nastavíme až po vyčerpání pokusů
         }
       }
-      if (!cancelled) { setProjects([]); setError(true); setLoading(false); }
+      // Když máme cache, necháme ji být (žádná chyba); jinak ukážeme hlášku.
+      if (!cancelled) { setLoading(false); if (!cached) setError(true); }
     };
     load();
     return () => { cancelled = true; };
