@@ -160,8 +160,17 @@ export default function GalleryPage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-4 border-[#3FA34D] border-t-transparent rounded-full animate-spin" />
+            /* Postupné načítání – kostra karet, ať zákazník hned vidí strukturu */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" aria-busy="true" aria-label="Načítání ukázek">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                  <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="text-center py-20">
