@@ -2394,90 +2394,119 @@ class AdminEmailRequest(BaseModel):
     review_google: Optional[str] = None
     review_seznam: Optional[str] = None
     set_status: Optional[str] = None
+    cta_label: Optional[str] = None
+    cta_url: Optional[str] = None
+    to_override: Optional[str] = None   # send a test copy here instead of the customer
+    preview: bool = False               # return rendered HTML instead of sending
 
-@api_router.post("/admin/bookings/{booking_id}/email")
-async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, request: Request):
-    """Admin: send custom email to booking customer"""
-    await verify_admin(request)
-    booking_doc = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
-    if not booking_doc:
-        raise HTTPException(status_code=404, detail="Objednávka nenalezena")
-    
-    customer_email = booking_doc.get("customer_email")
-    customer_name = booking_doc.get("customer_name", "")
-    if not customer_email:
-        raise HTTPException(status_code=400, detail="Zákazník nemá email")
-    
-    if not resend or not RESEND_API_KEY:
-        raise HTTPException(status_code=500, detail="Email služba není nakonfigurována")
-    
-    service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
-    # Convert newlines to <br> for HTML
-    message_html = data.message.replace('\n', '<br>')
 
-    # Optional review buttons (e.g. for a "work finished" email)
+def _email_button(label: str, url: str, c1: str, c2: str) -> str:
+    """A rounded, gradient 'bulletproof' e-mail button (solid color fallback for
+    clients that drop the gradient)."""
+    return (
+        f'<a href="{url}" style="display:inline-block;background-color:{c1};'
+        f'background-image:linear-gradient(135deg,{c1},{c2});color:#ffffff;text-decoration:none;'
+        'padding:14px 30px;border-radius:999px;font-weight:700;font-size:15px;margin:6px;'
+        f'box-shadow:0 6px 16px rgba(0,0,0,0.18);letter-spacing:0.2px;">{label}</a>'
+    )
+
+
+def _render_booking_email(customer_name, service_name, booking_doc, data) -> str:
+    message_html = (data.message or "").replace("\n", "<br>")
+
+    cta_block = ""
+    if (data.cta_label or "").strip() and (data.cta_url or "").strip():
+        cta_block = ('<div style="text-align:center;margin:4px 0 24px;">'
+                     + _email_button(data.cta_label.strip(), data.cta_url.strip(), "#2E8B3E", "#3FA34D")
+                     + '</div>')
+
     review_buttons = ""
     if (data.review_google or "").strip() or (data.review_seznam or "").strip():
         btns = ""
         if (data.review_google or "").strip():
-            btns += (f'<a href="{data.review_google.strip()}" '
-                     'style="display:inline-block;background:#2E8B3E;color:#fff;text-decoration:none;'
-                     'padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;margin:4px;">'
-                     '★ Ohodnotit na Google</a>')
+            btns += _email_button("★ Ohodnotit na Google", data.review_google.strip(), "#2E8B3E", "#4CAF50")
         if (data.review_seznam or "").strip():
-            btns += (f'<a href="{data.review_seznam.strip()}" '
-                     'style="display:inline-block;background:#c8102e;color:#fff;text-decoration:none;'
-                     'padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;margin:4px;">'
-                     '★ Ohodnotit na Seznamu</a>')
+            btns += _email_button("★ Ohodnotit na Seznamu", data.review_seznam.strip(), "#c8102e", "#e23b54")
         review_buttons = (
-            '<div style="text-align:center;margin:8px 0 24px;padding:16px;background:#f0fdf4;border-radius:10px;">'
-            '<p style="font-size:14px;color:#374151;margin:0 0 12px;font-weight:600;">Byli jste spokojeni? Budeme rádi za hodnocení 🙏</p>'
+            '<div style="text-align:center;margin:8px 0 24px;padding:20px;background:#f0fdf4;'
+            'border:1px solid #d6f0dc;border-radius:14px;">'
+            '<p style="font-size:15px;color:#1B4332;margin:0 0 14px;font-weight:700;">'
+            'Byli jste spokojeni? Budeme moc rádi za hodnocení 🙏</p>'
             f'{btns}</div>'
         )
 
-    email_html = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
-<body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
-<div style="max-width:580px;margin:0 auto;">
-  <div style="background:linear-gradient(135deg,#2E8B3E,#3FA34D);padding:28px 32px;border-radius:16px 16px 0 0;text-align:center;">
-    <h2 style="color:white;margin:0;font-size:20px;">SeknuTo.cz</h2>
-    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:13px;">Zpráva k vaší objednávce</p>
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#eef2ee;margin:0;padding:20px;">
+<div style="max-width:600px;margin:0 auto;">
+  <div style="background-color:#2E8B3E;background-image:linear-gradient(135deg,#1B4332,#3FA34D);padding:30px 32px;border-radius:18px 18px 0 0;text-align:center;">
+    <div style="display:inline-block;width:44px;height:44px;line-height:44px;background:rgba(255,255,255,0.16);border-radius:50%;font-size:22px;">🌿</div>
+    <h2 style="color:#ffffff;margin:10px 0 0;font-size:22px;letter-spacing:0.3px;">SeknuTo<span style="color:#c8f5d2;">.cz</span></h2>
+    <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px;">Zpráva k vaší zakázce</p>
   </div>
-  <div style="background:white;padding:28px;border:1px solid #e5e7eb;border-top:none;">
+  <div style="background:#ffffff;padding:30px;border:1px solid #e5e7eb;border-top:none;">
     <p style="font-size:15px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{customer_name}</strong>,</p>
-    <div style="font-size:14px;color:#4b5563;line-height:1.7;margin:16px 0 24px;">{message_html}</div>
+    <div style="font-size:15px;color:#4b5563;line-height:1.75;margin:16px 0 22px;">{message_html}</div>
+    {cta_block}
     {review_buttons}
-    <div style="background:#f9fafb;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;color:#6b7280;">
-      <strong>Služba:</strong> {service_name}<br>
-      <strong>Datum:</strong> {booking_doc.get('preferred_date','')}<br>
-      <strong>Adresa:</strong> {booking_doc.get('property_address','')}
+    <div style="background:#f7faf7;border-left:4px solid #3FA34D;border-radius:8px;padding:14px 16px;margin-bottom:22px;font-size:13px;color:#6b7280;">
+      <strong style="color:#374151;">Služba:</strong> {service_name}<br>
+      <strong style="color:#374151;">Termín:</strong> {booking_doc.get('preferred_date','') or '–'}<br>
+      <strong style="color:#374151;">Adresa:</strong> {booking_doc.get('property_address','') or '–'}
     </div>
-    <p style="font-size:13px;color:#9ca3af;margin:0;">
-      Otázky? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;">WhatsApp: 730 588 372</a>
-      &nbsp;|&nbsp; <a href="mailto:info@seknuto.cz" style="color:#2E8B3E;">info@seknuto.cz</a>
+    <p style="font-size:13px;color:#9ca3af;margin:0;text-align:center;">
+      Máte dotaz? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;text-decoration:none;">WhatsApp 730 588 372</a>
+      &nbsp;·&nbsp; <a href="mailto:info@seknuto.cz" style="color:#2E8B3E;text-decoration:none;">info@seknuto.cz</a>
     </p>
   </div>
-  <div style="background:#1a2e1a;padding:16px;text-align:center;border-radius:0 0 16px 16px;">
-    <p style="color:#3FA34D;margin:0;font-size:12px;">SeknuTo.cz – Trávník bez starostí!</p>
+  <div style="background:#12210f;padding:18px;text-align:center;border-radius:0 0 18px 18px;">
+    <p style="color:#7fce90;margin:0;font-size:12px;font-weight:600;">SeknuTo.cz — Trávník bez starostí!</p>
+    <p style="color:#5a6b57;margin:6px 0 0;font-size:11px;">Dušan Macháček · IČO 24889229 · Dvůr Králové nad Labem</p>
   </div>
 </div>
 </body></html>"""
-    
+
+
+@api_router.post("/admin/bookings/{booking_id}/email")
+async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, request: Request):
+    """Admin: send (or preview / test) a branded e-mail to the booking customer."""
+    await verify_admin(request)
+    booking_doc = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking_doc:
+        raise HTTPException(status_code=404, detail="Objednávka nenalezena")
+
+    customer_email = booking_doc.get("customer_email")
+    customer_name = booking_doc.get("customer_name", "") or "zákazníku"
+    service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
+    email_html = _render_booking_email(customer_name, service_name, booking_doc, data)
+
+    # Preview mode: return the rendered HTML, do not send.
+    if data.preview:
+        return {"html": email_html}
+
+    if not resend or not RESEND_API_KEY:
+        raise HTTPException(status_code=500, detail="Email služba není nakonfigurována")
+
+    is_test = bool((data.to_override or "").strip())
+    recipient = (data.to_override or "").strip() if is_test else customer_email
+    if not recipient:
+        raise HTTPException(status_code=400, detail="Zákazník nemá email")
+
+    subject = ("[TEST] " + data.subject) if is_test else data.subject
     try:
         await asyncio.to_thread(resend.Emails.send, {
             "from": SENDER_EMAIL,
-            "to": [customer_email],
-            "subject": data.subject,
+            "to": [recipient],
+            "subject": subject,
             "html": email_html,
         })
-        logger.info(f"Admin custom email sent to {customer_email} for booking {booking_id}")
-        # Optionally move the booking to a new status in the same action (no second
-        # automatic status e-mail — this custom e-mail already informed the client).
+        logger.info(f"Admin email {'(test) ' if is_test else ''}sent to {recipient} for booking {booking_id}")
+        # Real send only: optionally advance the booking status (no 2nd auto email).
         status_changed = None
-        if data.set_status and data.set_status in VALID_BOOKING_STATUSES:
+        if not is_test and data.set_status and data.set_status in VALID_BOOKING_STATUSES:
             await db.bookings.update_one({"id": booking_id}, {"$set": {"status": data.set_status}})
             status_changed = data.set_status
-        return {"success": True, "message": f"Email odeslán na {customer_email}", "status": status_changed}
+        return {"success": True, "message": f"Email odeslán na {recipient}", "status": status_changed, "test": is_test}
     except Exception as e:
         logger.error(f"Admin custom email failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Nepodařilo se odeslat email: {str(e)}")
