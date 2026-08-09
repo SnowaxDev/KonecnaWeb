@@ -914,6 +914,52 @@ const dayHeading = (iso) => {
   return base;
 };
 
+// Odkazy na hodnocení (Google / Seznam) se ukládají v prohlížeči – admin je zadá jednou
+const REVIEW_LINKS_KEY = 'seknuto_review_links';
+const readReviewLinks = () => {
+  try { return JSON.parse(localStorage.getItem(REVIEW_LINKS_KEY)) || { google: '', seznam: '' }; }
+  catch { return { google: '', seznam: '' }; }
+};
+
+const priceStr = (b) => (b.final_price > 0 ? `${b.final_price.toLocaleString('cs-CZ')} Kč`
+  : b.estimated_price > 0 ? `~${b.estimated_price.toLocaleString('cs-CZ')} Kč` : 'dle domluvy');
+
+// Připravené e-mailové šablony pro jednotlivé fáze zakázky. Vše je následně
+// plně editovatelné v modalu; `status` = nabídne zároveň změnit stav objednávky,
+// `review` = nabídne přiložit odkazy na hodnocení.
+const EMAIL_TEMPLATES = [
+  {
+    key: 'phone', label: '📞 Telefonicky domluveno', icon: Phone, status: null, review: false,
+    subject: 'Shrnutí naší domluvy – SeknuTo.cz',
+    body: (b) => `děkujeme za telefonát. Pro pořádek shrnujeme, na čem jsme se domluvili:\n\n• Práce: ${SERVICE_NAMES[b.service] || b.service}\n• Ozveme se / další krok: [doplňte]\n\nKdyby cokoli, jsme vám k dispozici na telefonu 730 588 372.`,
+  },
+  {
+    key: 'inspection', label: '📅 Termín prohlídky', icon: Calendar, status: null, review: false,
+    subject: 'Termín nezávazné prohlídky – SeknuTo.cz',
+    body: (b) => `domluvili jsme si nezávaznou prohlídku:\n\n📅 Kdy: [doplňte datum a čas]\n📍 Kde: ${b.property_address || '[adresa]'}\n\nObhlídka je zdarma – na místě navrhneme řešení a řekneme cenu předem. Pokud by vám termín nevyhovoval, dejte nám prosím vědět.`,
+  },
+  {
+    key: 'proposal', label: '📐 Návrh realizace', icon: FileText, status: 'confirmed', review: false,
+    subject: 'Návrh realizace – SeknuTo.cz',
+    body: (b) => `na základě prohlídky vám posíláme návrh realizace:\n\n🌿 Práce: ${SERVICE_NAMES[b.service] || b.service}\n📐 Rozsah: ${b.property_size > 0 ? '~' + b.property_size + ' m²' : '[rozsah]'}\n📅 Navrhovaný termín: [doplňte]\n💰 Cena: ${priceStr(b)}\n\n[Popis navrženého řešení – co vše provedeme…]\n\nPokud s návrhem souhlasíte, stačí odpovědět na tento e-mail a termín potvrdíme.`,
+  },
+  {
+    key: 'confirm', label: '✅ Potvrzení termínu realizace', icon: CheckCheck, status: 'confirmed', review: false,
+    subject: 'Potvrzení termínu realizace – SeknuTo.cz',
+    body: (b) => `potvrzujeme domluvený termín:\n\n🌿 Práce: ${SERVICE_NAMES[b.service] || b.service}\n📅 Termín: [doplňte datum a čas]\n📍 Adresa: ${b.property_address || '[adresa]'}\n💰 Cena: ${priceStr(b)}\n\nPři nepříznivém počasí vás včas kontaktujeme s náhradním termínem. Děkujeme za důvěru!`,
+  },
+  {
+    key: 'done', label: '🎉 Práce dokončena + hodnocení', icon: TrendingUp, status: 'completed', review: true,
+    subject: 'Hotovo! Děkujeme za důvěru – SeknuTo.cz',
+    body: (b) => `práce „${SERVICE_NAMES[b.service] || b.service}" je hotová a doufáme, že jste s výsledkem spokojeni.\n\nBudeme moc rádi, když nám věnujete chvilku a ohodnotíte naši práci – pomůže to nám i dalším zákazníkům. Odkazy najdete níže.\n\nKdykoli budete potřebovat, jsme tu pro vás. Děkujeme, že jste využili SeknuTo.cz!`,
+  },
+  {
+    key: 'custom', label: '✏️ Vlastní zpráva', icon: Mail, status: null, review: false,
+    subject: 'Zpráva k vaší objednávce – SeknuTo.cz',
+    body: () => '',
+  },
+];
+
 const BookingsTab = ({ token, handle401 }) => {
   const [bookings, setBookings] = useState([]);
   const [total, setTotal] = useState(0);
@@ -926,9 +972,13 @@ const BookingsTab = ({ token, handle401 }) => {
   const [expanded, setExpanded] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [emailModal, setEmailModal] = useState(null); // booking object or null
+  const [emailTemplate, setEmailTemplate] = useState('custom');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSetStatus, setEmailSetStatus] = useState(false);
+  const [emailAddReview, setEmailAddReview] = useState(false);
+  const [reviewLinks, setReviewLinks] = useState(readReviewLinks);
   const [priceModal, setPriceModal] = useState(null); // booking object or null
   const [priceValue, setPriceValue] = useState('');
   const [savingPrice, setSavingPrice] = useState(false);
@@ -1035,26 +1085,40 @@ const BookingsTab = ({ token, handle401 }) => {
     finally { setExporting(false); }
   };
 
-  const openEmailModal = (booking) => {
+  const applyTemplate = (booking, key) => {
+    const t = EMAIL_TEMPLATES.find(x => x.key === key) || EMAIL_TEMPLATES[EMAIL_TEMPLATES.length - 1];
+    setEmailTemplate(key);
+    setEmailSubject(t.subject);
+    setEmailMessage(t.body(booking));
+    setEmailSetStatus(!!t.status && booking.status !== t.status);
+    setEmailAddReview(!!t.review);
+  };
+
+  const openEmailModal = (booking, presetKey = 'custom') => {
     setEmailModal(booking);
-    setEmailSubject(`Informace k vaší poptávce – SeknuTo.cz`);
-    setEmailMessage('');
+    setReviewLinks(readReviewLinks());
+    applyTemplate(booking, presetKey);
   };
 
   const sendCustomEmail = async () => {
-    if (!emailModal || !emailMessage.trim()) {
-      toast.error('Vyplňte zprávu');
-      return;
-    }
+    if (!emailModal || !emailMessage.trim()) { toast.error('Vyplňte zprávu'); return; }
+    const tpl = EMAIL_TEMPLATES.find(x => x.key === emailTemplate);
+    const willSetStatus = emailSetStatus && tpl?.status;
     setSendingEmail(true);
     try {
-      await axios.post(`${API}/admin/bookings/${emailModal.id}/email`, {
-        booking_id: emailModal.id,
-        subject: emailSubject,
-        message: emailMessage,
-      }, { headers });
-      toast.success(`Email odeslán na ${emailModal.customer_email}`);
+      const payload = { booking_id: emailModal.id, subject: emailSubject, message: emailMessage };
+      if (emailAddReview) {
+        payload.review_google = reviewLinks.google || undefined;
+        payload.review_seznam = reviewLinks.seznam || undefined;
+        try { localStorage.setItem(REVIEW_LINKS_KEY, JSON.stringify(reviewLinks)); } catch { /* noop */ }
+      }
+      if (willSetStatus) payload.set_status = tpl.status;
+      await axios.post(`${API}/admin/bookings/${emailModal.id}/email`, payload, { headers });
+      toast.success(willSetStatus
+        ? `Email odeslán · stav → ${STATUS_LABELS[tpl.status]?.label}`
+        : `Email odeslán na ${emailModal.customer_email}`);
       setEmailModal(null);
+      if (willSetStatus) load();
     } catch (err) {
       if (!handle401(err)) toast.error(err.response?.data?.detail || 'Nepodařilo se odeslat email');
     } finally { setSendingEmail(false); }
@@ -1288,56 +1352,101 @@ const BookingsTab = ({ token, handle401 }) => {
         </div>
       )}
 
-      {/* Custom Email Modal */}
-      {emailModal && (
+      {/* E-mail zákazníkovi – šablony + editace + volitelná změna stavu */}
+      {emailModal && (() => {
+        const tpl = EMAIL_TEMPLATES.find(x => x.key === emailTemplate);
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden" data-testid="email-modal">
-            <div className="bg-[#3FA34D] px-6 py-4">
-              <h3 className="text-white font-bold">Poslat email zákazníkovi</h3>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]" data-testid="email-modal">
+            <div className="bg-[#1B4332] px-6 py-4 shrink-0">
+              <h3 className="text-white font-bold">E-mail zákazníkovi</h3>
               <p className="text-white/70 text-xs">{emailModal.customer_name} – {emailModal.customer_email}</p>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto">
+              {/* Výběr šablony */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1.5">Šablona podle fáze</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {EMAIL_TEMPLATES.map(t => (
+                    <button key={t.key} type="button"
+                      onClick={() => applyTemplate(emailModal, t.key)}
+                      className={`text-xs px-2.5 py-1.5 rounded-full border font-medium transition-all ${
+                        emailTemplate === t.key ? 'bg-[#3FA34D] text-white border-[#3FA34D]' : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                      }`}
+                      data-testid={`email-tpl-${t.key}`}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">Předmět</label>
-                <input
-                  type="text"
-                  value={emailSubject}
+                <input type="text" value={emailSubject}
                   onChange={e => setEmailSubject(e.target.value)}
                   className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none"
-                  data-testid="email-subject-input"
-                />
+                  data-testid="email-subject-input" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Zpráva</label>
-                <textarea
-                  value={emailMessage}
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  Text zprávy <span className="text-gray-400 font-normal">– [hranaté závorky] doplňte / upravte</span>
+                </label>
+                <textarea value={emailMessage}
                   onChange={e => setEmailMessage(e.target.value)}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none resize-none"
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none resize-y"
                   placeholder="Napište zprávu zákazníkovi..."
-                  data-testid="email-message-input"
-                />
+                  data-testid="email-message-input" />
+                <p className="text-xs text-gray-400 mt-1">Oslovení „Dobrý den, {emailModal.customer_name}" a patička se přidají automaticky.</p>
               </div>
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setEmailModal(null)}
-                  className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-                >
-                  Zrušit
-                </button>
-                <button
-                  onClick={sendCustomEmail}
-                  disabled={sendingEmail || !emailMessage.trim()}
-                  className="px-4 py-2 text-sm bg-[#3FA34D] text-white rounded-lg hover:bg-[#2d7a38] disabled:opacity-50 font-medium"
-                  data-testid="email-send-btn"
-                >
-                  {sendingEmail ? 'Odesílám...' : 'Odeslat email'}
-                </button>
-              </div>
+
+              {/* Odkazy na hodnocení */}
+              {tpl?.review && (
+                <div className="bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-lg p-3 space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-[#1B4332]">
+                    <input type="checkbox" checked={emailAddReview} onChange={e => setEmailAddReview(e.target.checked)} className="accent-[#3FA34D]" />
+                    Přiložit tlačítka na hodnocení
+                  </label>
+                  {emailAddReview && (
+                    <div className="space-y-2 pt-1">
+                      <input type="url" value={reviewLinks.google}
+                        onChange={e => setReviewLinks(r => ({ ...r, google: e.target.value }))}
+                        placeholder="Odkaz na Google hodnocení (https://…)"
+                        className="w-full h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+                      <input type="url" value={reviewLinks.seznam}
+                        onChange={e => setReviewLinks(r => ({ ...r, seznam: e.target.value }))}
+                        placeholder="Odkaz na Seznam / Firmy.cz hodnocení (https://…)"
+                        className="w-full h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+                      <p className="text-[11px] text-gray-400">Zadejte jednou – uloží se pro příště. Nevyplněný odkaz se nepřidá.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Změna stavu zároveň */}
+              {tpl?.status && (
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={emailSetStatus} onChange={e => setEmailSetStatus(e.target.checked)} className="accent-[#3FA34D]" />
+                  Zároveň změnit stav objednávky na <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${STATUS_LABELS[tpl.status]?.color}`}>{STATUS_LABELS[tpl.status]?.label}</span>
+                </label>
+              )}
+            </div>
+            <div className="flex gap-3 justify-end px-6 py-4 border-t border-gray-100 shrink-0">
+              <button onClick={() => setEmailModal(null)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                Zrušit
+              </button>
+              <button onClick={sendCustomEmail}
+                disabled={sendingEmail || !emailMessage.trim()}
+                className="px-4 py-2 text-sm bg-[#3FA34D] text-white rounded-lg hover:bg-[#2d7a38] disabled:opacity-50 font-medium"
+                data-testid="email-send-btn">
+                {sendingEmail ? 'Odesílám...' : 'Odeslat e-mail'}
+              </button>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Modal: konečná cena zakázky */}
       {priceModal && (
