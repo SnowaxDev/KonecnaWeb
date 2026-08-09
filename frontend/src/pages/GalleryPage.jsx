@@ -112,7 +112,7 @@ export default function GalleryPage() {
     };
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build dynamic categories from loaded projects
   const categories = ['Vše', ...new Set(projects.map(p => p.category || p.tag).filter(Boolean))];
