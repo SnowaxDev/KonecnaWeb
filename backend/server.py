@@ -2391,6 +2391,9 @@ class AdminEmailRequest(BaseModel):
     booking_id: str
     subject: str
     message: str
+    review_google: Optional[str] = None
+    review_seznam: Optional[str] = None
+    set_status: Optional[str] = None
 
 @api_router.post("/admin/bookings/{booking_id}/email")
 async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, request: Request):
@@ -2411,7 +2414,27 @@ async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, requ
     service_name = SERVICE_NAMES_CZ.get(booking_doc.get('service',''), booking_doc.get('service',''))
     # Convert newlines to <br> for HTML
     message_html = data.message.replace('\n', '<br>')
-    
+
+    # Optional review buttons (e.g. for a "work finished" email)
+    review_buttons = ""
+    if (data.review_google or "").strip() or (data.review_seznam or "").strip():
+        btns = ""
+        if (data.review_google or "").strip():
+            btns += (f'<a href="{data.review_google.strip()}" '
+                     'style="display:inline-block;background:#2E8B3E;color:#fff;text-decoration:none;'
+                     'padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;margin:4px;">'
+                     '★ Ohodnotit na Google</a>')
+        if (data.review_seznam or "").strip():
+            btns += (f'<a href="{data.review_seznam.strip()}" '
+                     'style="display:inline-block;background:#c8102e;color:#fff;text-decoration:none;'
+                     'padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;margin:4px;">'
+                     '★ Ohodnotit na Seznamu</a>')
+        review_buttons = (
+            '<div style="text-align:center;margin:8px 0 24px;padding:16px;background:#f0fdf4;border-radius:10px;">'
+            '<p style="font-size:14px;color:#374151;margin:0 0 12px;font-weight:600;">Byli jste spokojeni? Budeme rádi za hodnocení 🙏</p>'
+            f'{btns}</div>'
+        )
+
     email_html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f7f4;margin:0;padding:20px;">
@@ -2423,6 +2446,7 @@ async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, requ
   <div style="background:white;padding:28px;border:1px solid #e5e7eb;border-top:none;">
     <p style="font-size:15px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{customer_name}</strong>,</p>
     <div style="font-size:14px;color:#4b5563;line-height:1.7;margin:16px 0 24px;">{message_html}</div>
+    {review_buttons}
     <div style="background:#f9fafb;border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;color:#6b7280;">
       <strong>Služba:</strong> {service_name}<br>
       <strong>Datum:</strong> {booking_doc.get('preferred_date','')}<br>
@@ -2447,7 +2471,13 @@ async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, requ
             "html": email_html,
         })
         logger.info(f"Admin custom email sent to {customer_email} for booking {booking_id}")
-        return {"success": True, "message": f"Email odeslán na {customer_email}"}
+        # Optionally move the booking to a new status in the same action (no second
+        # automatic status e-mail — this custom e-mail already informed the client).
+        status_changed = None
+        if data.set_status and data.set_status in VALID_BOOKING_STATUSES:
+            await db.bookings.update_one({"id": booking_id}, {"$set": {"status": data.set_status}})
+            status_changed = data.set_status
+        return {"success": True, "message": f"Email odeslán na {customer_email}", "status": status_changed}
     except Exception as e:
         logger.error(f"Admin custom email failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Nepodařilo se odeslat email: {str(e)}")
