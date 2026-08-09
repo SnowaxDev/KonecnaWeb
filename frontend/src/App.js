@@ -13,6 +13,7 @@ import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import EmailPopup from "./components/EmailPopup";
 import GoogleAnalytics from "./components/GoogleAnalytics";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Homepage se načítá hned (první dojem); ostatní stránky lazy –
 // návštěvník nestahuje admin, rezervaci ani blog, dokud na ně nejde
@@ -80,6 +81,7 @@ function App() {
         <Analytics />
         <SpeedInsights />
         <ScrollToTop />
+        <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Admin - no header/footer */}
@@ -122,6 +124,7 @@ function App() {
           } />
         </Routes>
         </Suspense>
+        </ErrorBoundary>
         <Toaster position="top-center" richColors />
       </BrowserRouter>
     </div>
