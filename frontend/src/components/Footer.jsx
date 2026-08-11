@@ -143,9 +143,14 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2 text-sm">
               {[
+                { href: '/likvidace-pozemku', label: 'Likvidace zarostlých pozemků' },
+                { href: '/sekani-prerostle-travy', label: 'Sekání přerostlé trávy' },
                 { href: '/strihani-keru-kaceni-stromu', label: 'Stříhání keřů a kácení stromů' },
+                { href: '/vertikutace-travniku', label: 'Vertikutace trávníku' },
                 { href: '/realizace-zahrad', label: 'Realizace zahrad' },
                 { href: '/pokladani-travniku', label: 'Pokládání trávníku' },
+                { href: '/udrzba-zahrady', label: 'Údržba zahrady' },
+                { href: '/odvoz-bioodpadu', label: 'Odvoz bioodpadu' },
                 { href: '/sekani-travy-hradec-kralove', label: 'Sekání trávy Hradec Králové' },
                 { href: '/sekani-travy-trutnov',  label: 'Sekání trávy Trutnov' },
                 { href: '/sekani-travy-vrchlabi', label: 'Sekání trávy Vrchlabí' },
