@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import {
   CheckCircle, ArrowRight, Phone, MessageCircle, MapPin,
   TreeDeciduous, Sprout, Scissors, TreePine, Axe, Flower2,
-  Ruler, Leaf, Droplets, ShieldCheck
+  Ruler, Leaf, Droplets, ShieldCheck, Truck, Flame, Wind, Recycle
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -108,6 +108,167 @@ const SERVICE_DATA = {
       { question: 'Je lepší trávník ze semene, nebo travní koberec?', answer: 'Travní koberec dává okamžitý výsledek a je odolnější hned po pokládce, trávník ze semene je levnější. Při obhlídce doporučíme variantu vhodnou pro vaši zahradu.' },
       { question: 'Uděláte i návrh, nebo realizujete podle mého?', answer: 'Obojí. Navrhneme zahradu na míru, nebo zrealizujeme váš stávající návrh. Vše doladíme na bezplatné obhlídce přímo u vás.' },
       { question: 'Kolik realizace zahrady stojí?', answer: 'Každá zahrada je jiná, proto cenu stanovíme až po bezplatné obhlídce a podle zvoleného rozsahu. Cenu vždy znáte předem, bez skrytých poplatků.' },
+    ],
+  },
+  'likvidace-pozemku': {
+    badge: 'Zarostlé parcely · křoviny · nálety',
+    h1: 'Likvidace a čištění zarostlých pozemků',
+    hero: 'Vyčistíme i roky neudržovaný pozemek – vysekání přerostlé trávy a buřeně, odstranění křovin a náletových dřevin, mulčování, úklid a odvoz. Dvůr Králové nad Labem a okolí do 50 km, cenu znáte předem.',
+    metaTitle: 'Likvidace zarostlých pozemků Dvůr Králové | SeknuTo.cz',
+    metaDescription: 'Vyčištění a likvidace zarostlých pozemků, křovin a náletových dřevin ve Dvoře Králové a okolí. Přerostlá tráva, buřeň, mulčování, úklid a odvoz. Bezplatná obhlídka. 730 588 372',
+    keywords: 'likvidace pozemků Dvůr Králové, čištění zarostlých pozemků, vyčištění pozemku, likvidace náletových dřevin, odstranění křovin, sekání přerostlé trávy, mulčování pozemku, mýcení náletů, vyčištění parcely, úklid zarostlé zahrady, likvidace buřeně, zarostlá zahrada, likvidace pozemků Trutnov, likvidace pozemků Náchod, likvidace pozemků Jaroměř, čištění pozemků Hradec Králové, vyčištění pozemku Vrchlabí',
+    serviceName: 'Likvidace a čištění zarostlých pozemků',
+    serviceDesc: 'Kompletní vyčištění zarostlých pozemků a parcel – mýcení náletových dřevin, odstranění křovin, vysekání přerostlé trávy a buřeně, mulčování biomasy, úklid a ekologický odvoz.',
+    services: [
+      { icon: Scissors, title: 'Sekání přerostlé trávy a buřeně', desc: 'Vysekání i několik let neudržované trávy, kopřiv a plevele do čista.' },
+      { icon: Axe, title: 'Odstranění křovin a keřů', desc: 'Vyřezání zarostlých keřů, ostružiní a náletových křovin z celé plochy.' },
+      { icon: Flame, title: 'Mýcení náletových dřevin', desc: 'Odstranění náletů a menších stromků, které pozemek zarůstají.' },
+      { icon: Recycle, title: 'Mulčování a drcení biomasy', desc: 'Podrcení travin, větví a náletů rovnou na místě – méně odpadu.' },
+      { icon: Truck, title: 'Naložení a odvoz', desc: 'Naložení, odvoz a ekologická likvidace bioodpadu i větví.' },
+      { icon: ShieldCheck, title: 'Kompletní úklid pozemku', desc: 'Předáme vyčištěný a průchozí pozemek připravený k dalšímu využití.' },
+    ],
+    benefits: [
+      'Zvládneme i roky zanedbané a hustě zarostlé parcely',
+      'Přerostlá tráva, buřeň, křoviny i náletové dřeviny v jednom',
+      'Mulčování a odvoz bioodpadu rovnou v ceně',
+      'Vhodné před prodejem pozemku, stavbou i pro obce',
+      'Cena jasná před zahájením, žádné skryté poplatky',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
+    ],
+    faq: [
+      { question: 'Vyčistíte i pozemek, který nebyl roky sekaný?', answer: 'Ano, to je naše specialita. Zvládneme i několik let neudržované parcely s vysokou buření, kopřivami, ostružiním, křovinami i náletovými dřevinami. Postupujeme od hrubého vyčištění po finální úklid.' },
+      { question: 'Odvezete zelený odpad a větve?', answer: 'Ano. Biomasu podle rozsahu buď namulčujeme přímo na místě, nebo naložíme, odvezeme a ekologicky zlikvidujeme. Odvoz i úklid jsou součástí nabídky.' },
+      { question: 'Kolik stojí likvidace zarostlého pozemku?', answer: 'Cena závisí na výměře, hustotě a typu porostu a přístupnosti pozemku. Přesnou cenu dostanete při bezplatné nezávazné obhlídce – bez čekání a bez skrytých poplatků.' },
+      { question: 'Čistíte i pozemky před prodejem nebo stavbou?', answer: 'Ano, běžně čistíme parcely před prodejem, geodetickým zaměřením nebo zahájením stavby a spolupracujeme i s obcemi a firmami. Pozemek předáme průchozí a připravený.' },
+      { question: 'Jak rychle můžete přijet?', answer: 'Na poptávku odpovídáme do 24 hodin a termín obhlídky domluvíme co nejdříve. V sezóně řešíme i urgentní vyčištění.' },
+    ],
+  },
+  'sekani-prerostle-travy': {
+    badge: 'Přerostlá tráva · hrubé sekání',
+    h1: 'Sekání přerostlé trávy a hrubé sekání',
+    hero: 'Posekáme i vysokou, přerostlou trávu, kterou běžná sekačka nezvládne. Hrubé sekání zanedbaných zahrad a ploch ve Dvoře Králové nad Labem a okolí do 50 km – s úklidem a odvozem posečené hmoty.',
+    metaTitle: 'Sekání přerostlé trávy a hrubé sekání Dvůr Králové | SeknuTo.cz',
+    metaDescription: 'Hrubé sekání a sekání přerostlé trávy ve Dvoře Králové a okolí. Vysoká tráva, zanedbané zahrady a plochy, úklid a odvoz posečené hmoty. Bezplatná obhlídka. 730 588 372',
+    keywords: 'sekání přerostlé trávy, hrubé sekání, sekání vysoké trávy, posekání zarostlé zahrady, sekání zanedbané zahrady Dvůr Králové, mulčování trávy, sekání trávy křovinořezem, hrubé sekání Trutnov, sekání přerostlé trávy Jaroměř, sekání vysoké trávy Náchod',
+    serviceName: 'Sekání přerostlé trávy a hrubé sekání',
+    serviceDesc: 'Hrubé sekání a sekání vysoké, přerostlé trávy křovinořezem a mulčovačem včetně úklidu a odvozu posečené hmoty.',
+    services: [
+      { icon: Scissors, title: 'Sekání vysoké trávy', desc: 'Posekání přerostlé trávy, kterou běžná sekačka na výšku nezvládne.' },
+      { icon: Leaf, title: 'Hrubé sekání zanedbaných ploch', desc: 'Vyčištění delší dobu neudržovaných zahrad a travnatých pozemků.' },
+      { icon: Sprout, title: 'Mulčování travní hmoty', desc: 'Podrcení posečené trávy na místě jako alternativa k odvozu.' },
+      { icon: Truck, title: 'Úklid a odvoz', desc: 'Shrabání, naložení a ekologická likvidace posečené hmoty.' },
+      { icon: CheckCircle, title: 'Základ pro pravidelnou údržbu', desc: 'Po hrubém sekání vznikne čistý základ pro běžné pravidelné sečení.' },
+      { icon: ShieldCheck, title: 'Cena předem', desc: 'Přesnou cenu znáte po obhlídce, bez skrytých poplatků.' },
+    ],
+    benefits: [
+      'Zvládneme trávu i přes půl metru vysokou',
+      'Profesionální křovinořezy a mulčovače, ne domácí sekačka',
+      'Úklid a odvoz posečené hmoty v ceně',
+      'Ideální po dovolené, koupi nemovitosti nebo dlouhé zimě',
+      'Navážeme pravidelnou údržbou, ať už to nezaroste',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
+    ],
+    faq: [
+      { question: 'Jak vysokou trávu ještě zvládnete posekat?', answer: 'Běžně sekáme trávu vysokou i přes 50 cm. Pro přerostlé a zanedbané plochy používáme profesionální křovinořezy a mulčovače, které si s vysokou trávou i buření poradí.' },
+      { question: 'Uklidíte a odvezete posekanou trávu?', answer: 'Ano. Posečenou hmotu buď namulčujeme na místě, nebo shrabeme, naložíme a odvezeme. Úklid je součástí služby.' },
+      { question: 'Jaký je rozdíl mezi hrubým a pravidelným sekáním?', answer: 'Hrubé sekání je jednorázové vyčištění přerostlé plochy do čista. Pravidelné sekání je následná běžná údržba už udržovaného trávníku, kterou vám rádi zajistíme.' },
+      { question: 'Kolik hrubé sekání stojí?', answer: 'Cena závisí na výměře, výšce a hustotě porostu a přístupnosti. Přesnou cenu dostanete při bezplatné nezávazné obhlídce.' },
+    ],
+  },
+  'vertikutace-travniku': {
+    badge: 'Vertikutace · provzdušnění · hnojení',
+    h1: 'Vertikutace a provzdušnění trávníku',
+    hero: 'Vyhrabeme z trávníku mech a plsť, provzdušníme půdu a přihnojíme – trávník znovu zhoustne a zezelená. Vertikutace a regenerace trávníku ve Dvoře Králové nad Labem a okolí do 50 km.',
+    metaTitle: 'Vertikutace a provzdušnění trávníku Dvůr Králové | SeknuTo.cz',
+    metaDescription: 'Vertikutace, provzdušnění a hnojení trávníku ve Dvoře Králové a okolí. Odstranění mechu a plsti, regenerace a zahuštění trávníku. Bezplatná obhlídka. 730 588 372',
+    keywords: 'vertikutace trávníku, vertikutace Dvůr Králové, provzdušnění trávníku, aerifikace trávníku, odstranění mechu z trávníku, hnojení trávníku, regenerace trávníku, dosev trávníku, vyhrabání plsti, jarní údržba trávníku, vertikutace Trutnov, vertikutace Vrchlabí',
+    serviceName: 'Vertikutace a regenerace trávníku',
+    serviceDesc: 'Vertikutace, provzdušnění a hnojení trávníku – odstranění mechu a travní plsti, aerifikace, přihnojení a případný dosev pro hustý a zdravý trávník.',
+    services: [
+      { icon: Wind, title: 'Vertikutace (vyhrabání plsti)', desc: 'Prořezání a vyhrabání mechu a travní plsti, která trávník dusí.' },
+      { icon: Droplets, title: 'Provzdušnění (aerifikace)', desc: 'Provzdušnění půdy pro lepší přístup vody, vzduchu a živin ke kořenům.' },
+      { icon: Sprout, title: 'Hnojení a přihnojení', desc: 'Dodání živin travníkovým hnojivem pro sytě zelený a hustý trávník.' },
+      { icon: Leaf, title: 'Dosev řídkých míst', desc: 'Dosetí prořídlých a holých míst kvalitní travní směsí.' },
+      { icon: Scissors, title: 'Seč a úprava', desc: 'Posečení a úprava trávníku před i po vertikutaci.' },
+      { icon: ShieldCheck, title: 'Úklid a poradenství', desc: 'Odvoz vyhrabané hmoty a rady, jak trávník dál udržet.' },
+    ],
+    benefits: [
+      'Zbavíme trávník mechu a plsti, která ho dusí',
+      'Provzdušnění + hnojení = hustší a zelenější trávník',
+      'Ideální na jaře a na podzim jako pravidelná regenerace',
+      'Dosev prořídlých míst pro souvislý trávník',
+      'Cena jasná před zahájením prací',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
+    ],
+    faq: [
+      { question: 'Co je vertikutace a proč ji trávník potřebuje?', answer: 'Vertikutace je prořezání drnu a vyhrabání mechu a travní plsti, která se v trávníku hromadí a dusí ho. Po vertikutaci se ke kořenům lépe dostane voda, vzduch i živiny a trávník zhoustne.' },
+      { question: 'Kdy je nejlepší dobu na vertikutaci?', answer: 'Nejčastěji na jaře (duben–květen) a na podzim (září). Ideálně 1–2× ročně podle stavu trávníku. Termín rádi doporučíme při obhlídce.' },
+      { question: 'Přihnojíte a dosejete i řídká místa?', answer: 'Ano. Po vertikutaci trávník přihnojíme a prořídlá či holá místa dosejeme kvalitní travní směsí, aby byl trávník znovu souvislý a hustý.' },
+      { question: 'Kolik vertikutace stojí?', answer: 'Cena vychází z výměry trávníku a jeho stavu a z rozsahu (vertikutace, hnojení, dosev). Přesnou cenu dostanete při bezplatné nezávazné obhlídce.' },
+    ],
+  },
+  'udrzba-zahrady': {
+    badge: 'Pravidelná i jednorázová péče',
+    h1: 'Údržba zahrady a zahradnické práce',
+    hero: 'Postaráme se o vaši zahradu po celý rok – sekání trávy, plení a údržba záhonů, stříhání keřů, úklid listí i sezónní práce. Pravidelná i jednorázová údržba zahrady ve Dvoře Králové nad Labem a okolí do 50 km.',
+    metaTitle: 'Údržba zahrady a zahradnické práce Dvůr Králové | SeknuTo.cz',
+    metaDescription: 'Pravidelná i jednorázová údržba zahrady ve Dvoře Králové a okolí – sekání trávy, záhony, stříhání keřů, úklid listí a sezónní práce. Bezplatná obhlídka. 730 588 372',
+    keywords: 'údržba zahrady Dvůr Králové, zahradnické práce, pravidelná údržba zahrady, celoroční údržba zahrady, péče o zahradu, plení záhonů, úklid listí, sezónní práce na zahradě, zahradník Dvůr Králové, údržba zahrady Trutnov, údržba zahrady Jaroměř, údržba zahrady Náchod',
+    serviceName: 'Údržba zahrady a zahradnické práce',
+    serviceDesc: 'Pravidelná i jednorázová údržba zahrady – sekání trávy, plení a údržba záhonů, stříhání keřů, úklid listí a sezónní zahradnické práce.',
+    services: [
+      { icon: Scissors, title: 'Pravidelné sekání trávy', desc: 'Sečení trávníku v pravidelných intervalech i jednorázově.' },
+      { icon: Flower2, title: 'Plení a údržba záhonů', desc: 'Odplevelení, okopání a úprava okrasných i užitkových záhonů.' },
+      { icon: TreeDeciduous, title: 'Stříhání keřů a živých plotů', desc: 'Tvarování keřů, tújí a živých plotů pro upravenou zahradu.' },
+      { icon: Leaf, title: 'Úklid listí a sezónní práce', desc: 'Hrabání listí, jarní i podzimní úklid a příprava zahrady na zimu.' },
+      { icon: Droplets, title: 'Zálivka a péče o zeleň', desc: 'Zálivka, mulčování a základní péče o rostliny a stromy.' },
+      { icon: ShieldCheck, title: 'Spolehlivá pravidelnost', desc: 'Domluvíme rozvrh a o zahradu se staráme, ať máte klid.' },
+    ],
+    benefits: [
+      'Jeden tým na celoroční péči o vaši zahradu',
+      'Pravidelně i jednorázově podle vaší potřeby',
+      'Sekání, záhony, keře, listí i sezónní práce',
+      'Ideální pro zaneprázdněné majitele i rekreační objekty',
+      'Cena jasná předem, žádné skryté poplatky',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
+    ],
+    faq: [
+      { question: 'Můžete se o zahradu starat pravidelně po celý rok?', answer: 'Ano. Domluvíme si rozvrh (např. sekání každé 2 týdny) a postaráme se o sečení, záhony, keře, úklid listí i sezónní práce. Můžete využít i jednorázovou údržbu.' },
+      { question: 'Staráte se i o rekreační objekty, když nejsem přítomen?', answer: 'Ano, běžně udržujeme zahrady u chat a chalup i v nepřítomnosti majitele. Po každé návštěvě vám dáme vědět, co jsme udělali.' },
+      { question: 'Co všechno údržba zahrady zahrnuje?', answer: 'Podle domluvy sekání trávy, plení a úpravu záhonů, stříhání keřů a živých plotů, hrabání listí, zálivku a sezónní práce. Rozsah přizpůsobíme vaší zahradě.' },
+      { question: 'Kolik pravidelná údržba zahrady stojí?', answer: 'Cena vychází z velikosti zahrady, rozsahu prací a četnosti. Přesnou cenu i orientační rozvrh dostanete po bezplatné obhlídce.' },
+    ],
+  },
+  'odvoz-bioodpadu': {
+    badge: 'Zelený odpad · větve · úklid',
+    h1: 'Odvoz bioodpadu a zeleného odpadu',
+    hero: 'Naložíme a ekologicky zlikvidujeme trávu, listí, větve i další zelený odpad ze zahrady. Odvoz bioodpadu ve Dvoře Králové nad Labem a okolí do 50 km – klidně i jako doplněk k sekání či úklidu.',
+    metaTitle: 'Odvoz bioodpadu a zeleného odpadu Dvůr Králové | SeknuTo.cz',
+    metaDescription: 'Odvoz a ekologická likvidace bioodpadu ze zahrady ve Dvoře Králové a okolí – tráva, listí, větve, křoviny. Naložení i úklid. Bezplatná obhlídka. 730 588 372',
+    keywords: 'odvoz bioodpadu Dvůr Králové, odvoz zeleného odpadu, likvidace bioodpadu, odvoz trávy a listí, odvoz větví, odvoz zahradního odpadu, ekologická likvidace bioodpadu, úklid zahrady odvoz, odvoz bioodpadu Trutnov, odvoz odpadu Jaroměř',
+    serviceName: 'Odvoz a likvidace bioodpadu',
+    serviceDesc: 'Naložení, odvoz a ekologická likvidace zeleného odpadu ze zahrady – posečená tráva, listí, větve, křoviny i další bioodpad.',
+    services: [
+      { icon: Leaf, title: 'Tráva a listí', desc: 'Odvoz posečené trávy, shrabaného listí a drobného zeleného odpadu.' },
+      { icon: TreePine, title: 'Větve a křoviny', desc: 'Naložení a odvoz větví, ořezu a vyřezaných křovin.' },
+      { icon: Recycle, title: 'Ekologická likvidace', desc: 'Odpad odvezeme na kompostárnu či sběrné místo – ekologicky.' },
+      { icon: Truck, title: 'Naložení za vás', desc: 'Nemusíte nic tahat – odpad naložíme a odvezeme sami.' },
+      { icon: Scissors, title: 'Jako doplněk k práci', desc: 'Snadno navážeme na sekání, úklid nebo stříhání keřů.' },
+      { icon: ShieldCheck, title: 'Čistá zahrada', desc: 'Po odvozu předáme uklizenou a průchozí zahradu.' },
+    ],
+    benefits: [
+      'Zbavíme vás hromad trávy, listí i větví',
+      'Naložení i odvoz – nemusíte nic tahat',
+      'Ekologická likvidace na kompostárně či sběrném místě',
+      'Ideální doplněk k sekání, úklidu nebo čištění pozemku',
+      'Cena jasná předem, bez skrytých poplatků',
+      'Místní firma z Dvůra Králové, dojezd do 50 km',
+    ],
+    faq: [
+      { question: 'Jaký odpad odvezete?', answer: 'Zelený zahradní odpad – posečenou trávu, listí, větve, ořez a vyřezané křoviny. Odpad naložíme, odvezeme a ekologicky zlikvidujeme.' },
+      { question: 'Musím odpad nachystat sám?', answer: 'Nemusíte. Odpad naložíme za vás. Stačí, když nám ukážete, co má pryč – zbytek je na nás.' },
+      { question: 'Odvezete odpad i po vlastním sekání nebo úklidu?', answer: 'Ano. Odvoz bioodpadu nabízíme samostatně i jako doplněk k sekání, úklidu zahrady nebo čištění pozemku.' },
+      { question: 'Kolik odvoz bioodpadu stojí?', answer: 'Cena závisí na množství odpadu a vzdálenosti. Přesnou cenu dostanete po krátké obhlídce nebo podle popisu a fotek.' },
     ],
   },
 };
@@ -267,6 +428,28 @@ const ServiceLandingPage = ({ serviceSlug: propSlug }) => {
               </Reveal>
             ))}
           </Accordion>
+        </div>
+      </section>
+
+      {/* Další služby – interní prolinkování */}
+      <section className="py-12 bg-white border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-4">
+          <Reveal>
+            <h2 className="text-2xl font-bold text-center text-gray-900 mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Další služby
+            </h2>
+          </Reveal>
+          <div className="flex flex-wrap justify-center gap-2.5">
+            {Object.entries(SERVICE_DATA)
+              .filter(([s]) => s !== slug)
+              .map(([s, d]) => (
+                <Link key={s} to={`/${s}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-700 hover:border-[#3FA34D] hover:text-[#1B4332] hover:bg-[#F0FDF4] transition-all">
+                  <Leaf className="w-3.5 h-3.5 text-[#3FA34D]" />
+                  {d.h1}
+                </Link>
+              ))}
+          </div>
         </div>
       </section>
 

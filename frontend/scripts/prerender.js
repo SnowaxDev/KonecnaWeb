@@ -19,6 +19,9 @@ const PORT = 45678;
 
 // Veřejné, staticky vykreslitelné routy (bez /admin a bez dynamických detailů
 // z databáze – ty se renderují klientsky proti API).
+// Pořadí = priorita prerenderu. Statické SEO stránky (služby, města) první,
+// datově náročné /nase-prace a /blog až na konec – kdyby některá zdržovala,
+// důležité stránky už jsou hotové.
 const ROUTES = [
   '/',
   '/sluzby',
@@ -26,17 +29,25 @@ const ROUTES = [
   '/rezervace',
   '/o-nas',
   '/kontakt',
-  '/nase-prace',
-  '/blog',
+  // Služby (samostatné SEO landing stránky)
+  '/likvidace-pozemku',
+  '/sekani-prerostle-travy',
   '/strihani-keru-kaceni-stromu',
+  '/vertikutace-travniku',
   '/realizace-zahrad',
   '/pokladani-travniku',
+  '/udrzba-zahrady',
+  '/odvoz-bioodpadu',
+  // Města
   '/sekani-travy-hradec-kralove',
   '/sekani-travy-trutnov',
   '/sekani-travy-vrchlabi',
   '/sekani-travy-jaromer',
   '/sekani-travy-nachod',
   '/sekani-travy-hostinne',
+  // Datově náročné (fetch z backendu) – až na konec
+  '/nase-prace',
+  '/blog',
 ];
 
 const MIME = {

@@ -114,6 +114,11 @@ function App() {
                   <Route path="/strihani-keru-kaceni-stromu" element={<ServiceLandingPage serviceSlug="strihani-keru-kaceni-stromu" />} />
                   <Route path="/realizace-zahrad" element={<ServiceLandingPage serviceSlug="realizace-zahrad" />} />
                   <Route path="/pokladani-travniku" element={<ServiceLandingPage serviceSlug="pokladani-travniku" />} />
+                  <Route path="/likvidace-pozemku" element={<ServiceLandingPage serviceSlug="likvidace-pozemku" />} />
+                  <Route path="/sekani-prerostle-travy" element={<ServiceLandingPage serviceSlug="sekani-prerostle-travy" />} />
+                  <Route path="/vertikutace-travniku" element={<ServiceLandingPage serviceSlug="vertikutace-travniku" />} />
+                  <Route path="/udrzba-zahrady" element={<ServiceLandingPage serviceSlug="udrzba-zahrady" />} />
+                  <Route path="/odvoz-bioodpadu" element={<ServiceLandingPage serviceSlug="odvoz-bioodpadu" />} />
                 </Routes>
                 </PageFade>
               </main>
