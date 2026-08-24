@@ -2973,6 +2973,22 @@ const CampaignTab = ({ token, handle401 }) => {
   const [sending, setSending] = useState(false);
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState(null);
+  // Poukaz na míru + personalizace
+  const [makeVoucher, setMakeVoucher] = useState(true);
+  const [vType, setVType] = useState('percentage');
+  const [vValue, setVValue] = useState(15);
+  const [vDays, setVDays] = useState(30);
+  const [vLabel, setVLabel] = useState('');
+  const [tieService, setTieService] = useState(false);
+  // Historie kampaní
+  const [campaigns, setCampaigns] = useState([]);
+  const [expanded, setExpanded] = useState(null);
+
+  const loadCampaigns = () => {
+    axios.get(`${API}/admin/campaigns`, { headers })
+      .then(r => setCampaigns(r.data || []))
+      .catch(() => {});
+  };
 
   const applyTpl = (key) => {
     const t = CAMPAIGN_TEMPLATES.find(x => x.key === key) || CAMPAIGN_TEMPLATES[0];
@@ -2989,12 +3005,19 @@ const CampaignTab = ({ token, handle401 }) => {
     axios.get(`${API}/admin/clients/email-recipients`, { headers })
       .then(r => setCount(r.data.count))
       .catch(err => { if (!handle401(err)) setCount(null); });
+    loadCampaigns();
   }, []); // eslint-disable-line
 
   const payload = (extra = {}) => ({
     subject, message,
     cta_label: ctaLabel.trim() || undefined,
     cta_url: ctaUrl.trim() || undefined,
+    create_voucher: makeVoucher,
+    voucher_discount_type: vType,
+    voucher_value: Number(vValue) || 0,
+    voucher_valid_days: Number(vDays) || 30,
+    voucher_label: vLabel.trim() || undefined,
+    tie_last_service: tieService,
     ...extra,
   });
 
@@ -3009,7 +3032,7 @@ const CampaignTab = ({ token, handle401 }) => {
       finally { if (!cancelled) setPreviewLoading(false); }
     }, 450);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [subject, message, ctaLabel, ctaUrl]); // eslint-disable-line
+  }, [subject, message, ctaLabel, ctaUrl, makeVoucher, vType, vValue, vDays, vLabel, tieService]); // eslint-disable-line
 
   const sendTest = async () => {
     if (!message.trim() || !subject.trim()) { toast.error('Vyplňte předmět i text'); return; }
@@ -3030,6 +3053,7 @@ const CampaignTab = ({ token, handle401 }) => {
       const r = await axios.post(`${API}/admin/clients/bulk-email`, payload(), { headers });
       setResult(r.data);
       toast.success(`Rozesláno: ${r.data.sent} · chyby: ${r.data.failed} · přeskočeno: ${r.data.skipped}`);
+      loadCampaigns();
     } catch (err) { if (!handle401(err)) toast.error(err.response?.data?.detail || 'Rozesílka se nezdařila'); }
     finally { setSending(false); }
   };
@@ -3081,6 +3105,40 @@ const CampaignTab = ({ token, handle401 }) => {
             </div>
           </div>
 
+          {/* Poukaz na míru */}
+          <div className="bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-lg p-3 space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-[#1B4332]">
+              <input type="checkbox" checked={makeVoucher} onChange={e => setMakeVoucher(e.target.checked)} className="accent-[#3FA34D]" />
+              Vytvořit každému klientovi poukaz na míru
+            </label>
+            {makeVoucher && (
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-3 gap-2">
+                  <select value={vType} onChange={e => setVType(e.target.value)}
+                    className="h-9 px-2 border border-gray-200 rounded-lg text-xs bg-white focus:border-[#3FA34D] focus:outline-none">
+                    <option value="percentage">Procenta %</option>
+                    <option value="fixed_amount">Částka Kč</option>
+                  </select>
+                  <input type="number" min="1" value={vValue} onChange={e => setVValue(e.target.value)}
+                    placeholder="Sleva" title="Hodnota slevy"
+                    className="h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+                  <input type="number" min="1" value={vDays} onChange={e => setVDays(e.target.value)}
+                    placeholder="Dní platnost" title="Platnost ve dnech"
+                    className="h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+                </div>
+                <input type="text" value={vLabel} onChange={e => setVLabel(e.target.value)}
+                  placeholder="Název poukazu (volitelné, např. Konec sezóny)"
+                  className="w-full h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+                <p className="text-[11px] text-gray-500">Každý klient dostane <b>unikátní kód</b> a odkaz na uplatnění. Sleva {vType === 'percentage' ? `${vValue} %` : `${vValue} Kč`}, platnost {vDays} dní.</p>
+              </div>
+            )}
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={tieService} onChange={e => setTieService(e.target.checked)} className="accent-[#3FA34D]" />
+            Navázat na poslední provedenou službu klienta
+          </label>
+
           <div className="flex flex-wrap gap-2 pt-1">
             <Button variant="outline" onClick={sendTest} disabled={testing || !message.trim()}
               className="h-10 border-[#3FA34D] text-[#1B4332] hover:bg-[#F0FDF4]">
@@ -3107,6 +3165,72 @@ const CampaignTab = ({ token, handle401 }) => {
           </div>
           <iframe title="Náhled rozesílky" srcDoc={preview} className="flex-1 w-full bg-white" style={{ border: 'none', minHeight: 380 }} sandbox="" />
         </div>
+      </div>
+
+      {/* Historie kampaní / statistiky */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            Historie rozesílek ({campaigns.length})
+          </h3>
+          <Button variant="outline" size="sm" onClick={loadCampaigns} className="h-8">
+            <RefreshCw className="w-3.5 h-3.5 mr-1" /> Obnovit
+          </Button>
+        </div>
+        {campaigns.length === 0 ? (
+          <p className="text-center text-gray-400 py-8 text-sm">Zatím žádné rozesílky</p>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {campaigns.map(c => {
+              const open = expanded === c.id;
+              return (
+                <div key={c.id}>
+                  <button onClick={() => setExpanded(open ? null : c.id)}
+                    className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{c.subject}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(c.created_at).toLocaleString('cs-CZ')}
+                        {c.with_voucher ? ` · poukaz ${c.discount}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 text-xs">
+                      <span className="text-[#1B4332] font-semibold">✅ {c.sent}</span>
+                      {c.failed > 0 && <span className="text-red-500">⚠️ {c.failed}</span>}
+                      {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </div>
+                  </button>
+                  {open && (
+                    <div className="px-5 pb-4 bg-gray-50">
+                      <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-100 bg-white">
+                        <table className="w-full text-xs">
+                          <thead className="text-gray-400 sticky top-0 bg-white">
+                            <tr className="border-b border-gray-100">
+                              <th className="text-left px-3 py-2 font-medium">Klient</th>
+                              <th className="text-left px-3 py-2 font-medium">E-mail</th>
+                              <th className="text-left px-3 py-2 font-medium">Poukaz</th>
+                              <th className="text-left px-3 py-2 font-medium">Stav</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(c.recipients || []).map((r, i) => (
+                              <tr key={i} className="border-b border-gray-50">
+                                <td className="px-3 py-1.5 text-gray-800">{r.name}</td>
+                                <td className="px-3 py-1.5 text-gray-500">{r.email}</td>
+                                <td className="px-3 py-1.5 font-mono text-[#2E8B3E]">{r.voucher_code || '–'}</td>
+                                <td className="px-3 py-1.5">{r.status === 'sent' ? '✅' : '⚠️'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

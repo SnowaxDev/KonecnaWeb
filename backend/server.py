@@ -2467,7 +2467,19 @@ def _render_booking_email(customer_name, service_name, booking_doc, data) -> str
 </body></html>"""
 
 
-def _render_marketing_email(name, message, cta_label, cta_url, review_google, review_seznam, unsubscribe_url) -> str:
+def _voucher_card_html(code, discount_text, valid_until_cz, url) -> str:
+    return (
+        '<div style="border:2px dashed #3FA34D;border-radius:16px;padding:22px;text-align:center;'
+        'background:#f0fdf4;margin:6px 0 24px;">'
+        '<p style="margin:0 0 4px;font-size:12px;color:#1B4332;text-transform:uppercase;letter-spacing:2px;font-weight:700;">Váš osobní poukaz</p>'
+        f'<p style="margin:2px 0;font-size:30px;font-weight:800;color:#1B4332;">{discount_text} sleva</p>'
+        f'<p style="margin:8px 0;font-family:\'Courier New\',monospace;font-size:22px;font-weight:700;letter-spacing:4px;color:#2E8B3E;">{code}</p>'
+        f'<p style="margin:0 0 16px;font-size:12px;color:#6b7280;">Platí do {valid_until_cz}</p>'
+        + _email_button("Uplatnit poukaz", url, "#2E8B3E", "#3FA34D") + '</div>'
+    )
+
+
+def _render_marketing_email(name, message, cta_label, cta_url, review_google, review_seznam, unsubscribe_url, voucher_html="") -> str:
     """Branded bulk/marketing e-mail. Like the booking e-mail but without the
     per-booking info box and WITH an unsubscribe link in the footer (anti-spam)."""
     message_html = (message or "").replace("\n", "<br>")
@@ -2499,6 +2511,7 @@ def _render_marketing_email(name, message, cta_label, cta_url, review_google, re
   <div style="background:#ffffff;padding:30px;border:1px solid #e5e7eb;border-top:none;">
     <p style="font-size:15px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{name}</strong>,</p>
     <div style="font-size:15px;color:#4b5563;line-height:1.75;margin:16px 0 22px;">{message_html}</div>
+    {voucher_html}
     {cta_block}
     {review_buttons}
     <p style="font-size:13px;color:#9ca3af;margin:0;text-align:center;">
@@ -2524,6 +2537,13 @@ class BulkEmailRequest(BaseModel):
     review_seznam: Optional[str] = None
     preview: bool = False
     test_to: Optional[str] = None
+    # Personalizace na míru
+    create_voucher: bool = False            # vytvořit každému klientovi poukaz
+    voucher_discount_type: str = "percentage"  # 'percentage' | 'fixed_amount'
+    voucher_value: int = 15
+    voucher_valid_days: int = 30
+    voucher_label: Optional[str] = None
+    tie_last_service: bool = False          # navázat na poslední provedenou službu
 
 
 @api_router.get("/admin/clients/email-recipients")
@@ -2540,32 +2560,78 @@ async def admin_email_recipients(request: Request):
     return {"count": count}
 
 
+SITE_URL = (os.environ.get("SITE_URL") or "https://seknuto.cz").rstrip("/")
+
+
+def _voucher_discount_text(dtype, value):
+    return f"{int(value)} %" if dtype == "percentage" else f"{int(value)} Kč"
+
+
+def _sample_voucher_html(data):
+    dt = _voucher_discount_text(data.voucher_discount_type, data.voucher_value)
+    until = (datetime.now(timezone.utc) + timedelta(days=data.voucher_valid_days)).strftime("%d.%m.%Y")
+    return _voucher_card_html("UKAZKA12", dt, until, f"{SITE_URL}/poukaz/UKAZKA12")
+
+
+async def _last_service_map():
+    """Map z (client_id / email_norm / phone_norm) → název poslední dokončené služby."""
+    docs = await db.bookings.find(
+        {"status": "completed"},
+        {"_id": 0, "service": 1, "customer_email": 1, "customer_phone": 1, "client_id": 1, "created_at": 1},
+    ).sort("created_at", 1).to_list(5000)  # vzestupně → poslední přepíše
+    by_id, by_email, by_phone = {}, {}, {}
+    for b in docs:
+        sv = SERVICE_NAMES_CZ.get(b.get("service", ""), b.get("service", ""))
+        if not sv:
+            continue
+        if b.get("client_id"):
+            by_id[b["client_id"]] = sv
+        e = _norm_email(b.get("customer_email"))
+        if e:
+            by_email[e] = sv
+        p = _norm_phone(b.get("customer_phone"))
+        if p:
+            by_phone[p] = sv
+    return by_id, by_email, by_phone
+
+
 @api_router.post("/admin/clients/bulk-email")
 async def admin_bulk_email(data: BulkEmailRequest, request: Request):
-    """Send a branded campaign e-mail to all subscribed clients (or preview / test)."""
+    """Send a branded campaign e-mail to all subscribed clients (or preview / test),
+    optionally creating a personal voucher for each and logging the campaign."""
     await verify_admin(request)
     base = _public_base_url(request)
+    unsub_preview = f"{base}/api/unsubscribe?c=nahled"
+    sample_voucher = _sample_voucher_html(data) if data.create_voucher else ""
 
     if data.preview:
         html = _render_marketing_email("Jan Novák", data.message, data.cta_label, data.cta_url,
-                                       data.review_google, data.review_seznam, f"{base}/api/unsubscribe?c=nahled")
+                                       data.review_google, data.review_seznam, unsub_preview, sample_voucher)
         return {"html": html}
 
     if not resend or not RESEND_API_KEY:
         raise HTTPException(status_code=500, detail="Email služba není nakonfigurována")
 
-    # Test copy to a single address (no bulk).
+    # Test copy to a single address (no bulk, no real voucher).
     if (data.test_to or "").strip():
         html = _render_marketing_email("Jan Novák", data.message, data.cta_label, data.cta_url,
-                                       data.review_google, data.review_seznam, f"{base}/api/unsubscribe?c=nahled")
+                                       data.review_google, data.review_seznam, unsub_preview, sample_voucher)
         await asyncio.to_thread(resend.Emails.send, {
             "from": SENDER_EMAIL, "to": [data.test_to.strip()],
             "subject": "[TEST] " + data.subject, "html": html,
         })
         return {"sent": 1, "failed": 0, "skipped": 0, "test": True}
 
+    last_id, last_email, last_phone = await _last_service_map() if data.tie_last_service else ({}, {}, {})
+    discount_text = _voucher_discount_text(data.voucher_discount_type, data.voucher_value)
+    valid_until_dt = datetime.now(timezone.utc) + timedelta(days=data.voucher_valid_days)
+    valid_until_iso = valid_until_dt.isoformat()
+    valid_until_cz = valid_until_dt.strftime("%d.%m.%Y")
+    campaign_id = str(uuid.uuid4())
+
     clients = await db.clients.find({}, {"_id": 0}).to_list(10000)
     seen, sent, failed, skipped = set(), 0, 0, 0
+    recipients = []
     for c in clients:
         e, email = c.get("email_norm"), c.get("email")
         if not e or not email or c.get("unsubscribed") or e in seen:
@@ -2573,9 +2639,36 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
             continue
         seen.add(e)
         name = c.get("name") or "zákazníku"
+        msg = data.message
+
+        if data.tie_last_service:
+            sv = last_id.get(c.get("id")) or last_email.get(e) or last_phone.get(c.get("phone_norm"))
+            if sv:
+                msg = f"děkujeme, že jste u nás využili službu {sv}.\n\n" + msg
+
+        voucher_html, voucher_code = "", None
+        if data.create_voucher:
+            voucher_code = generate_coupon_code()
+            try:
+                await db.vouchers.insert_one({
+                    "id": str(uuid.uuid4()), "code": voucher_code,
+                    "display_name": data.voucher_label or f"Sleva {discount_text}",
+                    "discount_type": data.voucher_discount_type, "discount_value": data.voucher_value,
+                    "max_uses": 1, "uses_count": 0,
+                    "valid_from": datetime.now(timezone.utc).isoformat(), "valid_until": valid_until_iso,
+                    "campaign_name": data.subject, "target_audience": name,
+                    "client_id": c.get("id"), "status": "active",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                voucher_html = _voucher_card_html(voucher_code, discount_text, valid_until_cz, f"{SITE_URL}/poukaz/{voucher_code}")
+            except Exception as ex:
+                logger.warning(f"Voucher create failed for {email}: {ex}")
+                voucher_code = None
+
         unsub = f"{base}/api/unsubscribe?c={c.get('id')}"
-        html = _render_marketing_email(name, data.message, data.cta_label, data.cta_url,
-                                       data.review_google, data.review_seznam, unsub)
+        html = _render_marketing_email(name, msg, data.cta_label, data.cta_url,
+                                       data.review_google, data.review_seznam, unsub, voucher_html)
+        status = "sent"
         try:
             await asyncio.to_thread(resend.Emails.send, {
                 "from": SENDER_EMAIL, "to": [email], "subject": data.subject, "html": html,
@@ -2583,10 +2676,35 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
             sent += 1
         except Exception as ex:
             failed += 1
+            status = "failed"
             logger.warning(f"Bulk e-mail to {email} failed: {ex}")
+        recipients.append({"client_id": c.get("id"), "name": name, "email": email,
+                           "voucher_code": voucher_code, "status": status})
         await asyncio.sleep(0.12)  # šetrné tempo kvůli limitům Resendu
+
+    try:
+        await db.campaigns.insert_one({
+            "id": campaign_id, "subject": data.subject,
+            "message_excerpt": (data.message or "")[:160],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "sent": sent, "failed": failed, "skipped": skipped,
+            "with_voucher": bool(data.create_voucher),
+            "discount": discount_text if data.create_voucher else None,
+            "recipients": recipients,
+        })
+    except Exception as ex:
+        logger.warning(f"Campaign log failed: {ex}")
+
     logger.info(f"Bulk e-mail campaign: sent={sent} failed={failed} skipped={skipped}")
-    return {"sent": sent, "failed": failed, "skipped": skipped}
+    return {"sent": sent, "failed": failed, "skipped": skipped, "campaign_id": campaign_id}
+
+
+@api_router.get("/admin/campaigns")
+async def admin_list_campaigns(request: Request):
+    """History of bulk e-mail campaigns with per-recipient log (who got what)."""
+    await verify_admin(request)
+    campaigns = await db.campaigns.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return [_json_safe(c) for c in campaigns]
 
 
 @api_router.get("/unsubscribe")

@@ -112,15 +112,15 @@ const VoucherPage = () => {
     );
   }
 
-  if (error && !voucher?.is_valid) {
+  if (!voucher || !voucher.is_valid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Poukaz není platný</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Poukaz nenalezen</h1>
+          <p className="text-gray-600 mb-6">{error || voucher?.validation_error || 'Tento poukaz neexistuje nebo už není platný. Zkontrolujte prosím odkaz.'}</p>
           <Button
             onClick={() => navigate('/')}
             className="bg-[#3FA34D] hover:bg-[#2d7a38] text-white rounded-full px-6"
