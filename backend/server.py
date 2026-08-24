@@ -2612,10 +2612,35 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
     if not resend or not RESEND_API_KEY:
         raise HTTPException(status_code=500, detail="Email služba není nakonfigurována")
 
-    # Test copy to a single address (no bulk, no real voucher).
+    # Test copy to a single address. If vouchers are on, create a REAL sample
+    # voucher (fixed code SEKNUTEST) so the link in the test e-mail actually works.
     if (data.test_to or "").strip():
+        test_voucher = ""
+        if data.create_voucher:
+            dt = _voucher_discount_text(data.voucher_discount_type, data.voucher_value)
+            until_dt = datetime.now(timezone.utc) + timedelta(days=data.voucher_valid_days)
+            try:
+                await db.vouchers.update_one(
+                    {"code": "SEKNUTEST"},
+                    {"$set": {
+                        "id": "seknutest-sample", "code": "SEKNUTEST",
+                        "display_name": data.voucher_label or f"Ukázka – sleva {dt}",
+                        "discount_type": data.voucher_discount_type, "discount_value": data.voucher_value,
+                        "max_uses": 999, "uses_count": 0,
+                        "valid_from": datetime.now(timezone.utc).isoformat(),
+                        "valid_until": until_dt.isoformat(),
+                        "campaign_name": "Ukázka", "status": "active",
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    }},
+                    upsert=True,
+                )
+                test_voucher = _voucher_card_html("SEKNUTEST", dt, until_dt.strftime("%d.%m.%Y"),
+                                                  f"{SITE_URL}/poukaz/SEKNUTEST")
+            except Exception as ex:
+                logger.warning(f"Test voucher upsert failed: {ex}")
+                test_voucher = sample_voucher
         html = _render_marketing_email("Jan Novák", data.message, data.cta_label, data.cta_url,
-                                       data.review_google, data.review_seznam, unsub_preview, sample_voucher)
+                                       data.review_google, data.review_seznam, unsub_preview, test_voucher)
         await asyncio.to_thread(resend.Emails.send, {
             "from": SENDER_EMAIL, "to": [data.test_to.strip()],
             "subject": "[TEST] " + data.subject, "html": html,
