@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, Leaf, CreditCard, ChevronDown, ChevronUp,
   Calendar, Phone, Mail, MapPin, Edit3, FileText, Bold, Italic, Image,
   MessageSquare, Upload, CheckCheck, Archive, ExternalLink,
-  Search, Download, ChevronLeft, ChevronRight
+  Search, Download, ChevronLeft, ChevronRight, Send
 } from 'lucide-react';
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, Tooltip as ChartTooltip, CartesianGrid, ReferenceDot } from 'recharts';
 import { Button } from '../components/ui/button';
@@ -2931,6 +2931,187 @@ const BlogTab = ({ token, handle401 }) => {
 };
 
 // ─── MAIN ADMIN PAGE ──────────────────────────────────────────────────────────
+// ─── ROZESÍLKA / KAMPANĚ ──────────────────────────────────────────────────────
+const CAMPAIGN_TEMPLATES = [
+  {
+    key: 'endseason', label: '🍂 Konec sezóny + sleva',
+    subject: 'Konec sezóny: sleva 15 % na úklid zahrady 🍂',
+    cta: { label: 'Objednat se slevou', url: 'https://seknuto.cz/rezervace' },
+    message: 'sezóna se pomalu chýlí ke konci a je ideální čas připravit zahradu na zimu.\n\nNa podzimní úklid – poslední sekání, hrabání listí, ořez a zazimování – vám teď dáváme slevu 15 %.\n\nNabídka platí při objednání do [doplňte datum]. Stačí odpovědět na tento e-mail nebo zavolat na 730 588 372 a domluvíme termín.',
+  },
+  {
+    key: 'spring', label: '🌱 Jarní nabídka',
+    subject: 'Jaro je tu – nastartujte zahradu 🌱',
+    cta: { label: 'Rezervovat termín', url: 'https://seknuto.cz/rezervace' },
+    message: 'zima skončila a zahrada volá po péči. Nabízíme jarní start – vertikutaci a provzdušnění trávníku, první sekání, hnojení i úklid po zimě.\n\nObjednejte se včas, ať máte termín v době, kdy to potřebujete. Ozveme se a domluvíme se.',
+  },
+  {
+    key: 'winter', label: '❄️ Zazimování zahrady',
+    subject: 'Připravte zahradu na zimu ❄️',
+    cta: { label: 'Domluvit zazimování', url: 'https://seknuto.cz/rezervace' },
+    message: 'než přijdou mrazy, je čas zahradu zazimovat – poslední sekání, hrabání listí, ořez keřů a úklid.\n\nRádi to zařídíme za vás. Napište nám nebo zavolejte na 730 588 372 a vybereme termín.',
+  },
+  {
+    key: 'loyal', label: '🎁 Sleva pro stálé zákazníky',
+    subject: 'Poděkování a sleva jen pro vás 🎁',
+    cta: { label: 'Využít slevu', url: 'https://seknuto.cz/rezervace' },
+    message: 'děkujeme, že využíváte naše služby. Jako poděkování pro vás máme slevu na další objednávku.\n\nStačí se ozvat – rádi se o vaši zahradu opět postaráme.',
+  },
+  { key: 'custom', label: '✏️ Vlastní zpráva', subject: '', cta: { label: '', url: '' }, message: '' },
+];
+
+const CampaignTab = ({ token, handle401 }) => {
+  const headers = { 'X-Admin-Token': token };
+  const [tpl, setTpl] = useState('endseason');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [ctaLabel, setCtaLabel] = useState('');
+  const [ctaUrl, setCtaUrl] = useState('');
+  const [preview, setPreview] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [count, setCount] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const applyTpl = (key) => {
+    const t = CAMPAIGN_TEMPLATES.find(x => x.key === key) || CAMPAIGN_TEMPLATES[0];
+    setTpl(key);
+    setSubject(t.subject);
+    setMessage(t.message);
+    setCtaLabel(t.cta.label);
+    setCtaUrl(t.cta.url);
+  };
+
+  useEffect(() => { applyTpl('endseason'); }, []); // eslint-disable-line
+
+  useEffect(() => {
+    axios.get(`${API}/admin/clients/email-recipients`, { headers })
+      .then(r => setCount(r.data.count))
+      .catch(err => { if (!handle401(err)) setCount(null); });
+  }, []); // eslint-disable-line
+
+  const payload = (extra = {}) => ({
+    subject, message,
+    cta_label: ctaLabel.trim() || undefined,
+    cta_url: ctaUrl.trim() || undefined,
+    ...extra,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreviewLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const r = await axios.post(`${API}/admin/clients/bulk-email`, payload({ preview: true }), { headers });
+        if (!cancelled) setPreview(r.data.html || '');
+      } catch { /* náhled nepodstatný */ }
+      finally { if (!cancelled) setPreviewLoading(false); }
+    }, 450);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [subject, message, ctaLabel, ctaUrl]); // eslint-disable-line
+
+  const sendTest = async () => {
+    if (!message.trim() || !subject.trim()) { toast.error('Vyplňte předmět i text'); return; }
+    setTesting(true);
+    try {
+      await axios.post(`${API}/admin/clients/bulk-email`, payload({ test_to: TEST_EMAIL }), { headers });
+      toast.success(`🧪 Testovací e-mail odeslán na ${TEST_EMAIL}`);
+    } catch (err) { if (!handle401(err)) toast.error(err.response?.data?.detail || 'Test se nezdařil'); }
+    finally { setTesting(false); }
+  };
+
+  const sendBulk = async () => {
+    if (!message.trim() || !subject.trim()) { toast.error('Vyplňte předmět i text'); return; }
+    if (!window.confirm(`Opravdu odeslat tuto zprávu na ${count ?? '?'} klientů? Akce je nevratná.`)) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const r = await axios.post(`${API}/admin/clients/bulk-email`, payload(), { headers });
+      setResult(r.data);
+      toast.success(`Rozesláno: ${r.data.sent} · chyby: ${r.data.failed} · přeskočeno: ${r.data.skipped}`);
+    } catch (err) { if (!handle401(err)) toast.error(err.response?.data?.detail || 'Rozesílka se nezdařila'); }
+    finally { setSending(false); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>Hromadná rozesílka klientům</h3>
+          <p className="text-sm text-gray-500">
+            Obešle {count === null ? '…' : <b className="text-[#1B4332]">{count}</b>} klientů s e-mailem (odhlášení a duplicity se vynechají).
+          </p>
+        </div>
+        <span className="text-xs text-gray-400 max-w-xs">Každý e-mail obsahuje odkaz na odhlášení – v souladu s pravidly proti spamu.</span>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* Editor */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1.5">Šablona kampaně</label>
+            <div className="flex flex-wrap gap-1.5">
+              {CAMPAIGN_TEMPLATES.map(t => (
+                <button key={t.key} type="button" onClick={() => applyTpl(t.key)}
+                  className={`text-xs px-2.5 py-1.5 rounded-full border font-medium transition-all ${tpl === t.key ? 'bg-[#3FA34D] text-white border-[#3FA34D]' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Předmět</label>
+            <input type="text" value={subject} onChange={e => setSubject(e.target.value)}
+              className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Text <span className="text-gray-400 font-normal">– [závorky] doplňte</span></label>
+            <textarea value={message} onChange={e => setMessage(e.target.value)} rows={8}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#3FA34D] focus:outline-none resize-y" />
+            <p className="text-xs text-gray-400 mt-1">Oslovení „Dobrý den, {'{jméno}'}" a patička s odhlášením se přidají automaticky.</p>
+          </div>
+          <div className="border border-gray-100 rounded-lg p-3">
+            <label className="text-sm font-medium text-gray-700 block mb-2">Tlačítko (CTA)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input type="text" value={ctaLabel} onChange={e => setCtaLabel(e.target.value)} placeholder="Text tlačítka"
+                className="h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+              <input type="url" value={ctaUrl} onChange={e => setCtaUrl(e.target.value)} placeholder="Odkaz (https://…)"
+                className="h-9 px-3 border border-gray-200 rounded-lg text-xs focus:border-[#3FA34D] focus:outline-none" />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button variant="outline" onClick={sendTest} disabled={testing || !message.trim()}
+              className="h-10 border-[#3FA34D] text-[#1B4332] hover:bg-[#F0FDF4]">
+              {testing ? 'Posílám…' : '🧪 Test sobě'}
+            </Button>
+            <Button onClick={sendBulk} disabled={sending || !message.trim()}
+              className="h-10 bg-[#3FA34D] hover:bg-[#2d7a38] text-white font-semibold ml-auto">
+              <Send className="w-4 h-4 mr-2" />
+              {sending ? 'Rozesílám…' : `Odeslat všem (${count ?? '?'})`}
+            </Button>
+          </div>
+          {result && (
+            <div className="text-sm bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-lg p-3 text-[#1B4332]">
+              ✅ Odesláno <b>{result.sent}</b>{result.failed ? ` · ⚠️ chyby ${result.failed}` : ''}{result.skipped ? ` · přeskočeno ${result.skipped}` : ''}
+            </div>
+          )}
+        </div>
+
+        {/* Živý náhled */}
+        <div className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden flex flex-col" style={{ minHeight: 420 }}>
+          <div className="px-4 py-2 flex items-center justify-between border-b border-gray-200 bg-white/60">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Živý náhled</span>
+            {previewLoading && <RefreshCw className="w-3.5 h-3.5 text-gray-400 animate-spin" />}
+          </div>
+          <iframe title="Náhled rozesílky" srcDoc={preview} className="flex-1 w-full bg-white" style={{ border: 'none', minHeight: 380 }} sandbox="" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TABS = [
   { id: 'overview', label: 'Přehled', icon: LayoutDashboard },
   { id: 'contact', label: 'Zprávy', icon: MessageSquare },
@@ -2938,6 +3119,7 @@ const TABS = [
   { id: 'coupons', label: 'Kupóny', icon: Tag },
   { id: 'bookings', label: 'Objednávky', icon: ClipboardList },
   { id: 'clients', label: 'Klienti', icon: Users },
+  { id: 'campaign', label: 'Rozesílka', icon: Send },
   { id: 'gallery', label: 'Galerie', icon: Image },
   { id: 'blog', label: 'Blog', icon: FileText },
 ];
@@ -3073,6 +3255,7 @@ export default function AdminPage() {
             {activeTab === 'coupons' && <CouponsTab token={token} handle401={handle401} />}
             {activeTab === 'bookings' && <BookingsTab token={token} handle401={handle401} />}
             {activeTab === 'clients' && <ClientsTab token={token} handle401={handle401} />}
+            {activeTab === 'campaign' && <CampaignTab token={token} handle401={handle401} />}
             {activeTab === 'gallery' && <GalleryTab token={token} handle401={handle401} />}
             {activeTab === 'blog' && <BlogTab token={token} handle401={handle401} />}
           </div>

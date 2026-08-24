@@ -2467,6 +2467,151 @@ def _render_booking_email(customer_name, service_name, booking_doc, data) -> str
 </body></html>"""
 
 
+def _render_marketing_email(name, message, cta_label, cta_url, review_google, review_seznam, unsubscribe_url) -> str:
+    """Branded bulk/marketing e-mail. Like the booking e-mail but without the
+    per-booking info box and WITH an unsubscribe link in the footer (anti-spam)."""
+    message_html = (message or "").replace("\n", "<br>")
+
+    cta_block = ""
+    if (cta_label or "").strip() and (cta_url or "").strip():
+        cta_block = ('<div style="text-align:center;margin:8px 0 24px;">'
+                     + _email_button(cta_label.strip(), cta_url.strip(), "#2E8B3E", "#3FA34D")
+                     + '</div>')
+
+    review_buttons = ""
+    if (review_google or "").strip() or (review_seznam or "").strip():
+        btns = ""
+        if (review_google or "").strip():
+            btns += _email_button("★ Ohodnotit na Google", review_google.strip(), "#2E8B3E", "#4CAF50")
+        if (review_seznam or "").strip():
+            btns += _email_button("★ Ohodnotit na Seznamu", review_seznam.strip(), "#c8102e", "#e23b54")
+        review_buttons = ('<div style="text-align:center;margin:8px 0 24px;">' + btns + '</div>')
+
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#eef2ee;margin:0;padding:20px;">
+<div style="max-width:600px;margin:0 auto;">
+  <div style="background-color:#2E8B3E;background-image:linear-gradient(135deg,#1B4332,#3FA34D);padding:30px 32px;border-radius:18px 18px 0 0;text-align:center;">
+    <div style="display:inline-block;width:44px;height:44px;line-height:44px;background:rgba(255,255,255,0.16);border-radius:50%;font-size:22px;">🌿</div>
+    <h2 style="color:#ffffff;margin:10px 0 0;font-size:22px;letter-spacing:0.3px;">SeknuTo<span style="color:#c8f5d2;">.cz</span></h2>
+    <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px;">Nabídka &amp; novinky</p>
+  </div>
+  <div style="background:#ffffff;padding:30px;border:1px solid #e5e7eb;border-top:none;">
+    <p style="font-size:15px;color:#374151;margin:0 0 8px;">Dobrý den, <strong>{name}</strong>,</p>
+    <div style="font-size:15px;color:#4b5563;line-height:1.75;margin:16px 0 22px;">{message_html}</div>
+    {cta_block}
+    {review_buttons}
+    <p style="font-size:13px;color:#9ca3af;margin:0;text-align:center;">
+      Máte dotaz? <a href="https://wa.me/420730588372" style="color:#2E8B3E;font-weight:600;text-decoration:none;">WhatsApp 730 588 372</a>
+      &nbsp;·&nbsp; <a href="mailto:info@seknuto.cz" style="color:#2E8B3E;text-decoration:none;">info@seknuto.cz</a>
+    </p>
+  </div>
+  <div style="background:#12210f;padding:18px;text-align:center;border-radius:0 0 18px 18px;">
+    <p style="color:#7fce90;margin:0;font-size:12px;font-weight:600;">SeknuTo.cz — Trávník bez starostí!</p>
+    <p style="color:#5a6b57;margin:6px 0 0;font-size:11px;">Dušan Macháček · IČO 24889229 · Dvůr Králové nad Labem</p>
+    <p style="margin:10px 0 0;font-size:11px;"><a href="{unsubscribe_url}" style="color:#5a6b57;text-decoration:underline;">Odhlásit se z nabídek</a></p>
+  </div>
+</div>
+</body></html>"""
+
+
+class BulkEmailRequest(BaseModel):
+    subject: str
+    message: str
+    cta_label: Optional[str] = None
+    cta_url: Optional[str] = None
+    review_google: Optional[str] = None
+    review_seznam: Optional[str] = None
+    preview: bool = False
+    test_to: Optional[str] = None
+
+
+@api_router.get("/admin/clients/email-recipients")
+async def admin_email_recipients(request: Request):
+    """How many unique, subscribed clients with an e-mail would receive a bulk mail."""
+    await verify_admin(request)
+    clients = await db.clients.find({}, {"_id": 0, "email": 1, "email_norm": 1, "unsubscribed": 1}).to_list(10000)
+    seen, count = set(), 0
+    for c in clients:
+        e = c.get("email_norm")
+        if e and not c.get("unsubscribed") and e not in seen:
+            seen.add(e)
+            count += 1
+    return {"count": count}
+
+
+@api_router.post("/admin/clients/bulk-email")
+async def admin_bulk_email(data: BulkEmailRequest, request: Request):
+    """Send a branded campaign e-mail to all subscribed clients (or preview / test)."""
+    await verify_admin(request)
+    base = _public_base_url(request)
+
+    if data.preview:
+        html = _render_marketing_email("Jan Novák", data.message, data.cta_label, data.cta_url,
+                                       data.review_google, data.review_seznam, f"{base}/api/unsubscribe?c=nahled")
+        return {"html": html}
+
+    if not resend or not RESEND_API_KEY:
+        raise HTTPException(status_code=500, detail="Email služba není nakonfigurována")
+
+    # Test copy to a single address (no bulk).
+    if (data.test_to or "").strip():
+        html = _render_marketing_email("Jan Novák", data.message, data.cta_label, data.cta_url,
+                                       data.review_google, data.review_seznam, f"{base}/api/unsubscribe?c=nahled")
+        await asyncio.to_thread(resend.Emails.send, {
+            "from": SENDER_EMAIL, "to": [data.test_to.strip()],
+            "subject": "[TEST] " + data.subject, "html": html,
+        })
+        return {"sent": 1, "failed": 0, "skipped": 0, "test": True}
+
+    clients = await db.clients.find({}, {"_id": 0}).to_list(10000)
+    seen, sent, failed, skipped = set(), 0, 0, 0
+    for c in clients:
+        e, email = c.get("email_norm"), c.get("email")
+        if not e or not email or c.get("unsubscribed") or e in seen:
+            skipped += 1
+            continue
+        seen.add(e)
+        name = c.get("name") or "zákazníku"
+        unsub = f"{base}/api/unsubscribe?c={c.get('id')}"
+        html = _render_marketing_email(name, data.message, data.cta_label, data.cta_url,
+                                       data.review_google, data.review_seznam, unsub)
+        try:
+            await asyncio.to_thread(resend.Emails.send, {
+                "from": SENDER_EMAIL, "to": [email], "subject": data.subject, "html": html,
+            })
+            sent += 1
+        except Exception as ex:
+            failed += 1
+            logger.warning(f"Bulk e-mail to {email} failed: {ex}")
+        await asyncio.sleep(0.12)  # šetrné tempo kvůli limitům Resendu
+    logger.info(f"Bulk e-mail campaign: sent={sent} failed={failed} skipped={skipped}")
+    return {"sent": sent, "failed": failed, "skipped": skipped}
+
+
+@api_router.get("/unsubscribe")
+async def unsubscribe(c: str = ""):
+    """Public one-click unsubscribe from marketing e-mails."""
+    if c and c not in ("nahled", "preview"):
+        try:
+            await db.clients.update_one(
+                {"id": c},
+                {"$set": {"unsubscribed": True, "unsubscribed_at": datetime.now(timezone.utc).isoformat()}},
+            )
+        except Exception as e:
+            logger.warning(f"Unsubscribe failed for {c}: {e}")
+    page = """<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Odhlášeno – SeknuTo.cz</title></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#eef2ee;margin:0;padding:40px 20px;text-align:center;">
+<div style="max-width:460px;margin:0 auto;background:#fff;border-radius:16px;padding:36px;border:1px solid #e5e7eb;">
+<div style="font-size:40px;">🌿</div>
+<h1 style="color:#1B4332;font-size:22px;margin:12px 0 8px;">Jste odhlášeni</h1>
+<p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 20px;">Už vám nebudeme posílat nabídky ani novinky. Vaše případné objednávky a jejich potvrzení tím nejsou dotčeny.</p>
+<a href="https://seknuto.cz" style="display:inline-block;background:#3FA34D;color:#fff;text-decoration:none;padding:12px 26px;border-radius:999px;font-weight:600;">Zpět na SeknuTo.cz</a>
+</div></body></html>"""
+    return Response(content=page, media_type="text/html")
+
+
 @api_router.post("/admin/bookings/{booking_id}/email")
 async def admin_send_custom_email(booking_id: str, data: AdminEmailRequest, request: Request):
     """Admin: send (or preview / test) a branded e-mail to the booking customer."""
