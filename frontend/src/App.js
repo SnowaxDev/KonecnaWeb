@@ -18,12 +18,14 @@ import ErrorBoundary from "./components/ErrorBoundary";
 // Homepage se načítá hned (první dojem); ostatní stránky lazy –
 // návštěvník nestahuje admin, rezervaci ani blog, dokud na ně nejde
 import HomePage from "./pages/HomePage";
+// VoucherPage je konverzní landing z kampaní – načítáme eager (v hlavním
+// balíčku), ať ji nikdy neshodí chybějící lazy-chunk po novém nasazení.
+import VoucherPage from "./pages/VoucherPage";
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const BookingPage = lazy(() => import("./pages/BookingPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
-const VoucherPage = lazy(() => import("./pages/VoucherPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const GalleryDetailPage = lazy(() => import("./pages/GalleryDetailPage"));
