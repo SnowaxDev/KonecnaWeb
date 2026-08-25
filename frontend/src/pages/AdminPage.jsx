@@ -2957,6 +2957,12 @@ const CAMPAIGN_TEMPLATES = [
     cta: { label: 'Využít slevu', url: 'https://seknuto.cz/rezervace' },
     message: 'děkujeme, že využíváte naše služby. Jako poděkování pro vás máme slevu na další objednávku.\n\nStačí se ozvat – rádi se o vaši zahradu opět postaráme.',
   },
+  {
+    key: 'smyjemeto', label: '💧 Smyjeme to – konec sezóny',
+    subject: 'Konec sezóny: umyjeme dlažbu, fasádu i střechu 💧',
+    cta: { label: 'Chci posudek zdarma', url: 'https://smyjemeto.cz' },
+    message: 'než přijde zima, je ideální čas nechat okolí domu umýt do čista. Naše sesterská služba Smyjeme to se specializuje na vysokotlaké čištění – zámková dlažba, fasády, střechy, terasy i příjezdové cesty.\n\n💧 Ke konci sezóny máme zvýhodněnou nabídku a posudek s cenou je u nás vždy zdarma. Zámková dlažba i střecha budou jako nové ještě před zimou – zbavíme je mechu, řas i zašlé špíny.\n\nStačí kliknout níže nebo poslat fotku na 730 588 372 a řekneme cenu předem. Smyjeme to za vás!',
+  },
   { key: 'custom', label: '✏️ Vlastní zpráva', subject: '', cta: { label: '', url: '' }, message: '' },
 ];
 
@@ -2997,6 +3003,9 @@ const CampaignTab = ({ token, handle401 }) => {
     setMessage(t.message);
     setCtaLabel(t.cta.label);
     setCtaUrl(t.cta.url);
+    // Smyjeme to je sesterská služba – SeknuTo poukaz (míří na SeknuTo rezervaci)
+    // sem nepatří; slevu řeší smyjemeto.cz přes CTA.
+    if (key === 'smyjemeto') setMakeVoucher(false);
   };
 
   useEffect(() => { applyTpl('endseason'); }, []); // eslint-disable-line
