@@ -3061,7 +3061,7 @@ const CampaignTab = ({ token, handle401 }) => {
 
   const sendBulk = async () => {
     if (!message.trim() || !subject.trim()) { toast.error('Vyplňte předmět i text'); return; }
-    if (!window.confirm(`Opravdu odeslat tuto zprávu na ${count ?? '?'} klientů? Akce je nevratná.`)) return;
+    if (!window.confirm(`Opravdu odeslat tuto zprávu na ${count ?? '?'} příjemců z celé databáze? Akce je nevratná.`)) return;
     setSending(true);
     setResult(null);
     try {
@@ -3077,9 +3077,9 @@ const CampaignTab = ({ token, handle401 }) => {
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>Hromadná rozesílka klientům</h3>
+          <h3 className="font-semibold text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>Hromadná rozesílka – celá databáze</h3>
           <p className="text-sm text-gray-500">
-            Obešle {count === null ? '…' : <b className="text-[#1B4332]">{count}</b>} klientů s e-mailem (odhlášení a duplicity se vynechají).
+            Obešle {count === null ? '…' : <b className="text-[#1B4332]">{count}</b>} příjemců z celé databáze SeknuTo – klienti i odběratelé newsletteru (odhlášení a duplicity se vynechají).
           </p>
         </div>
         <span className="text-xs text-gray-400 max-w-xs">Každý e-mail obsahuje odkaz na odhlášení – v souladu s pravidly proti spamu.</span>
