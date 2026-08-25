@@ -2963,6 +2963,12 @@ const CAMPAIGN_TEMPLATES = [
     cta: { label: 'Chci posudek zdarma', url: 'https://smyjemeto.cz' },
     message: 'než přijde zima, je ideální čas nechat okolí domu umýt do čista. Naše sesterská služba Smyjeme to se specializuje na vysokotlaké čištění – zámková dlažba, fasády, střechy, terasy i příjezdové cesty.\n\n💧 Ke konci sezóny máme zvýhodněnou nabídku a posudek s cenou je u nás vždy zdarma. Zámková dlažba i střecha budou jako nové ještě před zimou – zbavíme je mechu, řas i zašlé špíny.\n\nStačí kliknout níže nebo poslat fotku na 730 588 372 a řekneme cenu předem. Smyjeme to za vás!',
   },
+  {
+    key: 'combo', label: '🍂💧 Konec sezóny – zahrada + čištění',
+    subject: 'Připravte celou nemovitost na zimu 🍂💧',
+    cta: { label: 'Objednat úklid zahrady', url: 'https://seknuto.cz/rezervace' },
+    message: 'blíží se konec sezóny a je ideální čas připravit celou nemovitost na zimu – zahradu i okolí domu.\n\n🍂 My ze SeknuTo se postaráme o zahradu: podzimní úklid, poslední sekání, hrabání listí, ořez keřů a zazimování – teď se zvýhodněnou slevou.\n\n💧 A naše sesterská služba Smyjeme to umyje, co zima potrápí nejvíc: zámkovou dlažbu, fasádu, střechu i terasu. Zbavíme je mechu, řas a špíny – posudek a cena jsou zdarma, více na smyjemeto.cz.\n\nOboje zařídíme za vás na jeden telefon 730 588 372. Ozvěte se a domluvíme termín ještě před zimou.',
+  },
   { key: 'custom', label: '✏️ Vlastní zpráva', subject: '', cta: { label: '', url: '' }, message: '' },
 ];
 
