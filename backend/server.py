@@ -2546,18 +2546,54 @@ class BulkEmailRequest(BaseModel):
     tie_last_service: bool = False          # navázat na poslední provedenou službu
 
 
+async def _gather_recipients():
+    """Sjednocená databáze SeknuTo pro rozesílky: klienti (objednávky/zprávy)
+    SLOUČENÍ odběratelé newsletteru. Deduplikováno podle normalizovaného
+    e-mailu, bez odhlášených. Vždy jede celá databáze, ne jen ti, co objednali.
+
+    Vrací list dictů: {email, email_norm, name, client_id, phone_norm, unsub_id}.
+    Klienti mají přednost (nesou jméno a historii); odběratelé se přidávají jen
+    tehdy, když jejich e-mail ještě není z klientů obsazený."""
+    recipients, seen = [], set()
+
+    clients = await db.clients.find({}, {"_id": 0}).to_list(20000)
+    for c in clients:
+        email = (c.get("email") or "").strip()
+        e = c.get("email_norm") or _norm_email(email)
+        if not email or not e or c.get("unsubscribed") or e in seen:
+            continue
+        seen.add(e)
+        recipients.append({
+            "email": email, "email_norm": e,
+            "name": c.get("name") or "zákazníku",
+            "client_id": c.get("id"), "phone_norm": c.get("phone_norm"),
+            "unsub_id": c.get("id"),
+        })
+
+    subs = await db.subscribers.find({}, {"_id": 0}).to_list(20000)
+    for s in subs:
+        email = (s.get("email") or "").strip()
+        e = _norm_email(email)
+        if not email or not e or s.get("unsubscribed") or e in seen:
+            continue
+        seen.add(e)
+        recipients.append({
+            "email": email, "email_norm": e,
+            "name": "zákazníku",
+            "client_id": None, "phone_norm": None,
+            "unsub_id": s.get("id"),
+        })
+
+    return recipients
+
+
 @api_router.get("/admin/clients/email-recipients")
 async def admin_email_recipients(request: Request):
-    """How many unique, subscribed clients with an e-mail would receive a bulk mail."""
+    """Kolik unikátních, přihlášených příjemců (klienti + odběratelé) by dostalo
+    hromadný e-mail — vždy z celé databáze SeknuTo."""
     await verify_admin(request)
-    clients = await db.clients.find({}, {"_id": 0, "email": 1, "email_norm": 1, "unsubscribed": 1}).to_list(10000)
-    seen, count = set(), 0
-    for c in clients:
-        e = c.get("email_norm")
-        if e and not c.get("unsubscribed") and e not in seen:
-            seen.add(e)
-            count += 1
-    return {"count": count}
+    recipients = await _gather_recipients()
+    return {"count": len(recipients)}
 
 
 SITE_URL = (os.environ.get("SITE_URL") or "https://seknuto.cz").rstrip("/")
@@ -2654,20 +2690,16 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
     valid_until_cz = valid_until_dt.strftime("%d.%m.%Y")
     campaign_id = str(uuid.uuid4())
 
-    clients = await db.clients.find({}, {"_id": 0}).to_list(10000)
-    seen, sent, failed, skipped = set(), 0, 0, 0
+    audience = await _gather_recipients()  # celá databáze: klienti + odběratelé
+    sent, failed, skipped = 0, 0, 0
     recipients = []
-    for c in clients:
-        e, email = c.get("email_norm"), c.get("email")
-        if not e or not email or c.get("unsubscribed") or e in seen:
-            skipped += 1
-            continue
-        seen.add(e)
-        name = c.get("name") or "zákazníku"
+    for r in audience:
+        email, e = r["email"], r["email_norm"]
+        name = r["name"]
         msg = data.message
 
         if data.tie_last_service:
-            sv = last_id.get(c.get("id")) or last_email.get(e) or last_phone.get(c.get("phone_norm"))
+            sv = last_id.get(r.get("client_id")) or last_email.get(e) or last_phone.get(r.get("phone_norm"))
             if sv:
                 msg = f"děkujeme, že jste u nás využili službu {sv}.\n\n" + msg
 
@@ -2682,7 +2714,7 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
                     "max_uses": 1, "uses_count": 0,
                     "valid_from": datetime.now(timezone.utc).isoformat(), "valid_until": valid_until_iso,
                     "campaign_name": data.subject, "target_audience": name,
-                    "client_id": c.get("id"), "status": "active",
+                    "client_id": r.get("client_id"), "status": "active",
                     "created_at": datetime.now(timezone.utc).isoformat(),
                 })
                 voucher_html = _voucher_card_html(voucher_code, discount_text, valid_until_cz, f"{SITE_URL}/poukaz/{voucher_code}")
@@ -2690,7 +2722,7 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
                 logger.warning(f"Voucher create failed for {email}: {ex}")
                 voucher_code = None
 
-        unsub = f"{base}/api/unsubscribe?c={c.get('id')}"
+        unsub = f"{base}/api/unsubscribe?c={r.get('unsub_id')}"
         html = _render_marketing_email(name, msg, data.cta_label, data.cta_url,
                                        data.review_google, data.review_seznam, unsub, voucher_html)
         status = "sent"
@@ -2703,7 +2735,7 @@ async def admin_bulk_email(data: BulkEmailRequest, request: Request):
             failed += 1
             status = "failed"
             logger.warning(f"Bulk e-mail to {email} failed: {ex}")
-        recipients.append({"client_id": c.get("id"), "name": name, "email": email,
+        recipients.append({"client_id": r.get("client_id"), "name": name, "email": email,
                            "voucher_code": voucher_code, "status": status})
         await asyncio.sleep(0.12)  # šetrné tempo kvůli limitům Resendu
 
@@ -2736,11 +2768,11 @@ async def admin_list_campaigns(request: Request):
 async def unsubscribe(c: str = ""):
     """Public one-click unsubscribe from marketing e-mails."""
     if c and c not in ("nahled", "preview"):
+        stamp = {"unsubscribed": True, "unsubscribed_at": datetime.now(timezone.utc).isoformat()}
+        # unsub_id může patřit klientovi i odběrateli newsletteru – označíme obojí
         try:
-            await db.clients.update_one(
-                {"id": c},
-                {"$set": {"unsubscribed": True, "unsubscribed_at": datetime.now(timezone.utc).isoformat()}},
-            )
+            await db.clients.update_one({"id": c}, {"$set": stamp})
+            await db.subscribers.update_one({"id": c}, {"$set": stamp})
         except Exception as e:
             logger.warning(f"Unsubscribe failed for {c}: {e}")
     page = """<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8">
