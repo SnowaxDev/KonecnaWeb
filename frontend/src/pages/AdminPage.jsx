@@ -995,6 +995,7 @@ const BookingsTab = ({ token, handle401 }) => {
   const [priceValue, setPriceValue] = useState('');
   const [savingPrice, setSavingPrice] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [notifyOnStatus, setNotifyOnStatus] = useState(false); // default: měnit status bez e-mailu klientovi
   const headers = { 'X-Admin-Token': token };
 
   const buildParams = (skip, limit) => {
@@ -1027,8 +1028,8 @@ const BookingsTab = ({ token, handle401 }) => {
     if (status === 'cancelled' && !window.confirm('Opravdu označit objednávku jako zrušenou?')) return;
     setUpdatingId(id);
     try {
-      await axios.patch(`${API}/admin/bookings/${id}/status`, { status }, { headers });
-      toast.success('Status aktualizován');
+      await axios.patch(`${API}/admin/bookings/${id}/status`, { status, notify: notifyOnStatus }, { headers });
+      toast.success(notifyOnStatus ? 'Status aktualizován + e-mail odeslán' : 'Status aktualizován');
       load();
     } catch (err) { if (!handle401(err)) toast.error('Chyba'); }
     finally { setUpdatingId(null); }
@@ -1357,6 +1358,18 @@ const BookingsTab = ({ token, handle401 }) => {
                           {STATUS_LABELS[st]?.label || st}
                         </button>
                       ))}
+                      <label
+                        className="text-xs flex items-center gap-1.5 text-gray-500 cursor-pointer select-none ml-2"
+                        title="Zapnuto = změna statusu zároveň pošle zákazníkovi automatický e-mail (potvrzeno / dokončeno / zrušeno). Vypnuto = status se změní tiše, bez e-mailu."
+                      >
+                        <input
+                          type="checkbox"
+                          checked={notifyOnStatus}
+                          onChange={e => setNotifyOnStatus(e.target.checked)}
+                          className="accent-[#3FA34D] w-3.5 h-3.5"
+                        />
+                        Poslat i e-mail
+                      </label>
                       <div className="ml-auto flex items-center gap-2">
                         <button
                           onClick={() => openPriceModal(b)}
