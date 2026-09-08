@@ -2351,9 +2351,11 @@ async def admin_update_booking_status(booking_id: str, request: Request):
     result = await db.bookings.update_one({"id": booking_id}, {"$set": {"status": new_status}})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Booking not found")
-    
-    # Send status email to customer (non-critical)
-    if resend and RESEND_API_KEY:
+
+    # E-mail zákazníkovi se posílá JEN když si to admin výslovně přeje (notify=true).
+    # Změna kategorie je jinak tichá – nechceme klienta zbytečně obtěžovat.
+    notify = bool(body.get("notify"))
+    if notify and resend and RESEND_API_KEY:
         booking_doc = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
         if booking_doc and booking_doc.get("customer_email"):
             email_map = {
