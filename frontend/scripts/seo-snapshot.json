@@ -1,0 +1,156 @@
+{
+  "/": {
+    "title": "Sekání trávy a zahradnické služby Dvůr Králové | SeknuTo.cz",
+    "description": "Profesionální sekání trávy, údržba zahrad a likvidace zarostlých pozemků ve Dvoře Králové nad Labem a okolí. Bezplatná obhlídka a kalkulace na míru. Volejte 730 588 372.",
+    "canonical": "https://seknuto.cz",
+    "h1": "Perfektní sekání vašeho trávníku",
+    "intro": "Sekání, údržba zahrad, likvidace zarostlých pozemků – rychle a za férové ceny. Spoléhejte na mladý, energický tým z Dvora Králové nad Labem."
+  },
+  "/sluzby": {
+    "title": "Zahradnické služby Dvůr Králové | Sekání trávy, pokládání trávníku, stříhání keřů, kácení stromů, realizace zahrad | SeknuTo.cz",
+    "description": "Kompletní zahradnické služby ve Dvoře Králové a okolí: sekání trávy, pokládání trávníku a travní koberec, stříhání keřů a živých plotů, kácení a ořez stromů, realizace zahrad, likvidace pozemků, sezónní balíčky. Bezplatná obhlídka.",
+    "canonical": "https://seknuto.cz/sluzby",
+    "h1": "Naše služby",
+    "intro": "Od jednorázového sekání po celoroční péči. Všechny ceny jsou orientační – přesnou kalkulaci připravíme po obhlídce."
+  },
+  "/cenik": {
+    "title": "Cena sekání trávy – transparentně a bez překvapení | SeknuTo.cz",
+    "description": "Cenu vždy stanovíme po bezplatné prohlídce vaší zahrady. Žádné skryté poplatky. Sekání trávy, stříhání keřů, kácení stromů, realizace zahrad, likvidace pozemků. Dvůr Králové a okolí.",
+    "canonical": "https://seknuto.cz/cenik",
+    "h1": "Jak zjistíte cenu?",
+    "intro": "Každá zahrada je jiná. Proto nabízíme bezplatnou obhlídku na místě, kde vám sdělíme přesnou cenu ještě před zahájením prací."
+  },
+  "/rezervace": {
+    "title": "Nezávazná poptávka zahradnických prací | Bezplatná obhlídka | SeknuTo.cz",
+    "description": "Pošlete nezávaznou poptávku na sekání trávy, likvidaci pozemků nebo údržbu zahrady. Přijedeme na bezplatnou obhlídku a sdělíme přesnou cenu předem. Dvůr Králové a okolí.",
+    "canonical": "https://seknuto.cz/rezervace",
+    "h1": "Nezávazná poptávka",
+    "intro": "Profesionální zahradnické služby pro váš dokonalý trávník a zahradu. Rychle, spolehlivě a transparentně."
+  },
+  "/o-nas": {
+    "title": "O nás | SeknuTo.cz – Zahradnické služby Dvůr Králové",
+    "description": "Jsme lokální tým zahradníků z Dvůru Králové nad Labem. Poskytujeme profesionální sekání trávy a zahradnické služby s důrazem na spolehlivost a férové ceny.",
+    "canonical": "https://seknuto.cz/o-nas",
+    "h1": "O nás",
+    "intro": "Jsme parta kluků z Dvora Králové, co mají rádi práci venku a baví je dělat zahrady krásné."
+  },
+  "/kontakt": {
+    "title": "Kontakt | SeknuTo.cz – Sekání trávy Dvůr Králové",
+    "description": "Kontaktujte SeknuTo.cz pro nezávaznou cenovou nabídku. Tel: 730 588 372. Zahradnické služby ve Dvoře Králové nad Labem a okolí.",
+    "canonical": "https://seknuto.cz/kontakt",
+    "h1": "Kontakt",
+    "intro": "Máte dotaz nebo chcete nezávaznou cenovou nabídku? Ozvěte se nám – rádi pomůžeme!"
+  },
+  "/likvidace-pozemku": {
+    "title": "Likvidace zarostlých pozemků Dvůr Králové | SeknuTo.cz",
+    "description": "Vyčištění a likvidace zarostlých pozemků, křovin a náletových dřevin ve Dvoře Králové a okolí. Přerostlá tráva, buřeň, mulčování, úklid a odvoz. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/likvidace-pozemku",
+    "h1": "Likvidace a čištění zarostlých pozemků Dvůr Králové a okolí",
+    "intro": "Vyčistíme i roky neudržovaný pozemek – vysekání přerostlé trávy a buřeně, odstranění křovin a náletových dřevin, mulčování, úklid a odvoz. Dvůr Králové nad Labem a okolí do 50 km, cenu znáte předem."
+  },
+  "/sekani-prerostle-travy": {
+    "title": "Sekání přerostlé trávy a hrubé sekání Dvůr Králové | SeknuTo.cz",
+    "description": "Hrubé sekání a sekání přerostlé trávy ve Dvoře Králové a okolí. Vysoká tráva, zanedbané zahrady a plochy, úklid a odvoz posečené hmoty. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-prerostle-travy",
+    "h1": "Sekání přerostlé trávy a hrubé sekání Dvůr Králové a okolí",
+    "intro": "Posekáme i vysokou, přerostlou trávu, kterou běžná sekačka nezvládne. Hrubé sekání zanedbaných zahrad a ploch ve Dvoře Králové nad Labem a okolí do 50 km – s úklidem a odvozem posečené hmoty."
+  },
+  "/strihani-keru-kaceni-stromu": {
+    "title": "Stříhání keřů a kácení stromů Dvůr Králové | SeknuTo.cz",
+    "description": "Profesionální stříhání keřů, živých plotů a tújí, ořez a kácení stromů ve Dvoře Králové a okolí. Rizikové kácení, štěpkování a odvoz větví. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/strihani-keru-kaceni-stromu",
+    "h1": "Stříhání keřů a kácení stromů Dvůr Králové a okolí",
+    "intro": "Stříhání a tvarování keřů, tújí a živých plotů, ořez i kompletní kácení stromů ve Dvoře Králové nad Labem a okolí do 50 km. Profesionální technika, úklid a odvoz větví v ceně."
+  },
+  "/vertikutace-travniku": {
+    "title": "Vertikutace a provzdušnění trávníku Dvůr Králové | SeknuTo.cz",
+    "description": "Vertikutace, provzdušnění a hnojení trávníku ve Dvoře Králové a okolí. Odstranění mechu a plsti, regenerace a zahuštění trávníku. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/vertikutace-travniku",
+    "h1": "Vertikutace a provzdušnění trávníku Dvůr Králové a okolí",
+    "intro": "Vyhrabeme z trávníku mech a plsť, provzdušníme půdu a přihnojíme – trávník znovu zhoustne a zezelená. Vertikutace a regenerace trávníku ve Dvoře Králové nad Labem a okolí do 50 km."
+  },
+  "/realizace-zahrad": {
+    "title": "Realizace zahrad Dvůr Králové | Návrh a založení | SeknuTo.cz",
+    "description": "Realizace zahrad na klíč ve Dvoře Králové a okolí – návrh zahrady, zakládání trávníků ze semene i travního koberce, výsadba zeleně a terénní úpravy. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/realizace-zahrad",
+    "h1": "Realizace zahrad Dvůr Králové a okolí",
+    "intro": "Kompletní realizace zahrad na klíč ve Dvoře Králové nad Labem a okolí – od návrhu přes terénní úpravy a založení trávníku až po výsadbu zeleně. Nová zahrada od základu i proměna té stávající."
+  },
+  "/pokladani-travniku": {
+    "title": "Pokládání trávníku a travní koberec Dvůr Králové | SeknuTo.cz",
+    "description": "Pokládka travního koberce a zakládání trávníku ze semene ve Dvoře Králové a okolí. Příprava podloží, rolovaný trávník, okamžitě zelená zahrada. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/pokladani-travniku",
+    "h1": "Pokládání trávníku Dvůr Králové a okolí",
+    "intro": "Pokládka travního koberce i zakládání trávníku ze semene ve Dvoře Králové nad Labem a okolí do 50 km. Připravíme podloží, položíme rolovaný trávník a předáme vám okamžitě zelenou zahradu – s úklidem a poradenstvím o péči."
+  },
+  "/udrzba-zahrady": {
+    "title": "Údržba zahrady a zahradnické práce Dvůr Králové | SeknuTo.cz",
+    "description": "Pravidelná i jednorázová údržba zahrady ve Dvoře Králové a okolí – sekání trávy, záhony, stříhání keřů, úklid listí a sezónní práce. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/udrzba-zahrady",
+    "h1": "Údržba zahrady a zahradnické práce Dvůr Králové a okolí",
+    "intro": "Postaráme se o vaši zahradu po celý rok – sekání trávy, plení a údržba záhonů, stříhání keřů, úklid listí i sezónní práce. Pravidelná i jednorázová údržba zahrady ve Dvoře Králové nad Labem a okolí do 50 km."
+  },
+  "/odvoz-bioodpadu": {
+    "title": "Odvoz bioodpadu a zeleného odpadu Dvůr Králové | SeknuTo.cz",
+    "description": "Odvoz a ekologická likvidace bioodpadu ze zahrady ve Dvoře Králové a okolí – tráva, listí, větve, křoviny. Naložení i úklid. Bezplatná obhlídka. 730 588 372",
+    "canonical": "https://seknuto.cz/odvoz-bioodpadu",
+    "h1": "Odvoz bioodpadu a zeleného odpadu Dvůr Králové a okolí",
+    "intro": "Naložíme a ekologicky zlikvidujeme trávu, listí, větve i další zelený odpad ze zahrady. Odvoz bioodpadu ve Dvoře Králové nad Labem a okolí do 50 km – klidně i jako doplněk k sekání či úklidu."
+  },
+  "/sekani-travy-hradec-kralove": {
+    "title": "Sekání trávy Hradec Králové | SeknuTo.cz – Bezplatná prohlídka",
+    "description": "Profesionální sekání trávy v Hradec Králové a okolí. Bezplatná prohlídka a kalkulace zdarma. Místní tým z Dvůra Králové. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-travy-hradec-kralove",
+    "h1": "Sekání trávy Hradec Králové a okolí",
+    "intro": "Místní tým SeknuTo.cz z Dvůra Králové. Sekáme zahrady v Hradec Králové a okolí. Bezplatná prohlídka a kalkulace na míru."
+  },
+  "/sekani-travy-trutnov": {
+    "title": "Sekání trávy Trutnov | SeknuTo.cz – Bezplatná prohlídka",
+    "description": "Profesionální sekání trávy v Trutnov a okolí. Bezplatná prohlídka a kalkulace zdarma. Místní tým z Dvůra Králové. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-travy-trutnov",
+    "h1": "Sekání trávy Trutnov a okolí",
+    "intro": "Místní tým SeknuTo.cz z Dvůra Králové. Sekáme zahrady v Trutnov a okolí. Bezplatná prohlídka a kalkulace na míru."
+  },
+  "/sekani-travy-vrchlabi": {
+    "title": "Sekání trávy Vrchlabí | SeknuTo.cz – Bezplatná prohlídka",
+    "description": "Profesionální sekání trávy v Vrchlabí a okolí. Bezplatná prohlídka a kalkulace zdarma. Místní tým z Dvůra Králové. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-travy-vrchlabi",
+    "h1": "Sekání trávy Vrchlabí a okolí",
+    "intro": "Místní tým SeknuTo.cz z Dvůra Králové. Sekáme zahrady v Vrchlabí a okolí. Bezplatná prohlídka a kalkulace na míru."
+  },
+  "/sekani-travy-jaromer": {
+    "title": "Sekání trávy Jaroměř | SeknuTo.cz – Bezplatná prohlídka",
+    "description": "Profesionální sekání trávy v Jaroměř a okolí. Bezplatná prohlídka a kalkulace zdarma. Místní tým z Dvůra Králové. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-travy-jaromer",
+    "h1": "Sekání trávy Jaroměř a okolí",
+    "intro": "Místní tým SeknuTo.cz z Dvůra Králové. Sekáme zahrady v Jaroměř a okolí. Bezplatná prohlídka a kalkulace na míru."
+  },
+  "/sekani-travy-nachod": {
+    "title": "Sekání trávy Náchod | SeknuTo.cz – Bezplatná prohlídka",
+    "description": "Profesionální sekání trávy v Náchod a okolí. Bezplatná prohlídka a kalkulace zdarma. Místní tým z Dvůra Králové. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-travy-nachod",
+    "h1": "Sekání trávy Náchod a okolí",
+    "intro": "Místní tým SeknuTo.cz z Dvůra Králové. Sekáme zahrady v Náchod a okolí. Bezplatná prohlídka a kalkulace na míru."
+  },
+  "/sekani-travy-hostinne": {
+    "title": "Sekání trávy Hostinné | SeknuTo.cz – Bezplatná prohlídka",
+    "description": "Profesionální sekání trávy v Hostinné a okolí. Bezplatná prohlídka a kalkulace zdarma. Místní tým z Dvůra Králové. 730 588 372",
+    "canonical": "https://seknuto.cz/sekani-travy-hostinne",
+    "h1": "Sekání trávy Hostinné a okolí",
+    "intro": "Místní tým SeknuTo.cz z Dvůra Králové. Sekáme zahrady v Hostinné a okolí. Bezplatná prohlídka a kalkulace na míru."
+  },
+  "/nase-prace": {
+    "title": "Ukázky naší práce – Sekání trávy Dvůr Králové | SeknuTo.cz",
+    "description": "Prohlédněte si realizace SeknuTo.cz – sekání přerostlé trávy, stříhání keřů, jarní balíčky, pravidelná údržba zahrad. Výsledky před a po z Dvůra Králové, Trutnova a okolí.",
+    "canonical": "https://seknuto.cz/nase-prace",
+    "h1": "Ukázky realizací",
+    "intro": "Prohlédněte si, jak proměňujeme zahrady a trávníky. Přejeďte čárou po fotce a porovnejte stav před a po – kliknutím na projekt zobrazíte všechny fotky i videa."
+  },
+  "/blog": {
+    "title": "Zahradní blog – Tipy a rady pro váš trávník | SeknuTo.cz",
+    "description": "Rady od profesionálních zahradníků z Dvůra Králové nad Labem. Jak pečovat o trávník, kdy vertikutovat, jak hnojit trávu a jak udržovat zahradu po celý rok.",
+    "canonical": "https://seknuto.cz/blog",
+    "h1": "Tipy pro vaši zahradu",
+    "intro": "Rady od profesionálů – jak pečovat o trávník, zahradu a zeleň po celý rok."
+  }
+}
