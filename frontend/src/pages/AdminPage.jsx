@@ -941,6 +941,16 @@ const EMAIL_TEMPLATES = [
     body: (b) => `děkujeme za telefonát. Pro pořádek shrnujeme, na čem jsme se domluvili:\n\n• Práce: ${SERVICE_NAMES[b.service] || b.service}\n• Ozveme se / další krok: [doplňte]\n\nKdyby cokoli, jsme vám k dispozici na telefonu 730 588 372.`,
   },
   {
+    key: 'unreachable', label: '📵 Nedaří se dovolat', icon: Phone, status: null, review: false,
+    subject: 'Zkoušeli jsme se vám dovolat – SeknuTo.cz',
+    body: (b) => `zkoušeli jsme vás zastihnout na čísle ${b.customer_phone || '[telefon]'}, ale bohužel se nám nepodařilo spojit.\n\nAbyste kvůli tomu nepřišli o termín: stačí odpovědět na tento e-mail a napsat, kdy se vám hodí zavolat – nebo nám rovnou zavolejte na 730 588 372.\n\nPokud je pro vás jednodušší domluvit vše písemně, klidně napište rovnou sem.`,
+  },
+  {
+    key: 'followup', label: '🔄 Je poptávka aktuální?', icon: RefreshCw, status: null, review: false,
+    subject: 'Je vaše poptávka stále aktuální? – SeknuTo.cz',
+    body: (b) => `před časem jste nás oslovili ohledně služby „${SERVICE_NAMES[b.service] || b.service}"${b.property_address ? ` na adrese ${b.property_address}` : ''}.\n\nZatím jsme se nestihli domluvit na termínu, tak se jen ptáme, jestli je poptávka pořád aktuální. Stačí krátká odpověď:\n\n• ANO – ozveme se vám s nejbližším volným termínem\n• NE – poptávku uzavřeme a už vás nebudeme obtěžovat\n\nBezplatná obhlídka a kalkulace samozřejmě platí dál. Kdyby se cokoli změnilo, jsme na telefonu 730 588 372.`,
+  },
+  {
     key: 'inspection', label: '📅 Termín prohlídky', icon: Calendar, status: null, review: false,
     subject: 'Termín nezávazné prohlídky – SeknuTo.cz',
     body: (b) => `domluvili jsme si nezávaznou prohlídku:\n\n📅 Kdy: [doplňte datum a čas]\n📍 Kde: ${b.property_address || '[adresa]'}\n\nObhlídka je zdarma – na místě navrhneme řešení a řekneme cenu předem. Pokud by vám termín nevyhovoval, dejte nám prosím vědět.`,
@@ -956,9 +966,34 @@ const EMAIL_TEMPLATES = [
     body: (b) => `potvrzujeme domluvený termín:\n\n🌿 Práce: ${SERVICE_NAMES[b.service] || b.service}\n📅 Termín: [doplňte datum a čas]\n📍 Adresa: ${b.property_address || '[adresa]'}\n💰 Cena: ${priceStr(b)}\n\nPři nepříznivém počasí vás včas kontaktujeme s náhradním termínem. Děkujeme za důvěru!`,
   },
   {
+    key: 'reminder', label: '⏰ Připomínka termínu', icon: Calendar, status: null, review: false,
+    subject: 'Připomínka – blíží se váš termín – SeknuTo.cz',
+    body: (b) => `jen krátce připomínáme domluvený termín:\n\n🌿 Práce: ${SERVICE_NAMES[b.service] || b.service}\n📅 Termín: [doplňte datum a čas]\n📍 Adresa: ${b.property_address || '[adresa]'}\n\nAbychom to zvládli rychle a bez zdržení, poprosíme o:\n• zpřístupněný pozemek (odemčená brána, volný příjezd)\n• uklizené drobné předměty z trávníku (hračky, hadice, květináče)\n• zavřená domácí zvířata po dobu práce\n\nNemusíte být přítomni, pokud je přístup zajištěn. Kdyby vám termín nevyšel, dejte nám prosím vědět co nejdřív.`,
+  },
+  {
+    key: 'weather', label: '🌧️ Přesun kvůli počasí', icon: RefreshCw, status: null, review: false,
+    subject: 'Přesun termínu kvůli počasí – SeknuTo.cz',
+    body: (b) => `bohužel nám do domluveného termínu vstoupilo počasí a nebudeme moci dorazit.\n\n🌿 Práce: ${SERVICE_NAMES[b.service] || b.service}\n📅 Původní termín: [doplňte]\n📅 Náhradní termín: [doplňte]\n\nNení to výmluva – mokrá tráva se seká nekvalitně, trhá se a technika při práci v rozmoklém terénu poškodí trávník i půdu. Raději přijedeme o pár dní později a odvedeme práci pořádně.\n\nDejte prosím vědět, jestli vám náhradní termín vyhovuje. Děkujeme za pochopení.`,
+  },
+  {
     key: 'done', label: '🎉 Práce dokončena + hodnocení', icon: TrendingUp, status: 'completed', review: true,
     subject: 'Hotovo! Děkujeme za důvěru – SeknuTo.cz',
     body: (b) => `práce „${SERVICE_NAMES[b.service] || b.service}" je hotová a doufáme, že jste s výsledkem spokojeni.\n\nBudeme moc rádi, když nám věnujete chvilku a ohodnotíte naši práci – pomůže to nám i dalším zákazníkům. Odkazy najdete níže.\n\nKdykoli budete potřebovat, jsme tu pro vás. Děkujeme, že jste využili SeknuTo.cz!`,
+  },
+  {
+    key: 'payment', label: '💳 Podklady k platbě', icon: CreditCard, status: null, review: false,
+    subject: 'Podklady k platbě – SeknuTo.cz',
+    body: (b) => `posíláme podklady k úhradě za provedenou práci:\n\n🌿 Práce: ${SERVICE_NAMES[b.service] || b.service}\n📍 Adresa: ${b.property_address || '[adresa]'}\n💰 Částka: ${priceStr(b)}\n\n🏦 Číslo účtu: [doplňte]\n🔢 Variabilní symbol: [doplňte]\n📅 Splatnost: [doplňte]\n\nPlatit můžete i v hotovosti při předání. Kdyby cokoli k vyúčtování nesedělo, ozvěte se – rádi to vysvětlíme.`,
+  },
+  {
+    key: 'recurring', label: '🔁 Pravidelná údržba', icon: Leaf, status: null, review: false,
+    subject: 'Chcete mít zahradu v pořádku celou sezónu? – SeknuTo.cz',
+    body: (b) => `nedávno jsme u vás dělali „${SERVICE_NAMES[b.service] || b.service}" a napadlo nás vám nabídnout něco, co spoustě zákazníků ušetří starosti.\n\nMísto řešení každé jednotlivé objednávky můžeme jezdit pravidelně:\n\n• à 14 dní – nejoblíbenější, trávník je pořád v kondici\n• 1× měsíčně – pro nenáročné trávníky\n• sezónní balíček – domluvíme rozsah na celý rok\n\nCo z toho máte:\n• zvýhodněnou cenu oproti jednorázovým zakázkám\n• přednost při obsazování termínů (nemusíte čekat ve frontě v sezóně)\n• nemusíte na nic myslet – přijedeme sami\n\nStačí odpovědět, jaký interval by vám vyhovoval, a připravíme konkrétní nabídku.`,
+  },
+  {
+    key: 'declined', label: '🙏 Uzavřít poptávku', icon: Archive, status: 'cancelled', review: false,
+    subject: 'Děkujeme za zájem – SeknuTo.cz',
+    body: (b) => `děkujeme, že jste nás oslovili ohledně služby „${SERVICE_NAMES[b.service] || b.service}".\n\nRozumíme, že to tentokrát nevyšlo, a poptávku tedy uzavíráme. Nic se neděje – kdyby se situace změnila nebo budete potřebovat cokoli kolem zahrady později, stačí se ozvat a rádi se domluvíme znovu.\n\nPřejeme hezké dny a ať vám zahrada dělá radost.`,
   },
   {
     key: 'custom', label: '✏️ Vlastní zpráva', icon: Mail, status: null, review: false,
