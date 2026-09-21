@@ -24,15 +24,44 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 import { cs } from 'date-fns/locale';
+import {
+  trackFormStart, trackFormStep, trackLead, trackFormError, resetFormTracking,
+} from '../lib/analytics';
+import { TEL_HREF, PHONE_DISPLAY, WHATSAPP_HREF } from '../config/contact';
+
+// Telefon bereme tolerantně: mezery, +420, 00420 i devět číslic bez předvolby.
+export const isValidCzPhone = (raw) => {
+  const v = String(raw || '').replace(/[\s()-]/g, '');
+  return /^(?:\+420|00420)?[6-7]\d{8}$/.test(v);
+};
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Rozpracovaná poptávka přežije obnovení stránky i omylem zavřený prohlížeč.
+const DRAFT_KEY = 'seknuto_booking_draft';
+
+// Předvýběr služby z reklamy nebo sezónní stránky: /rezervace?sluzba=listi
+const SLUZBA_PARAM_MAP = {
+  sekani: 'lawn_mowing',
+  'sekani-s-hnojenim': 'lawn_with_fertilizer',
+  prerostla: 'overgrown',
+  listi: 'overgrown',
+  pozemek: 'land_clearing',
+  likvidace: 'land_clearing',
+  ploty: 'tree_shrub_care',
+  kaceni: 'tree_shrub_care',
+  stromy: 'tree_shrub_care',
+  'pravidelna-udrzba': 'lawn_mowing',
+};
 
 const BookingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitFailed, setSubmitFailed] = useState(false);
   const [bookingId, setBookingId] = useState(null);
   const [couponCode, setCouponCode] = useState('');
   const [couponValid, setCouponValid] = useState(null);
@@ -56,6 +85,8 @@ const BookingPage = () => {
     additional_services: [],
     preferred_date: null,
     preferred_time: 'anytime',
+    deadline: '2weeks',
+    preferred_channel: 'phone',
     alternative_date: null,
     customer_name: '',
     customer_phone: '',
@@ -67,6 +98,37 @@ const BookingPage = () => {
     coupon_code: '',
     voucher_fixed_discount: 0,
   });
+
+  // Obnovení rozpracované poptávky a předvýběr služby z reklamy (?sluzba=)
+  useEffect(() => {
+    try {
+      const draft = sessionStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        if (parsed && typeof parsed === 'object') {
+          setFormData(prev => ({
+            ...prev,
+            ...parsed,
+            // Datum se serializuje na string – vracíme ho zpět na Date
+            preferred_date: parsed.preferred_date ? new Date(parsed.preferred_date) : null,
+          }));
+        }
+      }
+    } catch { /* poškozený koncept ignorujeme, radši prázdný formulář */ }
+
+    const wanted = searchParams.get('sluzba');
+    if (wanted && SLUZBA_PARAM_MAP[wanted]) {
+      setFormData(prev => ({ ...prev, service: SLUZBA_PARAM_MAP[wanted] }));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Průběžné ukládání – zákazník nesmí přijít o rozepsanou poptávku
+  useEffect(() => {
+    if (currentStep >= 5) return;
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+    } catch { /* private mode / plná quota – tichý no-op */ }
+  }, [formData, currentStep]);
 
   useEffect(() => {
     // Handle voucher from URL (from VoucherPage redirect)
@@ -225,6 +287,28 @@ const BookingPage = () => {
     { id: 'anytime', label: 'Kdykoliv', time: 'Flexibilní' },
   ];
 
+  // Zákazník většinou nezná naši obsazenost, takže výběr konkrétního dne byl
+  // zbytečné tření – a stejně se termín doladí telefonicky. Ptáme se proto na
+  // to, co opravdu potřebujeme vědět: do kdy má být hotovo.
+  // `days` slouží k dopočtu preferred_date, které backend a admin očekávají.
+  const deadlineOptions = [
+    { id: 'asap', label: 'Co nejdřív', hint: 'ideálně do týdne', days: 7, icon: '⚡' },
+    { id: '2weeks', label: 'Do 14 dnů', hint: 'běžný termín', days: 14, icon: '📅' },
+    { id: 'month', label: 'Do měsíce', hint: 'mám čas', days: 30, icon: '🗓️' },
+    { id: 'season', label: 'Nespěchá', hint: 'domluvíme se', days: 90, icon: '🌿' },
+    { id: 'date', label: 'Mám konkrétní termín', hint: 'vyberu datum', days: null, icon: '🎯' },
+  ];
+
+  // Z volby „do kdy" dopočítáme cílové datum. U konkrétního termínu bereme
+  // datum z kalendáře, jinak dnešek + počet dnů dané volby.
+  const resolveTargetDate = () => {
+    if (formData.deadline === 'date' && formData.preferred_date) return formData.preferred_date;
+    const opt = deadlineOptions.find(o => o.id === formData.deadline);
+    const d = new Date();
+    d.setDate(d.getDate() + (opt?.days ?? 14));
+    return d;
+  };
+
   // Helper to check if service is custom order
   const isCustomOrder = (serviceId) => serviceId === 'custom_order';
 
@@ -247,14 +331,16 @@ const BookingPage = () => {
   const steps = [
     { num: 1, title: 'Služba' },
     { num: 2, title: 'Detaily' },
-    { num: 3, title: 'Termín' },
+    { num: 3, title: 'Do kdy' },
     { num: 4, title: 'Kontakt' },
     { num: 5, title: 'Hotovo' },
   ];
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => prev + 1);
+      const next = currentStep + 1;
+      trackFormStep(next, steps.find(s => s.num === next)?.title || String(next));
+      setCurrentStep(next);
     }
   };
 
@@ -280,19 +366,34 @@ const BookingPage = () => {
         }
         return true; // m² is optional info for the inspection
       case 3:
-        if (!formData.preferred_date) {
-          toast.error('Vyberte termín');
+        if (!formData.deadline) {
+          toast.error('Vyberte, do kdy to potřebujete');
+          return false;
+        }
+        if (formData.deadline === 'date' && !formData.preferred_date) {
+          toast.error('Vyberte konkrétní datum');
           return false;
         }
         return true;
       case 4:
-        if (!formData.customer_name || !formData.customer_phone || !formData.customer_email || !formData.property_address) {
-          toast.error('Vyplňte všechna povinná pole');
-          return false;
-        }
-        if (!formData.gdpr_consent) {
-          toast.error('Musíte souhlasit se zpracováním údajů');
-          return false;
+        {
+          const errs = {};
+          if (!formData.customer_name.trim()) errs.customer_name = 'Vyplňte prosím jméno';
+          if (!formData.customer_phone.trim()) errs.customer_phone = 'Vyplňte prosím telefon';
+          else if (!isValidCzPhone(formData.customer_phone)) errs.customer_phone = 'Telefon nevypadá správně – zkuste formát 730 588 372';
+          if (!formData.property_address.trim()) errs.property_address = 'Napište alespoň obec';
+          // E-mail je nepovinný, ale když ho zákazník vyplní, musí dávat smysl
+          if (formData.customer_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email.trim())) {
+            errs.customer_email = 'E-mail nevypadá správně';
+          }
+          if (!formData.gdpr_consent) errs.gdpr_consent = 'Bez souhlasu bohužel nemůžeme poptávku zpracovat';
+          setFieldErrors(errs);
+          if (Object.keys(errs).length > 0) {
+            trackFormError(Object.keys(errs)[0]);
+            focusFirstError(Object.keys(errs)[0]);
+            return false;
+          }
+          return true;
         }
         return true;
       default:
@@ -316,7 +417,9 @@ const BookingPage = () => {
       const payload = {
         ...formData,
         notes: notesValue,
-        preferred_date: formData.preferred_date ? formData.preferred_date.toISOString().split('T')[0] : null,
+        // Backend i admin očekávají konkrétní datum – u rozsahů posíláme
+        // dopočítaný cílový termín, ať zůstane kontrakt beze změny.
+        preferred_date: resolveTargetDate().toISOString().split('T')[0],
         alternative_date: formData.alternative_date ? formData.alternative_date.toISOString().split('T')[0] : null,
       };
       
@@ -327,19 +430,39 @@ const BookingPage = () => {
       localStorage.removeItem('active_voucher');
       localStorage.removeItem('seknuto_coupon');
       
+      // generate_lead až po potvrzení serveru – klik na tlačítko není konverze
+      trackLead({ serviceType: formData.service, preferredChannel: formData.preferred_channel });
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* private mode */ }
+
       setCurrentStep(5);
       toast.success('Poptávka odeslána!');
     } catch (error) {
       console.error('Booking failed:', error);
-      toast.error('Chyba při odesílání. Zkuste to znovu.');
+      trackFormError('submit_failed');
+      setSubmitFailed(true);
+      toast.error('Odeslání se nezdařilo. Zkuste to prosím znovu.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Fokus na první chybné pole – jinak zákazník na mobilu netuší, kde je problém.
+  const focusFirstError = (field) => {
+    if (typeof document === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-field="${field}"]`);
+      if (el) { el.focus?.(); el.scrollIntoView?.({ block: 'center', behavior: 'smooth' }); }
+    });
+  };
+
   const updateFormData = (field, value) => {
+    // Jakmile zákazník pole opraví, chybu schováme
+    setFieldErrors(prev => (prev[field] ? { ...prev, [field]: undefined } : prev));
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // form_start posíláme až při skutečné interakci, ne při otevření stránky
+  const handleFirstInteraction = () => trackFormStart();
 
   const toggleAdditionalService = (serviceId) => {
     setFormData(prev => ({
@@ -870,30 +993,62 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                {/* Calendar */}
+                {/* Do kdy má být hotovo */}
                 <div>
-                  <Label className="text-sm font-semibold mb-2 block">Vyberte datum *</Label>
-                  <div className="flex justify-center">
-                    <Calendar
-                      mode="single"
-                      selected={formData.preferred_date}
-                      onSelect={(date) => {
-                        if (date) {
-                          setFormData(prev => ({ ...prev, preferred_date: date }));
-                        }
-                      }}
-                      disabled={(date) => {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        return date < today;
-                      }}
-                      locale={cs}
-                      className="rounded-xl border border-gray-200 bg-white shadow-sm"
-                      data-testid="calendar-preferred"
-                    />
+                  <Label className="text-sm font-semibold mb-2 block">Do kdy to potřebujete? *</Label>
+                  <div className="grid grid-cols-2 gap-2" role="group" aria-label="Do kdy má být práce hotová">
+                    {deadlineOptions.map((option) => {
+                      const active = formData.deadline === option.id;
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => {
+                            updateFormData('deadline', option.id);
+                            // Při přepnutí zpět na rozsah zahodíme dřív vybrané datum,
+                            // ať se neodešle něco, co zákazník už nechtěl.
+                            if (option.id !== 'date') updateFormData('preferred_date', null);
+                          }}
+                          className={`p-3 rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3FA34D] focus-visible:ring-offset-1 ${
+                            active ? 'border-[#3FA34D] bg-[#3FA34D] text-white' : 'border-gray-200 hover:border-[#3FA34D]/50 bg-white'
+                          } ${option.id === 'date' ? 'col-span-2' : ''}`}
+                          data-testid={`deadline-option-${option.id}`}
+                        >
+                          <p className="font-semibold text-sm">{option.icon} {option.label}</p>
+                          <p className={`text-xs mt-0.5 ${active ? 'text-white/75' : 'text-gray-500'}`}>{option.hint}</p>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                
+
+                {/* Kalendář jen pro ty, kdo opravdu chtějí konkrétní den */}
+                {formData.deadline === 'date' && (
+                  <div>
+                    <Label className="text-sm font-semibold mb-2 block">Vyberte datum *</Label>
+                    <div className="flex justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={formData.preferred_date}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFormData(prev => ({ ...prev, preferred_date: date }));
+                          }
+                        }}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
+                        locale={cs}
+                        className="rounded-xl border border-gray-200 bg-white shadow-sm"
+                        data-testid="calendar-preferred"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Selected Date - More prominent - ABOVE time slots */}
                 {formData.preferred_date && (
                   <div className="p-4 bg-[#3FA34D] rounded-xl text-white shadow-lg">
@@ -967,12 +1122,17 @@ const BookingPage = () => {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         value={formData.customer_name}
+                        data-field="customer_name"
+                        aria-invalid={!!fieldErrors.customer_name}
                         onChange={(e) => updateFormData('customer_name', e.target.value)}
                         className="h-11 pl-10 border-2"
                         placeholder="Jan Novák"
                         data-testid="input-customer-name"
                       />
                     </div>
+                      {fieldErrors.customer_name && (
+                        <p className="text-xs text-red-600 mt-1" role="alert">{fieldErrors.customer_name}</p>
+                      )}
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Telefon *</Label>
@@ -981,42 +1141,57 @@ const BookingPage = () => {
                       <Input
                         type="tel"
                         value={formData.customer_phone}
+                        data-field="customer_phone"
+                        aria-invalid={!!fieldErrors.customer_phone}
                         onChange={(e) => updateFormData('customer_phone', e.target.value)}
                         className="h-11 pl-10 border-2"
                         placeholder="+420..."
                         data-testid="input-customer-phone"
                       />
                     </div>
+                      {fieldErrors.customer_phone && (
+                        <p className="text-xs text-red-600 mt-1" role="alert">{fieldErrors.customer_phone}</p>
+                      )}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-semibold">Email *</Label>
+                  <Label className="text-sm font-semibold">E-mail <span className="text-gray-400 font-normal">(nepovinné)</span></Label>
                   <div className="relative mt-1">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       type="email"
                       value={formData.customer_email}
+                      data-field="customer_email"
+                      aria-invalid={!!fieldErrors.customer_email}
                       onChange={(e) => updateFormData('customer_email', e.target.value)}
                       className="h-11 pl-10 border-2"
-                      placeholder="jan@email.cz"
+                      placeholder="jan@email.cz – pošleme potvrzení"
                       data-testid="input-customer-email"
                     />
                   </div>
+                      {fieldErrors.customer_email && (
+                        <p className="text-xs text-red-600 mt-1" role="alert">{fieldErrors.customer_email}</p>
+                      )}
                 </div>
 
                 <div>
-                  <Label className="text-sm font-semibold">Adresa zahrady *</Label>
+                  <Label className="text-sm font-semibold">Obec nebo adresa *</Label>
                   <div className="relative mt-1">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       value={formData.property_address}
+                      data-field="property_address"
+                      aria-invalid={!!fieldErrors.property_address}
                       onChange={(e) => updateFormData('property_address', e.target.value)}
                       className="h-11 pl-10 border-2"
-                      placeholder="Ulice 123, Město"
+                      placeholder="Stačí obec, např. Dvůr Králové"
                       data-testid="input-property-address"
                     />
                   </div>
+                      {fieldErrors.property_address && (
+                        <p className="text-xs text-red-600 mt-1" role="alert">{fieldErrors.property_address}</p>
+                      )}
                 </div>
 
                 <div>
@@ -1081,6 +1256,39 @@ const BookingPage = () => {
                 )}
 
                 {/* GDPR */}
+                {/* Preferovaný kanál – ať víme, kudy se ozvat, a zákazník má kontrolu */}
+                <div>
+                  <Label className="text-sm font-semibold mb-1.5 block">Jak se vám máme ozvat?</Label>
+                  <div className="grid grid-cols-3 gap-2" role="group" aria-label="Preferovaný způsob kontaktu">
+                    {[
+                      { id: 'phone', label: 'Telefon', icon: '📞' },
+                      { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
+                      { id: 'email', label: 'E-mail', icon: '✉️' },
+                    ].map((ch) => {
+                      const active = formData.preferred_channel === ch.id;
+                      const disabled = ch.id === 'email' && !formData.customer_email.trim();
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          aria-pressed={active}
+                          disabled={disabled}
+                          title={disabled ? 'Nejdřív vyplňte e-mail' : undefined}
+                          onClick={() => updateFormData('preferred_channel', ch.id)}
+                          className={`p-2.5 rounded-xl border-2 text-center text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3FA34D] ${
+                            active ? 'border-[#3FA34D] bg-[#3FA34D] text-white'
+                            : disabled ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-[#3FA34D]/50 bg-white text-gray-700'
+                          }`}
+                          data-testid={`channel-${ch.id}`}
+                        >
+                          <span aria-hidden="true">{ch.icon}</span> {ch.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <label className="flex items-start gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl" data-testid="gdpr-consent">
                   <Checkbox
                     checked={formData.gdpr_consent}
@@ -1091,6 +1299,29 @@ const BookingPage = () => {
                     Souhlasím se zpracováním osobních údajů *
                   </span>
                 </label>
+                {fieldErrors.gdpr_consent && (
+                  <p className="text-xs text-red-600 -mt-2" role="alert">{fieldErrors.gdpr_consent}</p>
+                )}
+
+                {/* Když odeslání selže, nenecháme zákazníka viset – nabídneme rychlejší cestu */}
+                {submitFailed && (
+                  <div className="p-4 rounded-xl border-2 border-red-200 bg-red-50" role="alert" data-testid="submit-error">
+                    <p className="text-sm font-semibold text-red-800">Poptávku se nepodařilo odeslat</p>
+                    <p className="text-xs text-red-700 mt-1">
+                      Zkuste to prosím znovu, nebo nám napište rovnou – vyřídíme to hned.
+                    </p>
+                    <div className="flex gap-2 mt-3" data-track-location="rezervace-chyba">
+                      <a href={WHATSAPP_HREF} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 text-center text-sm font-semibold bg-[#25D366] text-[#0b3d1f] rounded-lg py-2.5">
+                        Napsat na WhatsApp
+                      </a>
+                      <a href={TEL_HREF}
+                        className="flex-1 text-center text-sm font-semibold bg-[#3FA34D] text-white rounded-lg py-2.5">
+                        Zavolat {PHONE_DISPLAY}
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 {/* Order Summary */}
                 <div className="p-4 bg-[#F0FDF4] rounded-xl border border-[#3FA34D]/20" data-testid="final-price-summary">
@@ -1262,6 +1493,8 @@ const BookingPage = () => {
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                   className="bg-[#3FA34D] hover:bg-[#2d7a38] rounded-full px-8 h-11 font-semibold"
+                  /* Sticky lišta se u tohoto tlačítka schová, ať nekonkuruje hlavnímu CTA */
+                  data-sticky-hide
                   data-testid="btn-submit"
                 >
                   {isSubmitting ? (
@@ -1271,7 +1504,7 @@ const BookingPage = () => {
                     </>
                   ) : (
                     <>
-                      {isCustomOrder(formData.service) ? 'Odeslat poptávku' : 'Odeslat rezervaci'}
+                      {isCustomOrder(formData.service) ? 'Odeslat poptávku zdarma' : 'Odeslat poptávku zdarma'}
                       <Check className="w-4 h-4 ml-2" />
                     </>
                   )}

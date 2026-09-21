@@ -286,16 +286,31 @@ class BookingCreate(BaseModel):
     additional_services: List[str] = []
     preferred_date: str
     preferred_time: str = "anytime"
+    # Do kdy má být hotovo (asap/2weeks/month/season/date). Konkrétní datum už
+    # po zákazníkovi nechceme – nezná naši obsazenost a byla to zbytečná překážka.
+    deadline: Optional[str] = None
+    # Kudy se zákazníkovi ozvat: phone / whatsapp / email
+    preferred_channel: str = "phone"
     alternative_date: Optional[str] = None
     customer_name: str
     customer_phone: str
-    customer_email: EmailStr
+    # E-mail je nepovinný – hlavní kontakt je telefon. Prázdný řetězec z
+    # formuláře normalizujeme na None, aby neprošel do EmailStr validace.
+    customer_email: Optional[EmailStr] = None
     property_address: str
     notes: Optional[str] = ""
     estimated_price: int = 0
     gdpr_consent: bool = True
     coupon_code: Optional[str] = None
     voucher_fixed_discount: Optional[int] = 0
+
+    @field_validator('customer_email', mode='before')
+    @classmethod
+    def empty_email_to_none(cls, v):
+        # Formulář posílá "" když zákazník e-mail nevyplnil
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     @field_validator('service')
     @classmethod
@@ -330,7 +345,9 @@ class Booking(BaseModel):
     alternative_date: Optional[str] = None
     customer_name: str
     customer_phone: str
-    customer_email: str
+    customer_email: Optional[str] = None
+    deadline: Optional[str] = None
+    preferred_channel: str = "phone"
     property_address: str
     notes: Optional[str] = ""
     estimated_price: int
@@ -871,7 +888,7 @@ async def create_booking(booking_data: BookingCreate):
         logger.info(f"Coupon {booking_data.coupon_code} marked as used for booking {booking.id}")
     
     # Add booking email to Resend Contacts (independent of email sending)
-    if resend and RESEND_API_KEY:
+    if resend and RESEND_API_KEY and booking.customer_email:
         try:
             contact_params = {
                 "email": booking.customer_email,
