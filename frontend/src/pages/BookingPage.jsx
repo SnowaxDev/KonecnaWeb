@@ -28,7 +28,7 @@ import {
   trackFormStart, trackFormStep, trackLead, trackFormError, resetFormTracking,
 } from '../lib/analytics';
 import { TEL_HREF, PHONE_DISPLAY, WHATSAPP_HREF } from '../config/contact';
-import { TrustStrip, HowItWorksCompact } from '../components/BookingReassurance';
+import { TrustStrip } from '../components/BookingReassurance';
 import { isValidCzPhone, serviceFromParam } from '../lib/validation';
 
 
@@ -46,6 +46,8 @@ const BookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitFailed, setSubmitFailed] = useState(false);
+  const [showCoupon, setShowCoupon] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const [bookingId, setBookingId] = useState(null);
   const [couponCode, setCouponCode] = useState('');
   const [couponValid, setCouponValid] = useState(null);
@@ -481,26 +483,26 @@ const BookingPage = () => {
       <button
         type="button"
         onClick={onToggle}
-        className={`w-full flex items-center justify-between p-4 text-left transition-colors ${
+        className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors ${
           isExpanded ? 'bg-[#F0FDF4]' : 'hover:bg-gray-50'
         }`}
         data-testid={`section-toggle-${title.toLowerCase().replace(/\s/g, '-')}`}
       >
-        <div className="flex items-center gap-3">
-          <Icon className={`w-5 h-5 ${isExpanded ? 'text-[#3FA34D]' : 'text-gray-500'}`} />
-          <span className={`font-semibold ${isExpanded ? 'text-[#3FA34D]' : 'text-gray-700'}`}>{title}</span>
+        <div className="flex items-center gap-2">
+          <Icon className={`w-4 h-4 ${isExpanded ? 'text-[#3FA34D]' : 'text-gray-500'}`} />
+          <span className={`font-semibold text-sm ${isExpanded ? 'text-[#3FA34D]' : 'text-gray-700'}`}>{title}</span>
           {badge && (
             <span className="text-xs bg-[#3FA34D] text-white px-2 py-0.5 rounded-full">{badge}</span>
           )}
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-[#3FA34D]" />
+          <ChevronUp className="w-4 h-4 text-[#3FA34D]" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400" />
         )}
       </button>
       {isExpanded && (
-        <div className="p-4 pt-0 animate-fade-in">
+        <div className="px-3 pb-2 pt-0 animate-fade-in">
           {children}
         </div>
       )}
@@ -518,13 +520,13 @@ const BookingPage = () => {
       {/* Compact Header */}
       <div className="bg-white border-b border-gray-200 py-2 px-4 mt-16 shrink-0">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-base sm:text-lg font-bold text-center text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <h1 className="booking-title text-base sm:text-lg font-bold text-center text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Nezávazná poptávka
           </h1>
-          {currentStep < 5 && <div className="mt-1 mb-2"><TrustStrip /></div>}
+          {currentStep < 5 && <div className="mt-1 mb-2 booking-trust"><TrustStrip /></div>}
 
           {/* Progress Steps - Compact */}
-          <div className="flex items-center justify-between">
+          <div className="booking-progress flex items-center justify-between">
             {steps.map((step, idx) => (
               <div key={step.num} className="flex items-center">
                 <div className="flex flex-col items-center">
@@ -570,41 +572,40 @@ const BookingPage = () => {
                   isExpanded={expandedSection === 'basic'}
                   onToggle={() => setExpandedSection(expandedSection === 'basic' ? null : 'basic')}
                 >
-                  <div className="space-y-2">
-                    {basicServices.map((service) => (
-                      <label
-                        key={service.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.service === service.id 
-                            ? 'border-[#3FA34D] bg-[#F0FDF4]' 
-                            : 'border-gray-100 hover:border-[#3FA34D]/50 hover:bg-gray-50'
-                        }`}
-                        data-testid={`service-option-${service.id}`}
-                      >
-                        <input 
-                          type="radio" 
-                          name="service" 
-                          value={service.id}
-                          checked={formData.service === service.id}
-                          onChange={() => selectService(service.id, 'basic')}
-                          className="sr-only"
-                        />
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          formData.service === service.id ? 'bg-[#3FA34D]' : 'bg-gray-100'
-                        }`}>
-                          <service.icon className={`w-5 h-5 ${
-                            formData.service === service.id ? 'text-white' : 'text-gray-500'
-                          }`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm">{service.title}</p>
-                          {service.info && (
-                            <p className="text-xs text-green-600">{service.info}</p>
-                          )}
-                        </div>
-                        <span className="text-sm font-bold text-[#3FA34D] whitespace-nowrap">{service.price}</span>
-                      </label>
-                    ))}
+                  {/* Mřížka místo seznamu: 9 služeb se musí vejít na obrazovku
+                      bez scrollování, proto dlaždice a ne široké řádky. */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+                    {basicServices.map((service) => {
+                      const active = formData.service === service.id;
+                      return (
+                        <label
+                          key={service.id}
+                          className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border-2 cursor-pointer transition-all ${
+                            active
+                              ? 'border-[#3FA34D] bg-[#F0FDF4]'
+                              : 'border-gray-100 hover:border-[#3FA34D]/50 hover:bg-gray-50'
+                          }`}
+                          data-testid={`service-option-${service.id}`}
+                        >
+                          <input
+                            type="radio"
+                            name="service"
+                            value={service.id}
+                            checked={active}
+                            onChange={() => selectService(service.id, 'basic')}
+                            className="sr-only"
+                          />
+                          <div className={`w-6 h-6 shrink-0 rounded-md flex items-center justify-center ${
+                            active ? 'bg-[#3FA34D]' : 'bg-gray-100'
+                          }`}>
+                            <service.icon className={`w-3.5 h-3.5 ${active ? 'text-white' : 'text-gray-500'}`} />
+                          </div>
+                          <span className="text-[11px] sm:text-xs font-medium text-gray-900 leading-tight">
+                            {service.title}
+                          </span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </CollapsibleSection>
 
@@ -739,16 +740,18 @@ const BookingPage = () => {
 
               {/* Selected Service Preview */}
               {formData.service && (
-                <div className="p-4 bg-[#F0FDF4] border-t border-[#3FA34D]/20">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-500">Vybraná služba:</p>
-                      <p className="font-semibold text-[#3FA34D]">{getServiceName(formData.service)}</p>
+                <div className="px-3 py-1.5 bg-[#F0FDF4] border-t border-[#3FA34D]/20">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[#3FA34D] truncate">
+                        <span className="font-normal text-gray-500">Vybráno: </span>
+                        {getServiceName(formData.service)}
+                      </p>
                       {isCustomOrder(formData.service) && (
-                        <p className="text-xs text-amber-600 mt-0.5">Cena bude stanovena po konzultaci</p>
+                        <p className="text-[10px] text-amber-600">Cena po konzultaci</p>
                       )}
                     </div>
-                    <CheckCircle className="w-6 h-6 text-[#3FA34D]" />
+                    <CheckCircle className="w-4 h-4 text-[#3FA34D] shrink-0" />
                   </div>
                 </div>
               )}
@@ -757,13 +760,9 @@ const BookingPage = () => {
 
           {/* Step 2: Custom Order Details (only for custom_order service) */}
           {currentStep === 2 && isCustomOrder(formData.service) && (
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-2-custom-content">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-[#3FA34D]" />
-                Detaily zakázkové poptávky
-              </h2>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4" data-testid="step-2-custom-content">
 
-              <div className="space-y-5">
+              <div className="space-y-3">
                 {/* Selected Service */}
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <p className="text-xs text-gray-500">Vybraná služba:</p>
@@ -837,7 +836,7 @@ const BookingPage = () => {
                   <Label htmlFor="custom-description" className="text-sm font-semibold">
                     Popis požadavků / rozsah prací
                   </Label>
-                  <Textarea
+                  <Textarea rows={2}
                     id="custom-description"
                     value={customOrderDescription}
                     onChange={(e) => setCustomOrderDescription(e.target.value)}
@@ -864,13 +863,9 @@ const BookingPage = () => {
 
           {/* Step 2: Property Details (standard services) */}
           {currentStep === 2 && !isCustomOrder(formData.service) && (
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-2-content">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-[#3FA34D]" />
-                Informace o pozemku
-              </h2>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4" data-testid="step-2-content">
               
-              <div className="space-y-5">
+              <div className="space-y-3">
                 {/* Selected Service */}
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <p className="text-xs text-gray-500">Vybraná služba:</p>
@@ -916,8 +911,8 @@ const BookingPage = () => {
 
                 {/* Additional Services */}
                 <div>
-                  <Label className="text-sm font-semibold mb-2 block">Doplňkové služby</Label>
-                  <div className="space-y-2">
+                  <Label className="text-xs font-semibold mb-1 block">Doplňkové služby</Label>
+                  <div className="grid grid-cols-2 gap-1.5">
                     {additionalServices.map((service) => (
                       <label
                         key={service.id}
@@ -938,44 +933,19 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                {/* Free inspection info */}
-                <div className="p-4 bg-[#F0FDF4] border border-[#3FA34D]/20 rounded-xl">
-                  <p className="text-sm font-medium text-[#1B4332]">Prohlídka a kalkulace zdarma</p>
-                  <p className="text-xs text-gray-600 mt-1">Přesnou cenu vám sdělíme při bezplatné obhlídce na místě. Žádné překvapení.</p>
-                </div>
+                {/* Prohlídka zdarma – jednořádkové ujištění */}
+                <p className="text-[11px] text-[#1B4332]">
+                  <strong>Prohlídka a kalkulace zdarma.</strong> Přesnou cenu řekneme na místě, bez překvapení.
+                </p>
               </div>
             </div>
           )}
 
           {/* Step 3: Schedule */}
           {currentStep === 3 && (
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-3-content">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-[#3FA34D]" />
-                Kdy vám to vyhovuje?
-              </h2>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4" data-testid="step-3-content">
               
-              <div className="space-y-5">
-                {/* Order Summary Card */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-2">Vaše poptávka:</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900">{getServiceName(formData.service)}</p>
-                      <p className="text-sm text-gray-500">
-                        {isCustomOrder(formData.service)
-                          ? (customOrderTypes.length > 0 ? customOrderTypes.slice(0, 2).map(t => customOrderWorkTypes.find(w => w.id === t)?.label).filter(Boolean).join(', ') + (customOrderTypes.length > 2 ? '...' : '') : 'Zakázkové práce')
-                          : formData.property_size > 0
-                          ? `~${formData.property_size} m²`
-                          : 'Bezplatná obhlídka'
-                        }
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-[#3FA34D]">Cena po obhlídce</p>
-                    </div>
-                  </div>
-                </div>
+              <div className="space-y-3">
 
                 {/* Do kdy má být hotovo */}
                 <div>
@@ -1092,16 +1062,12 @@ const BookingPage = () => {
 
           {/* Step 4: Contact Information */}
           {currentStep === 4 && (
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-4-content">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-[#3FA34D]" />
-                Kontaktní údaje
-              </h2>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4" data-testid="step-4-content">
               
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-sm font-semibold">Jméno *</Label>
+                    <Label className="text-xs font-semibold">Jméno *</Label>
                     <div className="relative mt-1">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -1109,7 +1075,7 @@ const BookingPage = () => {
                         data-field="customer_name"
                         aria-invalid={!!fieldErrors.customer_name}
                         onChange={(e) => updateFormData('customer_name', e.target.value)}
-                        className="h-11 pl-10 border-2"
+                        className="h-8 sm:h-9 pl-9 border-2 text-sm"
                         placeholder="Jan Novák"
                         data-testid="input-customer-name"
                       />
@@ -1119,7 +1085,7 @@ const BookingPage = () => {
                       )}
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold">Telefon *</Label>
+                    <Label className="text-xs font-semibold">Telefon *</Label>
                     <div className="relative mt-1">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -1128,7 +1094,7 @@ const BookingPage = () => {
                         data-field="customer_phone"
                         aria-invalid={!!fieldErrors.customer_phone}
                         onChange={(e) => updateFormData('customer_phone', e.target.value)}
-                        className="h-11 pl-10 border-2"
+                        className="h-8 sm:h-9 pl-9 border-2 text-sm"
                         placeholder="+420..."
                         data-testid="input-customer-phone"
                       />
@@ -1139,8 +1105,9 @@ const BookingPage = () => {
                   </div>
                 </div>
 
+                <div className="grid sm:grid-cols-2 gap-x-3 gap-y-2">
                 <div>
-                  <Label className="text-sm font-semibold">E-mail <span className="text-gray-400 font-normal">(nepovinné)</span></Label>
+                  <Label className="text-xs font-semibold">E-mail <span className="text-gray-400 font-normal">(nepovinné)</span></Label>
                   <div className="relative mt-1">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -1149,7 +1116,7 @@ const BookingPage = () => {
                       data-field="customer_email"
                       aria-invalid={!!fieldErrors.customer_email}
                       onChange={(e) => updateFormData('customer_email', e.target.value)}
-                      className="h-11 pl-10 border-2"
+                      className="h-8 sm:h-9 pl-9 border-2 text-sm"
                       placeholder="jan@email.cz – pošleme potvrzení"
                       data-testid="input-customer-email"
                     />
@@ -1158,9 +1125,8 @@ const BookingPage = () => {
                         <p className="text-xs text-red-600 mt-1" role="alert">{fieldErrors.customer_email}</p>
                       )}
                 </div>
-
                 <div>
-                  <Label className="text-sm font-semibold">Obec nebo adresa *</Label>
+                  <Label className="text-xs font-semibold">Obec nebo adresa *</Label>
                   <div className="relative mt-1">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -1168,7 +1134,7 @@ const BookingPage = () => {
                       data-field="property_address"
                       aria-invalid={!!fieldErrors.property_address}
                       onChange={(e) => updateFormData('property_address', e.target.value)}
-                      className="h-11 pl-10 border-2"
+                      className="h-8 sm:h-9 pl-9 border-2 text-sm"
                       placeholder="Stačí obec, např. Dvůr Králové"
                       data-testid="input-property-address"
                     />
@@ -1177,9 +1143,17 @@ const BookingPage = () => {
                         <p className="text-xs text-red-600 mt-1" role="alert">{fieldErrors.property_address}</p>
                       )}
                 </div>
+                </div>
 
-                <div>
-                  <Label className="text-sm font-semibold">Poznámka</Label>
+                {!showNote ? (
+                  <button type="button" onClick={() => setShowNote(true)}
+                    className="text-xs text-[#3FA34D] underline underline-offset-2"
+                    data-testid="toggle-note">
+                    Přidat poznámku
+                  </button>
+                ) : (
+                  <div>
+                  <Label className="text-xs font-semibold">Poznámka <span className="text-gray-400 font-normal">(nepovinné)</span></Label>
                   <Textarea
                     value={formData.notes}
                     onChange={(e) => updateFormData('notes', e.target.value)}
@@ -1188,6 +1162,7 @@ const BookingPage = () => {
                     data-testid="input-notes"
                   />
                 </div>
+                )}
 
                 {/* Active Voucher Badge */}
                 {activeVoucher && !isCustomOrder(formData.service) && (
@@ -1202,10 +1177,17 @@ const BookingPage = () => {
                 )}
 
                 {/* Coupon – skryt pokud je aktivní voucher nebo custom_order */}
-                {!activeVoucher && !isCustomOrder(formData.service) && (
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-amber-600" />
+                {!activeVoucher && !isCustomOrder(formData.service) && !showCoupon && (
+                  <button type="button" onClick={() => setShowCoupon(true)}
+                    className="text-xs text-[#3FA34D] underline underline-offset-2"
+                    data-testid="toggle-coupon">
+                    Mám slevový kupón
+                  </button>
+                )}
+                {!activeVoucher && !isCustomOrder(formData.service) && showCoupon && (
+                <div className="p-2.5 bg-amber-50 rounded-lg border border-amber-200">
+                  <Label className="text-xs font-semibold flex items-center gap-2">
+                    <Tag className="w-3.5 h-3.5 text-amber-600" />
                     Slevový kupón
                   </Label>
                   <div className="flex gap-2 mt-2">
@@ -1240,11 +1222,9 @@ const BookingPage = () => {
                 )}
 
                 {/* GDPR */}
-                <HowItWorksCompact />
-
                 {/* Preferovaný kanál – ať víme, kudy se ozvat, a zákazník má kontrolu */}
                 <div>
-                  <Label className="text-sm font-semibold mb-1.5 block">Jak se vám máme ozvat?</Label>
+                  <Label className="text-xs font-semibold mb-1 block">Jak se vám máme ozvat?</Label>
                   <div className="grid grid-cols-3 gap-2" role="group" aria-label="Preferovaný způsob kontaktu">
                     {[
                       { id: 'phone', label: 'Telefon', icon: '📞' },
@@ -1261,7 +1241,7 @@ const BookingPage = () => {
                           disabled={disabled}
                           title={disabled ? 'Nejdřív vyplňte e-mail' : undefined}
                           onClick={() => updateFormData('preferred_channel', ch.id)}
-                          className={`p-2.5 rounded-xl border-2 text-center text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3FA34D] ${
+                          className={`px-2 py-1.5 rounded-lg border-2 text-center text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3FA34D] ${
                             active ? 'border-[#3FA34D] bg-[#3FA34D] text-white'
                             : disabled ? 'border-gray-100 text-gray-300 cursor-not-allowed'
                             : 'border-gray-200 hover:border-[#3FA34D]/50 bg-white text-gray-700'
@@ -1275,7 +1255,7 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                <label className="flex items-start gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl" data-testid="gdpr-consent">
+                <label className="flex items-start gap-2 cursor-pointer p-2 bg-gray-50 rounded-lg" data-testid="gdpr-consent">
                   <Checkbox
                     checked={formData.gdpr_consent}
                     onCheckedChange={(checked) => updateFormData('gdpr_consent', checked)}
@@ -1339,18 +1319,11 @@ const BookingPage = () => {
                   </div>
                 )}
 
-                {/* Platba na místě */}
-                <div className="p-4 rounded-xl border-2 bg-[#F0FDF4] border-[#3FA34D]/30" data-testid="payment-onsite-info">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#3FA34D]/10 flex items-center justify-center shrink-0">
-                      <Banknote className="w-5 h-5 text-[#3FA34D]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#1B4332] text-sm">Platba na místě po dokončení práce</p>
-                      <p className="text-xs text-[#4B5563] mt-0.5">Hotovost nebo bankovní převod – platíte až po dokončení a kontrole práce.</p>
-                    </div>
-                  </div>
-                </div>
+                {/* Platba na místě – jen připomenutí, nemusí zabírat celou kartu */}
+                <p className="booking-payment-note flex items-center gap-1.5 text-[11px] text-[#1B4332]" data-testid="payment-onsite-info">
+                  <Banknote className="w-3.5 h-3.5 text-[#3FA34D] shrink-0" aria-hidden="true" />
+                  Platíte až po dokončení práce – hotově nebo převodem.
+                </p>
               </div>
             </div>
           )}

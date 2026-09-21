@@ -190,6 +190,51 @@ p {
     height: calc(100svh - 4rem);
 }
 
+/* Na nízkých displejích (iPhone SE apod.) by pás důvěry ukrojil místo, které
+   potřebuje samotný formulář. Krok se musí vejít celý – důvěru buduje i to,
+   že zákazník vidí všechno naráz. */
+@media (max-height: 820px) {
+    .booking-trust {
+        display: none;
+    }
+}
+
+/* Na opravdu nízkých displejích ustupuje i nadpis – co stránka dělá, říká
+   progres („Služba / Detaily / Do kdy / Kontakt") i titulek v prohlížeči. */
+@media (max-height: 790px) {
+    .booking-title {
+        display: none;
+    }
+}
+
+/* Nejmenší telefony: informace o platbě je příjemná, ale formulář má přednost.
+   Zákazník ji uvidí v potvrzovacím e-mailu i na webu. */
+@media (max-height: 680px) {
+    .booking-payment-note {
+        display: none;
+    }
+}
+
+/* Nejmenší displeje (starší Androidy ~360×640): stáhneme vertikální rytmus
+   uvnitř formuláře. Radši mírně hustší rozestupy než scrollování – krok se
+   musí vejít celý. */
+@media (max-height: 660px) {
+    /* Tailwind řeší rozestupy přes `> :not([hidden]) ~ :not([hidden])`,
+       takže stejný selektor musíme použít i tady, jinak se nepřebije. */
+    .booking-shell .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 0.25rem;
+    }
+    .booking-shell .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 0.3rem;
+    }
+    /* Menší kolečka progresu – pořadí kroku je čitelné i takto */
+    .booking-progress > div > div > div:first-child {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.7rem;
+    }
+}
+
 /* Sticky kontaktní lišta (jen mobil) ------------------------------------- */
 /* Na mobilu plní roli WhatsApp tlačítka lišta dole, plovoucí bublina by se
    s ní překrývala. Proto ji do 767 px skrýváme. */

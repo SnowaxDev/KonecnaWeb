@@ -237,15 +237,30 @@ test.describe('Rezervace se vejde na jednu obrazovku', () => {
     expect(await page.locator('footer').count()).toBe(0);
   });
 
-  test('dlouhý seznam služeb scrolluje uvnitř, ne stránkou', async ({ page }) => {
+  test('žádný krok nevyžaduje scrollování', async ({ page }) => {
     await page.goto('/rezervace');
-    const step = page.getByTestId('step-1-content');
-    await step.waitFor();
-    const scrollable = await step.evaluate((el) => {
-      const inner = el.firstElementChild;
-      return inner.scrollHeight > inner.clientHeight;
+    await page.getByTestId('step-1-content').waitFor();
+    await page.waitForTimeout(900);
+    await page.getByTestId('service-option-lawn_mowing').click();
+
+    const overflowOfCurrentStep = () => page.evaluate(() => {
+      const step = document.querySelector('[data-testid^="step-"][data-testid$="-content"]');
+      if (!step) return -1;
+      const inner = step.firstElementChild;
+      return Math.max(
+        inner ? inner.scrollHeight - inner.clientHeight : 0,
+        step.scrollHeight - step.clientHeight,
+        0
+      );
     });
-    expect(scrollable).toBe(true);
+
+    for (let step = 1; step <= 4; step += 1) {
+      expect(await overflowOfCurrentStep(), `krok ${step} přetéká`).toBeLessThanOrEqual(0);
+      if (step < 4) {
+        await page.getByTestId('btn-next').click();
+        await page.waitForTimeout(700);
+      }
+    }
   });
 });
 
