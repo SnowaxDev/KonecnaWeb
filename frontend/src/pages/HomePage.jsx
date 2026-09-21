@@ -4,6 +4,7 @@ import {
   Scissors, TreeDeciduous, Sprout, Package, Truck, Calendar,
   Star, Clock, MapPin, Shield, Flame
 } from 'lucide-react';
+import { WHATSAPP_HREF, PHONE_DISPLAY } from '../config/contact';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import {
@@ -209,18 +210,18 @@ const HomePage = () => {
               </div>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4" data-track-location="hero">
                 <Link to="/rezervace" className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
                     className="w-full bg-[#2E8B3E] hover:bg-[#256d31] text-white rounded-full px-8 h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all"
                     data-testid="hero-cta-rezervace"
                   >
-                    Nezávazná poptávka
+                    Nezávazná poptávka zdarma
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <a href="https://wa.me/420730588372" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                <a href={WHATSAPP_HREF} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                   <Button 
                     size="lg" 
                     variant="outline"
@@ -228,10 +229,14 @@ const HomePage = () => {
                     data-testid="hero-cta-whatsapp"
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
-                    WhatsApp: 730 588 372
+                    WhatsApp: {PHONE_DISPLAY}
                   </Button>
                 </a>
               </div>
+              <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#2E8B3E] shrink-0" aria-hidden="true" />
+                Obhlídka a nacenění zdarma · ozveme se do 24 hodin
+              </p>
             </Reveal>
 
             {/* Right - Stats Card */}

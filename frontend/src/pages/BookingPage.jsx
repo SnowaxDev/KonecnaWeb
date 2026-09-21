@@ -28,12 +28,9 @@ import {
   trackFormStart, trackFormStep, trackLead, trackFormError, resetFormTracking,
 } from '../lib/analytics';
 import { TEL_HREF, PHONE_DISPLAY, WHATSAPP_HREF } from '../config/contact';
+import { HowItWorks, SocialProof } from '../components/BookingReassurance';
+import { isValidCzPhone, serviceFromParam } from '../lib/validation';
 
-// Telefon bereme tolerantně: mezery, +420, 00420 i devět číslic bez předvolby.
-export const isValidCzPhone = (raw) => {
-  const v = String(raw || '').replace(/[\s()-]/g, '');
-  return /^(?:\+420|00420)?[6-7]\d{8}$/.test(v);
-};
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -41,19 +38,6 @@ const API = `${BACKEND_URL}/api`;
 // Rozpracovaná poptávka přežije obnovení stránky i omylem zavřený prohlížeč.
 const DRAFT_KEY = 'seknuto_booking_draft';
 
-// Předvýběr služby z reklamy nebo sezónní stránky: /rezervace?sluzba=listi
-const SLUZBA_PARAM_MAP = {
-  sekani: 'lawn_mowing',
-  'sekani-s-hnojenim': 'lawn_with_fertilizer',
-  prerostla: 'overgrown',
-  listi: 'overgrown',
-  pozemek: 'land_clearing',
-  likvidace: 'land_clearing',
-  ploty: 'tree_shrub_care',
-  kaceni: 'tree_shrub_care',
-  stromy: 'tree_shrub_care',
-  'pravidelna-udrzba': 'lawn_mowing',
-};
 
 const BookingPage = () => {
   const navigate = useNavigate();
@@ -117,8 +101,9 @@ const BookingPage = () => {
     } catch { /* poškozený koncept ignorujeme, radši prázdný formulář */ }
 
     const wanted = searchParams.get('sluzba');
-    if (wanted && SLUZBA_PARAM_MAP[wanted]) {
-      setFormData(prev => ({ ...prev, service: SLUZBA_PARAM_MAP[wanted] }));
+    const preselected = serviceFromParam(wanted);
+    if (preselected) {
+      setFormData(prev => ({ ...prev, service: preselected }));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -456,13 +441,12 @@ const BookingPage = () => {
   };
 
   const updateFormData = (field, value) => {
+    // První skutečná interakce = začátek vyplňování (posílá se jen jednou)
+    trackFormStart();
     // Jakmile zákazník pole opraví, chybu schováme
     setFieldErrors(prev => (prev[field] ? { ...prev, [field]: undefined } : prev));
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  // form_start posíláme až při skutečné interakci, ne při otevření stránky
-  const handleFirstInteraction = () => trackFormStart();
 
   const toggleAdditionalService = (serviceId) => {
     setFormData(prev => ({
@@ -539,6 +523,18 @@ const BookingPage = () => {
           </h1>
           <p className="text-center text-xs text-gray-500 mb-3">Ozveme se do 24 hodin s přesnou kalkulací</p>
           
+          {/* Snížení nejistoty ještě před vyplňováním: důkaz + co bude následovat */}
+          {currentStep < 5 && (
+            <div className="grid sm:grid-cols-2 gap-3 mb-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
+                <HowItWorks />
+              </div>
+              <div className="flex items-start">
+                <SocialProof />
+              </div>
+            </div>
+          )}
+
           {/* Progress Steps - Compact */}
           <div className="flex items-center justify-between">
             {steps.map((step, idx) => (
@@ -1448,6 +1444,10 @@ const BookingPage = () => {
                     });
                     setCouponCode('');
                     setCouponValid(null);
+                    setFieldErrors({});
+                    setSubmitFailed(false);
+                    // Nová poptávka = nový trychtýř, ať form_start dorazí znovu
+                    resetFormTracking();
                     setCouponDiscount(0);
                     setCustomOrderTypes([]);
                     setCustomOrderDescription('');
