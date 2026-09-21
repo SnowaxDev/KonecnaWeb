@@ -70,6 +70,19 @@ const PageFade = ({ children }) => {
   );
 };
 
+// Na /rezervace schováváme patičku i e-mailový popup – formulář se má vejít
+// na jednu obrazovku a cokoli pod ním by vynutilo scroll.
+const SiteChrome = () => {
+  const { pathname } = useLocation();
+  if (pathname.startsWith('/rezervace')) return null;
+  return (
+    <>
+      <Footer />
+      <EmailPopup />
+    </>
+  );
+};
+
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="w-8 h-8 border-4 border-[#3FA34D] border-t-transparent rounded-full animate-spin" />
@@ -129,10 +142,9 @@ function App() {
                 </Routes>
                 </PageFade>
               </main>
-              <Footer />
+              <SiteChrome />
               <WhatsAppButton />
               <StickyContactBar />
-              <EmailPopup />
             </>
           } />
         </Routes>

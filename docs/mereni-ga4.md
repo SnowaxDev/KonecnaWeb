@@ -33,19 +33,34 @@ fungují i pro odkazy, které na stránce vzniknou až později.
 ## Co je potřeba nastavit ručně
 
 ### 1. GA4 – označit klíčové události
-Administrátor → **Události** → u těchto tří přepnout „Označit jako klíčovou událost":
+Administrátor → **Události** → přepnout „Označit jako klíčovou událost":
 - `generate_lead` ← hlavní konverze
-- `click_phone`
-- `click_whatsapp`
+- `click_whatsapp` ← druhý žádoucí kanál
 
 Události se v seznamu objeví až poté, co je web aspoň jednou odešle. Po nasazení
 tedy nejdřív projdi formulář nanečisto.
 
+`click_phone` **neoznačuj jako klíčovou událost.** Měříme ho jen pro přehled,
+kolik lidí i přesto volá – viz níže.
+
 ### 2. Google Ads – import konverzí
 Cíle → Konverze → **Nová akce pro konverzi** → Import → Google Analytics 4 → Web.
-Naimportuj všechny tři. Jako **primární** nech `generate_lead`; `click_phone` a
-`click_whatsapp` nastav jako **sekundární**, ať ti neředí optimalizaci – jeden
-člověk může kliknout na telefon několikrát.
+
+- **primární:** `generate_lead`
+- **sekundární:** `click_whatsapp`
+- **neimportovat:** `click_phone`
+
+### Proč se telefon nepropaguje
+
+Hovory nejde spolehlivě zvedat a zmeškaný hovor působí navenek hůř než žádné
+tlačítko. Kdyby byl `click_phone` konverzí, Ads by kampaně optimalizovaly přesně
+na ten kanál, který nezvládneme obsloužit – a platili bychom za prokliky, které
+skončí v hlasové schránce.
+
+Proto web tlačí na **nezávaznou poptávku** a **WhatsApp**: obojí počká, dá se
+vyřídit, až bude čas, a zůstane po něm písemná stopa. Telefonní číslo zůstává
+v hlavičce, patičce a na kontaktech pro ty, kdo opravdu chtějí volat – jen z něj
+neděláme hlavní výzvu k akci a neplatíme za něj v reklamě.
 
 ### 3. Ověření po nasazení
 - GA4 → Administrátor → **DebugView** (v prohlížeči si zapni rozšíření Tag Assistant),

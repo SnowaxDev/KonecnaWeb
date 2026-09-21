@@ -178,6 +178,18 @@ p {
     box-shadow: 0 6px 30px rgba(37, 211, 102, 0.5);
 }
 
+/* Rezervace: celý formulář na jednu obrazovku ----------------------------- */
+/* Stránka má pevnou výšku viewportu mínus fixní hlavička webu (4rem).
+   Scrolluje se jen uvnitř kroku, samotná stránka nikdy – zákazník tak má
+   progres i tlačítko Pokračovat pořád na očích.
+   svh (small viewport height) je stabilní i na mobilu, kde se lišta prohlížeče
+   schovává a vh by se přepočítávalo. vh zůstává jako fallback pro starší
+   prohlížeče. */
+.booking-shell {
+    height: calc(100vh - 4rem);
+    height: calc(100svh - 4rem);
+}
+
 /* Sticky kontaktní lišta (jen mobil) ------------------------------------- */
 /* Na mobilu plní roli WhatsApp tlačítka lišta dole, plovoucí bublina by se
    s ní překrývala. Proto ji do 767 px skrýváme. */

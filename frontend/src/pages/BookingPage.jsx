@@ -28,7 +28,7 @@ import {
   trackFormStart, trackFormStep, trackLead, trackFormError, resetFormTracking,
 } from '../lib/analytics';
 import { TEL_HREF, PHONE_DISPLAY, WHATSAPP_HREF } from '../config/contact';
-import { HowItWorks, SocialProof } from '../components/BookingReassurance';
+import { TrustStrip, HowItWorksCompact } from '../components/BookingReassurance';
 import { isValidCzPhone, serviceFromParam } from '../lib/validation';
 
 
@@ -508,7 +508,7 @@ const BookingPage = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" data-testid="booking-page">
+    <div className="booking-shell flex flex-col bg-gray-50 overflow-hidden" data-testid="booking-page">
       <SEOHead
         title="Nezávazná poptávka zahradnických prací | Bezplatná obhlídka | SeknuTo.cz"
         description="Pošlete nezávaznou poptávku na sekání trávy, likvidaci pozemků nebo údržbu zahrady. Přijedeme na bezplatnou obhlídku a sdělíme přesnou cenu předem. Dvůr Králové a okolí."
@@ -516,24 +516,12 @@ const BookingPage = () => {
         keywords="poptávka sekání trávy, objednat zahradníka, bezplatná obhlídka zahrady, poptávka likvidace pozemku, zahradník Dvůr Králové"
       />
       {/* Compact Header */}
-      <div className="bg-white border-b border-gray-200 py-4 px-4 mt-16">
+      <div className="bg-white border-b border-gray-200 py-2 px-4 mt-16 shrink-0">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold text-center text-gray-900 mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <h1 className="text-base sm:text-lg font-bold text-center text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Nezávazná poptávka
           </h1>
-          <p className="text-center text-xs text-gray-500 mb-3">Ozveme se do 24 hodin s přesnou kalkulací</p>
-          
-          {/* Snížení nejistoty ještě před vyplňováním: důkaz + co bude následovat */}
-          {currentStep < 5 && (
-            <div className="grid sm:grid-cols-2 gap-3 mb-4">
-              <div className="rounded-xl border border-gray-200 bg-white p-4">
-                <HowItWorks />
-              </div>
-              <div className="flex items-start">
-                <SocialProof />
-              </div>
-            </div>
-          )}
+          {currentStep < 5 && <div className="mt-1 mb-2"><TrustStrip /></div>}
 
           {/* Progress Steps - Compact */}
           <div className="flex items-center justify-between">
@@ -568,13 +556,13 @@ const BookingPage = () => {
       </div>
 
       {/* Main Content - Fills remaining space */}
-      <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full p-4">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col max-w-3xl mx-auto w-full p-2 sm:p-3">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex-1 min-h-0 flex flex-col overflow-hidden">
           
           {/* Step 1: Service Selection - Collapsible */}
           {currentStep === 1 && (
-            <div className="flex-1 flex flex-col overflow-hidden" data-testid="step-1-content">
-              <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden" data-testid="step-1-content">
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 {/* Basic Services Section */}
                 <CollapsibleSection
                   title="Základní služby"
@@ -769,7 +757,7 @@ const BookingPage = () => {
 
           {/* Step 2: Custom Order Details (only for custom_order service) */}
           {currentStep === 2 && isCustomOrder(formData.service) && (
-            <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-custom-content">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-2-custom-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-[#3FA34D]" />
                 Detaily zakázkové poptávky
@@ -876,7 +864,7 @@ const BookingPage = () => {
 
           {/* Step 2: Property Details (standard services) */}
           {currentStep === 2 && !isCustomOrder(formData.service) && (
-            <div className="flex-1 overflow-y-auto p-6" data-testid="step-2-content">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-2-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#3FA34D]" />
                 Informace o pozemku
@@ -961,7 +949,7 @@ const BookingPage = () => {
 
           {/* Step 3: Schedule */}
           {currentStep === 3 && (
-            <div className="flex-1 overflow-y-auto p-6" data-testid="step-3-content">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-3-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-[#3FA34D]" />
                 Kdy vám to vyhovuje?
@@ -1104,7 +1092,7 @@ const BookingPage = () => {
 
           {/* Step 4: Contact Information */}
           {currentStep === 4 && (
-            <div className="flex-1 overflow-y-auto p-6" data-testid="step-4-content">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6" data-testid="step-4-content">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-[#3FA34D]" />
                 Kontaktní údaje
@@ -1252,6 +1240,8 @@ const BookingPage = () => {
                 )}
 
                 {/* GDPR */}
+                <HowItWorksCompact />
+
                 {/* Preferovaný kanál – ať víme, kudy se ozvat, a zákazník má kontrolu */}
                 <div>
                   <Label className="text-sm font-semibold mb-1.5 block">Jak se vám máme ozvat?</Label>
@@ -1493,8 +1483,6 @@ const BookingPage = () => {
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                   className="bg-[#3FA34D] hover:bg-[#2d7a38] rounded-full px-8 h-11 font-semibold"
-                  /* Sticky lišta se u tohoto tlačítka schová, ať nekonkuruje hlavnímu CTA */
-                  data-sticky-hide
                   data-testid="btn-submit"
                 >
                   {isSubmitting ? (

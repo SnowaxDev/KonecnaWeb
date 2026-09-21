@@ -1,87 +1,57 @@
-import { Star, Send, PhoneCall, ClipboardCheck } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { REVIEWS } from '../config/contact';
 
 /**
- * Dva bloky, které snižují nejistotu těsně před odesláním poptávky:
- *  - HowItWorks: co se stane potom (nejčastější důvod, proč lidé formulář nedokončí
- *    – nevědí, do čeho jdou, a bojí se, že je někdo začne otravovat),
- *  - SocialProof: hodnocení z Firmy.cz jako důkaz, že nejsme náhodný inzerát.
+ * Jeden tenký pás důvěry nad formulářem.
  *
- * Záměrně bez jakýchkoli cen – cenu říkáme až po bezplatné obhlídce.
+ * Dřív tu byly dvě velké karty (hodnocení + „co se stane po odeslání"), jenže
+ * odsunuly formulář pod ohyb a zákazník musel scrollovat, aby vůbec viděl, co
+ * má vyplnit. Na konverzní stránce je formulář to hlavní – všechno ostatní se
+ * musí vejít do jednoho řádku, nebo tam nemá co dělat.
+ *
+ * Co se stane po odeslání se proto ukazuje až v posledním kroku, těsně nad
+ * tlačítkem Odeslat – tam, kde na tom zákazníkovi opravdu záleží.
  */
-
-const STEPS = [
-  {
-    icon: Send,
-    title: 'Pošlete poptávku',
-    text: 'Zabere to asi minutu. Nic tím neplatíte a k ničemu se nezavazujete.',
-  },
-  {
-    icon: PhoneCall,
-    title: 'Ozveme se do 24 hodin',
-    text: 'Většinou ještě týž den. Domluvíme se na termínu obhlídky.',
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'Bezplatná obhlídka',
-    text: 'Přijedeme se podívat a řekneme přesnou cenu předem, bez závazku.',
-  },
-];
-
-export const HowItWorks = () => (
-  <section aria-labelledby="jak-to-probiha" data-testid="how-it-works">
-    <h2 id="jak-to-probiha" className="text-sm font-bold text-[#1B4332] mb-3">
-      Co se stane po odeslání
-    </h2>
-    <ol className="space-y-3">
-      {STEPS.map((s, i) => (
-        <li key={s.title} className="flex gap-3">
-          <div className="shrink-0 w-9 h-9 rounded-full bg-[#F0FDF4] border border-[#3FA34D]/30 flex items-center justify-center">
-            <s.icon className="w-4 h-4 text-[#3FA34D]" aria-hidden="true" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-900">
-              {i + 1}. {s.title}
-            </p>
-            <p className="text-xs text-gray-600 mt-0.5">{s.text}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  </section>
-);
-
-export const SocialProof = () => (
-  <section
-    aria-labelledby="hodnoceni"
-    className="rounded-xl border border-gray-200 bg-white p-4"
-    data-testid="social-proof"
+export const TrustStrip = () => (
+  <div
+    className="flex items-center justify-center gap-x-3 gap-y-1 flex-wrap text-[11px] sm:text-xs text-gray-600"
+    data-testid="trust-strip"
   >
-    <h2 id="hodnoceni" className="sr-only">Hodnocení zákazníků</h2>
-    <div className="flex items-center gap-3">
-      <div className="flex" aria-hidden="true">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <Star
-            key={i}
-            className={`w-4 h-4 ${i < Math.round(REVIEWS.rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-      <p className="text-sm text-gray-800">
-        <strong>{String(REVIEWS.rating).replace('.', ',')}★</strong>{' '}
-        z {REVIEWS.count} hodnocení na{' '}
-        <a
-          href={REVIEWS.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#3FA34D] underline underline-offset-2"
-        >
-          {REVIEWS.label}
-        </a>
-      </p>
-    </div>
-    {/* TODO: doplnit reálné recenze z Firmy.cz – texty ani jména si nevymýšlíme */}
-  </section>
+    <span className="inline-flex items-center gap-1">
+      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" aria-hidden="true" />
+      <strong className="text-gray-800">{String(REVIEWS.rating).replace('.', ',')}★</strong>
+      <span className="hidden sm:inline">z {REVIEWS.count} hodnocení na</span>
+      <a
+        href={REVIEWS.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[#3FA34D] underline underline-offset-2"
+      >
+        {REVIEWS.label}
+      </a>
+    </span>
+    <span className="text-gray-300" aria-hidden="true">·</span>
+    <span>Obhlídka zdarma</span>
+    <span className="text-gray-300" aria-hidden="true">·</span>
+    <span>Ozveme se do 24 hodin</span>
+  </div>
 );
 
-export default HowItWorks;
+/**
+ * Tři kroky „co bude následovat" v kompaktní podobě – jen do posledního kroku
+ * formuláře, ať nezabírají místo tam, kde zákazník teprve vybírá službu.
+ */
+export const HowItWorksCompact = () => (
+  <div
+    className="rounded-lg bg-[#F0FDF4] border border-[#3FA34D]/20 px-3 py-2"
+    data-testid="how-it-works"
+  >
+    <p className="text-[11px] text-[#1B4332] leading-relaxed">
+      <strong>Co bude dál:</strong> poptávku pošlete zdarma a nezávazně → ozveme se
+      do 24 hodin (většinou ještě dnes) → přijedeme na bezplatnou obhlídku a řekneme
+      přesnou cenu předem.
+    </p>
+  </div>
+);
+
+export default TrustStrip;

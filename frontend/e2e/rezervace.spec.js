@@ -169,7 +169,7 @@ test.describe('Kontaktní odkazy a sticky lišta', () => {
     await mockApi(page);
   });
 
-  test('sticky lišta jen na mobilu, se správným číslem a textem', async ({ page }, testInfo) => {
+  test('lišta míří na poptávku a WhatsApp, nikoli na volání', async ({ page }, testInfo) => {
     await page.goto('/');
     const bar = page.getByTestId('sticky-contact-bar');
     const isMobile = testInfo.project.name.startsWith('mobile');
@@ -180,32 +180,72 @@ test.describe('Kontaktní odkazy a sticky lišta', () => {
     }
 
     await expect(bar).toBeVisible();
-    await expect(page.getByTestId('sticky-call')).toHaveAttribute('href', 'tel:+420730588372');
+    await expect(page.getByTestId('sticky-booking')).toHaveAttribute('href', '/rezervace');
+
     const wa = await page.getByTestId('sticky-whatsapp').getAttribute('href');
     expect(wa).toContain('wa.me/420730588372');
     expect(decodeURIComponent(wa)).toContain('Dobrý den, mám zájem o zahradní práce');
 
-    // Dotyková plocha aspoň 48 px
-    const box = await page.getByTestId('sticky-call').boundingBox();
+    // Telefon nechceme propagovat – v liště nesmí být žádný tel: odkaz
+    expect(await bar.locator('a[href^="tel:"]').count()).toBe(0);
+
+    const box = await page.getByTestId('sticky-booking').boundingBox();
     expect(box.height).toBeGreaterThanOrEqual(48);
   });
 
-  test('klik na telefon pošle click_phone se správnou lokalitou', async ({ page }, testInfo) => {
+  test('klik na WhatsApp v liště pošle click_whatsapp se správnou lokalitou', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('mobile'), 'lišta je jen na mobilu');
     await page.goto('/');
-    // Odkaz neotvíráme doopravdy, jen ověříme odeslanou událost
-    await page.getByTestId('sticky-call').click({ modifiers: ['Alt'] });
-    const ev = named(await events(page), 'click_phone');
+    await page.getByTestId('sticky-whatsapp').click({ modifiers: ['Alt'] });
+    const ev = named(await events(page), 'click_whatsapp');
     expect(ev.length).toBeGreaterThanOrEqual(1);
     expect(ev[0].params.link_location).toBe('sticky');
   });
 
-  test('na /rezervace se lišta schová u odesílacího tlačítka', async ({ page }, testInfo) => {
-    test.skip(!testInfo.project.name.startsWith('mobile'), 'lišta je jen na mobilu');
+  test('na /rezervace se lišta neukazuje vůbec', async ({ page }) => {
     await page.goto('/rezervace');
-    await goToContactStep(page);
-    await page.getByTestId('btn-submit').scrollIntoViewIfNeeded();
-    await expect(page.getByTestId('sticky-contact-bar')).toBeHidden({ timeout: 5000 });
+    await page.getByTestId('step-1-content').waitFor();
+    await expect(page.getByTestId('sticky-contact-bar')).toBeHidden();
+  });
+});
+
+test.describe('Rezervace se vejde na jednu obrazovku', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubAnalytics(page);
+    await mockApi(page);
+  });
+
+  test('stránka nejde odscrollovat a tlačítko je vidět', async ({ page }) => {
+    await page.goto('/rezervace');
+    await page.getByTestId('step-1-content').waitFor();
+    await page.waitForTimeout(400);
+
+    // scrollHeight klame (počítá i odříznutý obsah uvnitř scrolleru),
+    // proto testujeme, jestli se stránkou jde reálně pohnout.
+    const scrolled = await page.evaluate(() => {
+      window.scrollTo(0, 10000);
+      return window.scrollY || document.documentElement.scrollTop;
+    });
+    expect(scrolled).toBe(0);
+
+    await expect(page.getByTestId('btn-next')).toBeInViewport();
+  });
+
+  test('patička ani popup formulář neodsouvají', async ({ page }) => {
+    await page.goto('/rezervace');
+    await page.getByTestId('step-1-content').waitFor();
+    expect(await page.locator('footer').count()).toBe(0);
+  });
+
+  test('dlouhý seznam služeb scrolluje uvnitř, ne stránkou', async ({ page }) => {
+    await page.goto('/rezervace');
+    const step = page.getByTestId('step-1-content');
+    await step.waitFor();
+    const scrollable = await step.evaluate((el) => {
+      const inner = el.firstElementChild;
+      return inner.scrollHeight > inner.clientHeight;
+    });
+    expect(scrollable).toBe(true);
   });
 });
 
