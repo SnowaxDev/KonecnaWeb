@@ -37,7 +37,7 @@ async function mockApi(page, { bookingStatus = 200 } = {}) {
 const events = (page) => page.evaluate(() => window.__events || []);
 const named = (list, name) => list.filter((e) => e.name === name);
 
-async function fillContactStep(page, { email = '' } = {}) {
+async function fillContactStep(page, { email = 'jan@email.cz' } = {}) {
   await page.getByTestId('input-customer-name').fill('Jan Novák');
   await page.getByTestId('input-customer-phone').fill('730 588 372');
   if (email) await page.getByTestId('input-customer-email').fill(email);
@@ -79,13 +79,25 @@ test.describe('Rezervace – konverzní tok', () => {
     expect(named(evs, 'form_step').length).toBeGreaterThanOrEqual(2);
   });
 
-  test('e-mail není povinný – poptávka projde bez něj', async ({ page }) => {
+  test('bez e-mailu poptávka neprojde a chyba je u pole', async ({ page }) => {
     await page.goto('/rezervace');
     await goToContactStep(page);
-    await fillContactStep(page); // bez e-mailu
+    await fillContactStep(page, { email: '' });
     await page.getByTestId('btn-submit').click();
-    await expect(page.getByTestId('btn-submit')).toBeHidden({ timeout: 10000 });
-    expect(named(await events(page), 'generate_lead')).toHaveLength(1);
+
+    await expect(page.getByRole('alert').filter({ hasText: 'e-mail' })).toBeVisible();
+    // Neodeslaná poptávka se nesmí počítat jako konverze
+    expect(named(await events(page), 'generate_lead')).toHaveLength(0);
+  });
+
+  test('neplatný e-mail ukáže chybu u pole', async ({ page }) => {
+    await page.goto('/rezervace');
+    await goToContactStep(page);
+    await fillContactStep(page, { email: 'neplatny' });
+    await page.getByTestId('btn-submit').click();
+
+    await expect(page.getByRole('alert').filter({ hasText: 'E-mail' })).toBeVisible();
+    expect(named(await events(page), 'generate_lead')).toHaveLength(0);
   });
 
   test('žádná událost neobsahuje osobní údaje', async ({ page }) => {
@@ -120,6 +132,7 @@ test.describe('Rezervace – konverzní tok', () => {
     await goToContactStep(page);
     await page.getByTestId('input-customer-name').fill('Jan Novák');
     await page.getByTestId('input-customer-phone').fill('123');
+    await page.getByTestId('input-customer-email').fill('jan@email.cz');
     await page.getByTestId('input-property-address').fill('Dvůr Králové');
     await page.getByTestId('gdpr-consent').click();
     await page.getByTestId('btn-submit').click();

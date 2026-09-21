@@ -10,10 +10,11 @@ export const isValidCzPhone = (raw) => {
   return /^(?:\+420|00420)?[6-7]\d{8}$/.test(v);
 };
 
-// Nepovinné pole – prázdná hodnota je v pořádku, vyplněná musí dávat smysl.
+// E-mail je povinný – posíláme na něj potvrzení poptávky a páruje se podle něj
+// zákazník v CRM. Prázdná hodnota proto neprojde.
 export const isValidEmail = (raw) => {
   const v = String(raw || '').trim();
-  if (!v) return true;
+  if (!v) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 };
 

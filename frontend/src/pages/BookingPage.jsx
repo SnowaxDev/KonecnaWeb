@@ -29,7 +29,7 @@ import {
 } from '../lib/analytics';
 import { TEL_HREF, PHONE_DISPLAY, WHATSAPP_HREF } from '../config/contact';
 import { TrustStrip } from '../components/BookingReassurance';
-import { isValidCzPhone, serviceFromParam } from '../lib/validation';
+import { isValidCzPhone, isValidEmail, serviceFromParam } from '../lib/validation';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -389,10 +389,9 @@ const BookingPage = () => {
           if (!formData.customer_phone.trim()) errs.customer_phone = 'Vyplňte prosím telefon';
           else if (!isValidCzPhone(formData.customer_phone)) errs.customer_phone = 'Telefon nevypadá správně – zkuste formát 730 588 372';
           if (!formData.property_address.trim()) errs.property_address = 'Napište alespoň obec';
-          // E-mail je nepovinný, ale když ho zákazník vyplní, musí dávat smysl
-          if (formData.customer_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email.trim())) {
-            errs.customer_email = 'E-mail nevypadá správně';
-          }
+          // E-mail posíláme potvrzení poptávky, proto je povinný
+          if (!formData.customer_email.trim()) errs.customer_email = 'Vyplňte prosím e-mail';
+          else if (!isValidEmail(formData.customer_email)) errs.customer_email = 'E-mail nevypadá správně';
           if (!formData.gdpr_consent) errs.gdpr_consent = 'Bez souhlasu bohužel nemůžeme poptávku zpracovat';
           setFieldErrors(errs);
           if (Object.keys(errs).length > 0) {
@@ -1127,7 +1126,7 @@ const BookingPage = () => {
 
                 <div className="grid sm:grid-cols-2 gap-x-3 gap-y-2">
                 <div>
-                  <Label className="text-xs font-semibold">E-mail <span className="text-gray-400 font-normal">(nepovinné)</span></Label>
+                  <Label className="text-xs font-semibold">E-mail *</Label>
                   <div className="relative mt-1">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -1137,7 +1136,7 @@ const BookingPage = () => {
                       aria-invalid={!!fieldErrors.customer_email}
                       onChange={(e) => updateFormData('customer_email', e.target.value)}
                       className="h-8 sm:h-9 pl-9 border-2 text-sm"
-                      placeholder="jan@email.cz – pošleme potvrzení"
+                      placeholder="jan@email.cz"
                       data-testid="input-customer-email"
                     />
                   </div>

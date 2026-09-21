@@ -28,10 +28,10 @@ describe('isValidCzPhone', () => {
 });
 
 describe('isValidEmail', () => {
-  test('prázdný e-mail je v pořádku – pole je nepovinné', () => {
-    expect(isValidEmail('')).toBe(true);
-    expect(isValidEmail('   ')).toBe(true);
-    expect(isValidEmail(undefined)).toBe(true);
+  test('prázdný e-mail neprojde – pole je povinné', () => {
+    expect(isValidEmail('')).toBe(false);
+    expect(isValidEmail('   ')).toBe(false);
+    expect(isValidEmail(undefined)).toBe(false);
   });
 
   test('vyplněný e-mail musí dávat smysl', () => {
