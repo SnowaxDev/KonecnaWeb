@@ -39,7 +39,27 @@ const API = `${BACKEND_URL}/api`;
 const DRAFT_KEY = 'seknuto_booking_draft';
 
 
+// Fixní hlavička webu mění výšku podle breakpointu (61 → 76 → 81 px). Kdybychom
+// odsazení zadali natvrdo, formulář by se na některých šířkách schoval pod menu.
+// Měříme ji proto za běhu a výsledek dáme do CSS proměnné, ze které si bere
+// odsazení i výška shellu – ty dvě hodnoty na sobě musí sedět.
+const useSiteHeaderHeight = () => {
+  useEffect(() => {
+    const header = document.querySelector('header');
+    if (!header) return undefined;
+    const apply = () => {
+      document.documentElement.style.setProperty('--site-header-h', `${Math.round(header.getBoundingClientRect().height)}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(header);
+    window.addEventListener('resize', apply);
+    return () => { ro.disconnect(); window.removeEventListener('resize', apply); };
+  }, []);
+};
+
 const BookingPage = () => {
+  useSiteHeaderHeight();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
@@ -518,7 +538,7 @@ const BookingPage = () => {
         keywords="poptávka sekání trávy, objednat zahradníka, bezplatná obhlídka zahrady, poptávka likvidace pozemku, zahradník Dvůr Králové"
       />
       {/* Compact Header */}
-      <div className="bg-white border-b border-gray-200 py-2 px-4 mt-16 shrink-0">
+      <div className="booking-header bg-white border-b border-gray-200 px-4 shrink-0">
         <div className="max-w-3xl mx-auto">
           <h1 className="booking-title text-base sm:text-lg font-bold text-center text-gray-900" style={{ fontFamily: 'Poppins, sans-serif' }}>
             Nezávazná poptávka
@@ -558,8 +578,8 @@ const BookingPage = () => {
       </div>
 
       {/* Main Content - Fills remaining space */}
-      <div className="flex-1 min-h-0 flex flex-col max-w-3xl mx-auto w-full p-2 sm:p-3">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col justify-start max-w-3xl mx-auto w-full p-2 sm:p-3">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 min-h-0 max-h-full flex flex-col overflow-hidden">
           
           {/* Step 1: Service Selection - Collapsible */}
           {currentStep === 1 && (

@@ -186,8 +186,17 @@ p {
    schovává a vh by se přepočítávalo. vh zůstává jako fallback pro starší
    prohlížeče. */
 .booking-shell {
-    height: calc(100vh - 4rem);
-    height: calc(100svh - 4rem);
+    /* --site-header-h nastavuje BookingPage podle skutečné výšky hlavičky.
+       4rem je jen fallback pro první snímek, než se hodnota změří. */
+    margin-top: var(--site-header-h, 4rem);
+    height: calc(100vh - var(--site-header-h, 4rem));
+    height: calc(100svh - var(--site-header-h, 4rem));
+}
+
+/* Vzduch pod hlavičkou, ať se nadpis o menu neotírá */
+.booking-header {
+    padding-top: 0.75rem;
+    padding-bottom: 0.5rem;
 }
 
 /* Na nízkých displejích (iPhone SE apod.) by pás důvěry ukrojil místo, které
