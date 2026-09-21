@@ -1,13 +1,19 @@
 import { MessageCircle } from 'lucide-react';
+import { WHATSAPP_HREF } from '../config/contact';
 
+/**
+ * Plovoucí WhatsApp tlačítko. Na mobilu je schované (md:flex) – tam stejnou
+ * roli plní sticky lišta dole a dvě WhatsApp tlačítka přes sebe jen překážejí.
+ */
 const WhatsAppButton = () => {
   return (
     <a
-      href="https://wa.me/420730588372?text=Dobrý%20den,%20mám%20zájem%20o%20vaše%20služby."
+      href={WHATSAPP_HREF}
       target="_blank"
       rel="noopener noreferrer"
       className="whatsapp-float"
       aria-label="Kontaktovat přes WhatsApp"
+      data-track-location="float"
       data-testid="whatsapp-button"
     >
       <MessageCircle className="w-7 h-7" />

@@ -178,6 +178,51 @@ p {
     box-shadow: 0 6px 30px rgba(37, 211, 102, 0.5);
 }
 
+/* Sticky kontaktní lišta (jen mobil) ------------------------------------- */
+/* Na mobilu plní roli WhatsApp tlačítka lišta dole, plovoucí bublina by se
+   s ní překrývala. Proto ji do 767 px skrýváme. */
+@media (max-width: 767px) {
+    .whatsapp-float {
+        display: none;
+    }
+}
+
+.sticky-contact-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    /* Kvůli gestům na iPhonu – lišta nesmí končit pod home indikátorem */
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 768px) {
+    .sticky-contact-bar {
+        display: none;
+    }
+}
+
+/* Lišta je fixed, takže nezabírá místo v toku – patičku by překryla.
+   Doplníme odpovídající odsazení jen když je lišta opravdu vidět (CLS = 0,
+   protože se nemění layout, jen spodní padding). */
+body.has-sticky-bar {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+    body.has-sticky-bar {
+        padding-bottom: 0;
+    }
+}
+
 /* Card hover effects */
 .card-hover {
     transition: all 0.3s ease;

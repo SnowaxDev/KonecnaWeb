@@ -14,6 +14,8 @@ import WhatsAppButton from "./components/WhatsAppButton";
 import EmailPopup from "./components/EmailPopup";
 import GoogleAnalytics from "./components/GoogleAnalytics";
 import ErrorBoundary from "./components/ErrorBoundary";
+import StickyContactBar from "./components/StickyContactBar";
+import { initContactTracking } from "./lib/analytics";
 
 // Homepage se načítá hned (první dojem); ostatní stránky lazy –
 // návštěvník nestahuje admin, rezervaci ani blog, dokud na ně nejde
@@ -75,6 +77,9 @@ const PageLoader = () => (
 );
 
 function App() {
+  // Jeden delegovaný listener na tel:/wa.me/mailto odkazy v celé aplikaci
+  useEffect(() => { initContactTracking(); }, []);
+
   return (
     <HelmetProvider>
     <div className="App">
@@ -126,6 +131,7 @@ function App() {
               </main>
               <Footer />
               <WhatsAppButton />
+              <StickyContactBar />
               <EmailPopup />
             </>
           } />
